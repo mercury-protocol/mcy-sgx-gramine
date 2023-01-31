@@ -2,6 +2,12 @@ import os
 from gramine_examples.secrets import *  # not included in git
 
 
+def perform_commands(commands: list):
+    os.chdir("ra-tls-secret-prov")
+    for cmd in commands:
+        os.system(cmd)
+
+
 def epid(linkable: bool = False):
     spid = SPID_L if linkable else SPID_U
     primary_key = IAS_PRIMARY_KEY_L if linkable else IAS_PRIMARY_KEY_U
@@ -18,9 +24,7 @@ def epid(linkable: bool = False):
         "kill %%"
     ]
 
-    os.chdir("ra-tls-secret-prov")
-    for cmd in commands:
-        os.system(cmd)
+    perform_commands(commands)
 
 
 def dcap():
@@ -35,12 +39,10 @@ def dcap():
         "kill %%"
     ]
 
-    os.chdir("ra-tls-secret-prov")
-    for cmd in commands:
-        os.system(cmd)
+    perform_commands(commands)
 
 
 if __name__ == "__main__":
     """Choose which type of RA to use by commenting the other."""
-    # epid(linkable=False)
-    dcap()
+    epid(linkable=False)
+    # dcap()
