@@ -52,8 +52,11 @@ ssl/server.crt: ssl/ca_config.conf
 # installation. We also use `mbedtls_gramine` pkg-config because we don't have a secret prov one.
 # TODO: Create a pkg-config file for secretprov_gramine libs, and use it in below
 #       CFLAGS/LDFLAGS lines (via `pkg-config {--cflags|--libs} secretprov_gramine`).
-GRAMINEDIR ?= ../..
-CFLAGS += -Wall -std=c11 -I$(GRAMINEDIR)/tools/sgx/ra-tls
+# GRAMINEDIR ?= ../..# commented by MERCURY
+# CFLAGS += -Wall -std=c11 -I$(GRAMINEDIR)/tools/sgx/ra-tls# commented by MERCURY
+GRAMINEDIR = /home/mercury/Documents/repos/mcy-sgx-gramine/gramine_examples# added byMERCURY
+CFLAGS += -Wall -std=c11 -I$(GRAMINEDIR)/tools_sgx_ra_tls# added by MERCURY
+
 LDFLAGS += -Wl,--enable-new-dtags $(shell pkg-config --libs mbedtls_gramine)
 
 %/server_epid: %/server.c
