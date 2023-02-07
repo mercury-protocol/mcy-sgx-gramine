@@ -1,5 +1,5 @@
 import os
-from gramine_examples.secrets import *  # not included in git
+from gramine_ci_examples.secrets import *  # not included in git
 
 
 MINIMAL = "secret_prov_minimal"
@@ -23,6 +23,7 @@ def epid(level: str = MINIMAL, linkable: bool = False):
     ias_api_key = IAS_PRIMARY_KEY_L if linkable else IAS_PRIMARY_KEY_U
     commands_build = [
         "make clean",
+        "make distclean",
         f"make app epid RA_TYPE=epid RA_CLIENT_SPID={spid} RA_CLIENT_LINKABLE={int(linkable)}"
     ]
     commands_run = [
@@ -42,6 +43,7 @@ def epid(level: str = MINIMAL, linkable: bool = False):
 def dcap(level: str = MINIMAL):
     commands_build = [
         "make clean",
+        "make distclean",
         "make app dcap RA_TYPE=dcap"
     ]
     commands_run = [
