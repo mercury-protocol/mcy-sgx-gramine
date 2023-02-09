@@ -1,6 +1,13 @@
 # This PyTorch image classification example is based off
 # https://www.learnopencv.com/pytorch-for-beginners-image-classification-using-pre-trained-models/
 
+from time import time
+start = time()
+
+# TODO: add site packages to sys.path in gramine manifest
+import sys
+sys.path.append("/home/mercury/Documents/repos/mcy-sgx-gramine/venv/lib/python3.8/site-packages")
+
 from torchvision import models
 import torch
 
@@ -47,4 +54,4 @@ percentage = torch.nn.functional.softmax(out, dim=1)[0] * 100
 with open("result.txt", "w") as outfile:
     outfile.write(str([(classes[idx], percentage[idx].item()) for idx in indices[0][:5]]))
 
-print("Done. The result was written to `result.txt`.")
+print(f"Done. The result was written to `result.txt`. Duration: {time() - start} seconds.")
