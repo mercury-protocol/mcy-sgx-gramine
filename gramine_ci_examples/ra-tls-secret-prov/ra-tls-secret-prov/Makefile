@@ -54,7 +54,7 @@ ssl/server.crt: ssl/ca_config.conf
 #       CFLAGS/LDFLAGS lines (via `pkg-config {--cflags|--libs} secretprov_gramine`).
 # GRAMINEDIR ?= ../..# commented by MERCURY
 # CFLAGS += -Wall -std=c11 -I$(GRAMINEDIR)/tools/sgx/ra-tls# commented by MERCURY
-GRAMINEDIR = /home/mercury/Documents/repos/mcy-sgx-gramine/gramine_examples# added byMERCURY
+GRAMINEDIR = /home/mercury/Documents/repos/mcy-sgx-gramine/gramine_ci_examples# added byMERCURY
 CFLAGS += -Wall -std=c11 -I$(GRAMINEDIR)/tools_sgx_ra_tls# added by MERCURY
 
 LDFLAGS += -Wl,--enable-new-dtags $(shell pkg-config --libs mbedtls_gramine)
