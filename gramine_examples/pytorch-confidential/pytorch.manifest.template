@@ -24,6 +24,15 @@ fs.mounts = [
   { uri = "file:{{ pillow_path }}", path = "{{ pillow_path }}" },
 
   { type = "tmpfs", path = "/tmp" },
+
+  { path = "/classes.txt", uri = "file:classes.txt", type = "encrypted" },
+  { path = "/input.jpg", uri = "file:input.jpg", type = "encrypted" },
+  { path = "/alexnet-pretrained.pt", uri = "file:alexnet-pretrained.pt", type = "encrypted" },
+
+  # Uncomment line below if you want to use torchvision.model.alexnet(pretrained=True)
+  # { path = "/{{ env.HOME }}/.cache/torch/checkpoints/alexnet-owt-4df8aa71.pth", uri = "file:{{ env.HOME }}/.cache/torch/checkpoints/alexnet-owt-4df8aa71.pth", type = "encrypted" },
+
+  { path = "/result.txt", uri = "file:result.txt", type = "encrypted" },
 ]
 
 # PyTorch loads its pre-trained models from here
@@ -47,18 +56,22 @@ sgx.trusted_files = [
   "file:{{ python.get_path('stdlib', vars={'installed_base': '/usr/local'}) }}/",
 
   "file:pytorchexample.py",
-
-  "file:classes.txt",
-  "file:input.jpg",
-  "file:alexnet-pretrained.pt",  # Pre-trained model saved as a file
-
-  # Uncomment line below if you want to use torchvision.model.alexnet(pretrained=True)
-  # "file:{{ env.HOME }}/.cache/torch/checkpoints/alexnet-owt-4df8aa71.pth",
 ]
 
 sgx.allowed_files = [
-  "file:result.txt",
+  "file:/etc/host.conf",
+  "file:/etc/hosts",
+  "file:/etc/nsswitch.conf",
+  "file:/etc/resolv.conf",
 ]
+
+sgx.remote_attestation = "dcap"
+
+loader.env.LD_PRELOAD = "libsecret_prov_attest.so"
+loader.env.SECRET_PROVISION_CONSTRUCTOR = "1"
+loader.env.SECRET_PROVISION_SET_KEY = "default"
+loader.env.SECRET_PROVISION_CA_CHAIN_PATH = "ssl/ca.crt"
+loader.env.SECRET_PROVISION_SERVERS = "localhost:4433"
 
 # Gramine optionally provides patched OpenMP runtime library that runs faster inside SGX enclaves
 # (add `-Dlibgomp=enabled` when configuring the build). Uncomment the line below to use the patched
