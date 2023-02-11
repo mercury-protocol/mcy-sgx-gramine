@@ -13,9 +13,7 @@ endif
 
 .PHONY: all
 all: main.manifest
-ifeq ($(SGX),1)
 all: main.manifest.sgx main.sig main.token
-endif
 
 main.manifest: main.manifest.template
 	gramine-manifest \

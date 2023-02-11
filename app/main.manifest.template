@@ -21,7 +21,6 @@ fs.mounts = [
   { uri = "file:{{ arch_libdir }}", path = "{{ arch_libdir }}" },
   { uri = "file:/usr", path = "/usr" },
   { uri = "file:/etc", path = "/etc" },
-  # { uri = "file:/dev/attestation", path = "/dev/attestation" },
   { uri = "file:{{ pillow_path }}", path = "{{ pillow_path }}" },
 
   { type = "tmpfs", path = "/tmp" },
@@ -31,6 +30,7 @@ sgx.nonpie_binary = true
 sgx.enclave_size = "1G"
 sgx.thread_num = 32
 sgx.edmm_enable = {{ 'true' if env.get('EDMM', '0') == '1' else 'false' }}
+sgx.remote_attestation = "epid"
 
 sgx.trusted_files = [
   "file:{{ gramine.libos }}",
