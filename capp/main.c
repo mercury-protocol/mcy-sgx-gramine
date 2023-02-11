@@ -32,7 +32,7 @@ int main(void) {
         // If it is EOF stop reading.
     } while (ch != EOF);
 
-    printf("content of this file are \n");
+    printf("\n");
  
     // Closing the file
     fclose(ptr);
