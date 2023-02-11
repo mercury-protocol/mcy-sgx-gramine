@@ -1,0 +1,8 @@
+.vscode/settings.json
+capp/test.txt
+capp/main
+capp/main.manifest
+capp/main.o
+capp/main.manifest.sgx
+capp/main.sig
+capp/main.token

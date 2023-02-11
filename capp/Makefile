@@ -47,11 +47,9 @@ main.token: main.sig
 	gramine-sgx-get-token \
 		--output $@ --sig $<
 
-GRAMINE = gramine-sgx
-
 .PHONY: check
 check: all
-	$(GRAMINE) main > OUTPUT
+	gramine-sgx main > OUTPUT
 	echo "Hello, world" | diff OUTPUT -
 	@echo "[ Success ]"
 
