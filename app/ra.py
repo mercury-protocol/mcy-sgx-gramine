@@ -5,11 +5,7 @@ from ecdsa.curves import SECP256k1
 from ecdsa import SigningKey
 from hashlib import sha256
 
-
-REPORT_PATH = "/dev/attestation/user_report_data"
-QUOTE_PATH = "/dev/attestation/quote"
-KEY_NAME = "ecdsa_secret"
-KEY_PATH = f"/dev/attestation/keys/{KEY_NAME}"
+from constants import QUOTE_PATH, KEY_PATH, GR_QUOTE
 
 
 def generate_key_pair():
@@ -32,7 +28,7 @@ def read(path):
 
 def get_quote():
     quote = read(QUOTE_PATH)
-    write("gr.quote", quote)
+    write(GR_QUOTE, quote)
 
 
 get_quote()

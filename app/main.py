@@ -1,6 +1,6 @@
 import os
 import json
-from app.constants import IAS_API_KEY
+from app.constants import IAS_API_KEY, GR_QUOTE, IAS_REPORT, IAS_SIGNATURE, IAS_CERTIFICATE
 
 
 def get_signature() -> str:
@@ -23,7 +23,12 @@ def main():
     os.system("make")
 
     os.system("gramine-sgx ./ra ra.py")
-    os.system(f"gramine-sgx-ias-request report -k {IAS_API_KEY} -q gr.quote -r ias.report -s ias.sig -c ias.cert -v")
+    os.system(f"gramine-sgx-ias-request report"
+              f" -k {IAS_API_KEY}"
+              f" -q {GR_QUOTE}"
+              f" -r {IAS_REPORT}"
+              f" -s {IAS_SIGNATURE}"
+              f" -c {IAS_CERTIFICATE} -v")
 
     return {
         "X-IASReport-Signature": get_signature(),

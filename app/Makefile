@@ -1,8 +1,8 @@
-# PyTorch and the pre-trained model must be installed on the system. See README for details.
-
+GR_QUOTE ?= gr.quote
+IAS_REPORT ?= ias.report
+IAS_SIGNATURE ?= ias.sig
+IAS_CERTIFICATE ?= ias.cert
 ARCH_LIBDIR ?= /lib/$(shell $(CC) -dumpmachine)
-
-# PyTorch uses the Pillow backend; detect where Pillow was installed
 PILLOW_PATH ?= $(shell pip3 show pillow | grep Location: | cut -d" " -f2)/
 
 ifeq ($(DEBUG),1)
@@ -17,6 +17,10 @@ all: ra.manifest.sgx ra.sig ra.token
 
 ra.manifest: ra.manifest.template
 	gramine-manifest \
+		-Dgr_quote=$(GR_QUOTE) \
+		-Dias_report=$(IAS_REPORT) \
+		-Dias_signature=$(IAS_SIGNATURE) \
+		-Dias_certificate=$(IAS_CERTIFICATE) \
 		-Dlog_level=$(GRAMINE_LOG_LEVEL) \
 		-Dpillow_path=$(PILLOW_PATH) \
 		-Darch_libdir=$(ARCH_LIBDIR) \
