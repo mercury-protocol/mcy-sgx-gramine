@@ -6,3 +6,15 @@ capp/main.o
 capp/main.manifest.sgx
 capp/main.sig
 capp/main.token
+.idea/.gitignore
+.idea/mcy-sgx-gramine.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/inspectionProfiles/profiles_settings.xml
+app/key.txt
+app/ecdsa_secret
+app/main.manifest
+app/main.manifest.sgx
+app/main.sig
+app/main.token
