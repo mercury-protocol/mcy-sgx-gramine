@@ -47,6 +47,8 @@ sgx.trusted_files = [
   "file:{{ python.get_path('stdlib', vars={'installed_base': '/usr/local'}) }}/",
 
   "file:main.py",
+  #"file:/dev/attestation/keys/ecdsa_secret", # TODO: remove
+  #"file:key.txt", # TODO: remove
 ]
 
 sgx.allowed_files = [
