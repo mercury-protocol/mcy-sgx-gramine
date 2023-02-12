@@ -1,2 +1,2 @@
 QUOTE_PATH = "/dev/attestation/quote"
-IAS_REQUEST = "gramine-sgx-ias-request"
+IAS_API_KEY = "909c02172d964178a794d055e98c41d8"  # TODO: store it securely

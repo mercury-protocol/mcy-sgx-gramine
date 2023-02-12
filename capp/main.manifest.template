@@ -24,6 +24,9 @@ sgx.ra_client_spid = "741871B230A61340FEBE8B50A803525F"
 sgx.trusted_files = [
   "file:{{ gramine.libos }}",
   "file:main",
-  "file:test.txt",
   "file:{{ gramine.runtimedir() }}/",
+]
+
+sgx.allowed_files = [
+  "file:test.txt",
 ]

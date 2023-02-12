@@ -12,10 +12,10 @@ GRAMINE_LOG_LEVEL = error
 endif
 
 .PHONY: all
-all: main.manifest
-all: main.manifest.sgx main.sig main.token
+all: ra.manifest
+all: ra.manifest.sgx ra.sig ra.token
 
-main.manifest: main.manifest.template
+ra.manifest: ra.manifest.template
 	gramine-manifest \
 		-Dlog_level=$(GRAMINE_LOG_LEVEL) \
 		-Dpillow_path=$(PILLOW_PATH) \
@@ -26,22 +26,22 @@ main.manifest: main.manifest.template
 # Make on Ubuntu <= 20.04 doesn't support "Rules with Grouped Targets" (`&:`),
 # for details on this workaround see
 # https://github.com/gramineproject/gramine/blob/e8735ea06c/CI-Examples/helloworld/Makefile
-main.manifest.sgx main.sig: sgx_sign
+ra.manifest.sgx ra.sig: sgx_sign
 	@:
 
 .INTERMEDIATE: sgx_sign
-sgx_sign: main.manifest
+sgx_sign: ra.manifest
 	gramine-sgx-sign \
 		--manifest $< \
 		--output $<.sgx
 
-main.token: main.sig
+ra.token: ra.sig
 	gramine-sgx-get-token --output $@ --sig $<
 
 .PHONY: clean
 clean:
-	$(RM) *.token *.sig *.manifest.sgx *.manifest
+	$(RM) *.token ra.sig *.manifest.sgx *.manifest
 
 .PHONY: distclean
 distclean: clean
-	$(RM) *.pt result.txt
+	$(RM) *.sig *.quote *.cert *.report
