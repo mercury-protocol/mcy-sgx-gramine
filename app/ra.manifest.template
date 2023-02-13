@@ -24,6 +24,8 @@ fs.mounts = [
   { type = "tmpfs", path = "/tmp" },
 ]
 
+fs.insecure__keys.ecdsa_secret = "00112233445566778899aabbccddeeff"
+
 sgx.nonpie_binary = true
 sgx.enclave_size = "1G"
 sgx.thread_num = 32

@@ -10,11 +10,18 @@ from constants import QUOTE_PATH, GR_QUOTE, KEY_PATH
 
 
 def generate_key_pair():
+    # TODO: only a 16 bytes long binary key can be saved
+    # TODO: I could only add key file in manifest with an insecure option
+
     key = SigningKey.generate(curve=SECP256k1, hashfunc=sha256)
-    public = key.get_verifying_key().to_string()
-    secret = key.to_string()
+
+    # secret = key.to_string()
+    # public = key.get_verifying_key().to_string()
+
+    secret = bytes("0123456789abcdef", "utf-8")
+    public = bytes("fedcba9876543210", "utf-8")
+
     return secret, public
-    # return bytes("1"*16, "utf-8"), bytes("public", "utf-8")
 
 
 def write(path, data):
@@ -33,7 +40,11 @@ def save_secret_key():
 
 
 def update_user_report_data():
-    pass
+    # TODO: finish implementation once key can be saved
+    target_info = read("/dev/attestation/my_target_info")
+    write("/dev/attestation/target_info", target_info)
+    user_report_data = bytes("This is a Mercury operator.", "utf-8")
+    write("/dev/attestation/user_report_data", user_report_data)
 
 
 def get_quote():
@@ -41,12 +52,15 @@ def get_quote():
     write(GR_QUOTE, quote)
 
 
-# save_secret_key()  # TODO: fix no permission to save key
-# update_user_report_data()  # TODO: implement once key can be saved
+# TODO: attestation returns GROUP_OUT_OF_DATE - try to build without insecure configuration
+save_secret_key()
+update_user_report_data()
 get_quote()
 
 
 # prints for debugging
+# import os
 # print("/dev/attestation: ", os.listdir("/dev/attestation"))
 # print("/dev/attestation/keys: ", os.listdir("/dev/attestation/keys"))
 # print("/dev/attestation/user_report_data: ", os.listdir("/dev/attestation/user_report_data"))
+# print(read(KEY_PATH))
