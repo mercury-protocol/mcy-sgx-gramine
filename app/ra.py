@@ -58,9 +58,14 @@ update_user_report_data()
 get_quote()
 
 
-# prints for debugging
+# ---------- DEBUG CODE ----------
 # import os
 # print("/dev/attestation: ", os.listdir("/dev/attestation"))
 # print("/dev/attestation/keys: ", os.listdir("/dev/attestation/keys"))
 # print("/dev/attestation/user_report_data: ", os.listdir("/dev/attestation/user_report_data"))
 # print(read(KEY_PATH))
+
+# if __name__ == "__main__":
+#     sk, pk = generate_key_pair()
+#     print(sk)
+#     print(len(sk))
