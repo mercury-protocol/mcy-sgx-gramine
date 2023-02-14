@@ -22,9 +22,13 @@ fs.mounts = [
   { uri = "file:{{ pillow_path }}", path = "{{ pillow_path }}" },
 
   { type = "tmpfs", path = "/tmp" },
+
+  # TODO: make sure that local_secret_key is encrypted
+  #{ path = "/local_secret_key", uri = "file:/local_secret_key", type = "encrypted" },
 ]
 
-fs.insecure__keys.ecdsa_secret = "00112233445566778899aabbccddeeff"  # random hex init value
+# TODO: investigate what are the best key storing options
+#fs.insecure__keys.ecdsa_secret = "00112233445566778899aabbccddeeff"  # random hex init value
 
 sgx.nonpie_binary = true
 sgx.enclave_size = "1G"
@@ -47,6 +51,7 @@ sgx.trusted_files = [
 
   "file:ra.py",
   "file:constants.py",
+  "file:utils.py",
 ]
 
 sgx.allowed_files = [
@@ -54,4 +59,6 @@ sgx.allowed_files = [
   "file:{{ ias_report }}",
   "file:{{ ias_signature }}",
   "file:{{ ias_certificate }}",
+
+  "file:local_secret_key"
 ]

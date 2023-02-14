@@ -48,4 +48,4 @@ clean:
 
 .PHONY: distclean
 distclean: clean
-	$(RM) *.sig *.quote *.cert *.report
+	$(RM) *.sig *.quote *.cert *.report local_secret_key

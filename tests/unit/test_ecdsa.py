@@ -1,4 +1,6 @@
-from ecdsa import ECDH, NIST256p
+from ecdsa.ecdh import ECDH
+from ecdsa.curves import NIST256p
+from app.utils import generate_key_pair, derive_public_from_secret
 
 
 def test_dhke():
@@ -6,6 +8,7 @@ def test_dhke():
     # Generate local key pair
     local = ECDH(curve=NIST256p)
     local.generate_private_key()
+    local_secret_key = local.private_key.to_string()
     local_public_key = local.get_public_key().to_string()
     with open("local_public_key", "wb") as f:
         f.write(local_public_key)
@@ -13,6 +16,7 @@ def test_dhke():
     # Generate remote key pair
     remote = ECDH(curve=NIST256p)
     remote.generate_private_key()
+    remote_secret_key = remote.private_key.to_string()
     remote_public_key = remote.get_public_key().to_string()
     with open("remote_public_key", "wb") as f:
         f.write(remote_public_key)
@@ -31,11 +35,13 @@ def test_dhke():
 
     print()
     print(f"local_public_key ({len(local_public_key)} bytes):", local_public_key.hex())
-    print(f"local_shared_secret ({len(local_shared_secret)} bytes):", local_shared_secret.hex())
+    print(f"local_secret_key ({len(local_secret_key)} bytes):", local_secret_key.hex())
+    print(f"shared_secret_key ({len(local_shared_secret)} bytes):", local_shared_secret.hex())
 
     assert local_shared_secret == remote_shared_secret
     assert local_public_key == local_public_key_received
     assert remote_public_key == remote_public_key_received
+    assert local_secret_key != remote_secret_key
     assert local_public_key != remote_public_key
 
     # Repeat test with hex keys - only on local side
@@ -46,3 +52,9 @@ def test_dhke():
     local.load_received_public_key_bytes(remote_public_key_received)
     local_shared_secret = local.generate_sharedsecret_bytes()
     assert local_shared_secret == remote_shared_secret
+
+
+def test_derive_public_key():
+    secret, public = generate_key_pair()
+    derived_public = derive_public_from_secret(secret)
+    assert derived_public == public
