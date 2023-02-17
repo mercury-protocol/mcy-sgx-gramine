@@ -4,24 +4,24 @@
 
 
 from constants import QUOTE_PATH, GR_QUOTE, SEALED_LOCAL_KEY
-from utils import read, read_sealed, write, write_sealed, generate_key_pair, derive_public_from_secret
+from utils import read, write, generate_key_pair, derive_public_from_secret
 
 
 def script1():
     secret, public = generate_key_pair()
-    write_sealed(SEALED_LOCAL_KEY, secret)
+    write(SEALED_LOCAL_KEY, secret)
 
 
 def script2() -> bytes:
-    secret = read_sealed(SEALED_LOCAL_KEY)  # TODO: make it work
+    secret = read(SEALED_LOCAL_KEY)
     public = derive_public_from_secret(secret)
     write("/dev/attestation/user_report_data", public)
-    quote = read(QUOTE_PATH)
+    quote = read(QUOTE_PATH, binary=True)
     return quote
 
 
 def save_quote(quote: bytes):
-    write(GR_QUOTE, quote)
+    write(GR_QUOTE, quote, binary=True)
 
 
 script1()
