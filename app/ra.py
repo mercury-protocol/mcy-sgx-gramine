@@ -3,21 +3,17 @@
 # sys.path.append("/home/mercury/Documents/repos/mcy-sgx-gramine/venv/lib/python3.8/site-packages")
 
 
-from constants import QUOTE_PATH, GR_QUOTE
-from utils import read, write, generate_key_pair, derive_public_from_secret
+from constants import QUOTE_PATH, GR_QUOTE, SEALED_LOCAL_KEY
+from utils import read, read_sealed, write, write_sealed, generate_key_pair, derive_public_from_secret
 
 
 def script1():
-    # TODO: only a 16 bytes long binary key can be saved to /dev/attestation/keys/<key>-> ECDH P-256 generates 32 bytes
-    # TODO: I could only add key file to that path in manifest with an insecure option
-    # TODO: now we are saving the key to 'local_secret_key'
-
     secret, public = generate_key_pair()
-    write("local_secret_key", secret)
+    write_sealed(SEALED_LOCAL_KEY, secret)
 
 
 def script2() -> bytes:
-    secret = read("local_secret_key")
+    secret = read_sealed(SEALED_LOCAL_KEY)  # TODO: make it work
     public = derive_public_from_secret(secret)
     write("/dev/attestation/user_report_data", public)
     quote = read(QUOTE_PATH)

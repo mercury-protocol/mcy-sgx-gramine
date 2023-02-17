@@ -27,12 +27,8 @@ fs.mounts = [
 
   { type = "tmpfs", path = "/tmp" },
 
-  # TODO: make sure that local_secret_key is encrypted
-  #{ path = "/local_secret_key", uri = "file:/local_secret_key", type = "encrypted" },
+  { path = "/local_secret_key", uri = "file:local_secret_key", type = "encrypted", key_name = "_sgx_mrenclave" },
 ]
-
-# TODO: investigate what are the best key storing options
-#fs.insecure__keys.ecdsa_secret = "00112233445566778899aabbccddeeff"  # random hex init value
 
 sgx.nonpie_binary = true
 sgx.enclave_size = "1G"
@@ -40,7 +36,7 @@ sgx.thread_num = 32
 sgx.edmm_enable = {{ 'true' if env.get('EDMM', '0') == '1' else 'false' }}
 sgx.remote_attestation = "epid"
 sgx.ra_client_linkable = false
-sgx.ra_client_spid = "741871B230A61340FEBE8B50A803525F"
+sgx.ra_client_spid = "741871B230A61340FEBE8B50A803525F"  # TODO: do not hardcode
 
 sgx.trusted_files = [
   "file:{{ gramine.libos }}",
@@ -67,6 +63,4 @@ sgx.allowed_files = [
   "file:{{ ias_report }}",
   "file:{{ ias_signature }}",
   "file:{{ ias_certificate }}",
-
-  "file:local_secret_key"
 ]

@@ -21,3 +21,4 @@ app/main.token
 app/__pycache__/__init__.cpython-38.pyc
 app/__pycache__/constants.cpython-38.pyc
 scratch.py
+local_secret_key
