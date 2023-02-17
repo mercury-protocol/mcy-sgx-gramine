@@ -10,7 +10,7 @@ from utils import read, write, generate_key_pair, derive_public_from_secret
 def script1():
     # TODO: only a 16 bytes long binary key can be saved to /dev/attestation/keys/<key>-> ECDH P-256 generates 32 bytes
     # TODO: I could only add key file to that path in manifest with an insecure option
-    # TODO: now we are saving the key to 'local_secret_key' encrypted file
+    # TODO: now we are saving the key to 'local_secret_key'
 
     secret, public = generate_key_pair()
     write("local_secret_key", secret)
@@ -28,7 +28,6 @@ def save_quote(quote: bytes):
     write(GR_QUOTE, quote)
 
 
-# TODO: attestation returns GROUP_OUT_OF_DATE - try to build without insecure configuration
 script1()
 quote = script2()
 save_quote(quote)

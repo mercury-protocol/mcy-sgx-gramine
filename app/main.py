@@ -4,17 +4,17 @@ from app.constants import IAS_API_KEY, GR_QUOTE, IAS_REPORT, IAS_SIGNATURE, IAS_
 
 
 def get_signature() -> str:
-    with open("ias.sig", "r") as f:
+    with open(IAS_SIGNATURE, "r") as f:
         return f.read()
 
 
 def get_certificate() -> str:
-    with open("ias.cert", "r") as f:
+    with open(IAS_CERTIFICATE, "r") as f:
         return f.read()
 
 
 def get_report() -> dict:
-    with open("ias.report", "r") as f:
+    with open(IAS_REPORT, "r") as f:
         return json.loads(f.read())
 
 
@@ -23,6 +23,7 @@ def main():
     os.system("make")
 
     os.system("gramine-sgx ./ra ra.py")
+    # TODO: attestation returns GROUP_OUT_OF_DATE - try to build without insecure configuration
     os.system(f"gramine-sgx-ias-request report"
               f" -k {IAS_API_KEY}"
               f" -q {GR_QUOTE}"
