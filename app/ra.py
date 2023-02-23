@@ -3,30 +3,25 @@
 # sys.path.append("/home/mercury/Documents/repos/mcy-sgx-gramine/venv/lib/python3.8/site-packages")
 
 
-from constants import QUOTE_PATH, GR_QUOTE, SEALED_LOCAL_KEY
+from constants import QUOTE_PATH, GR_QUOTE, LOCAL_SECRET
 from utils import read, write, generate_key_pair, derive_public_from_secret
 
 
-def script1():
+def save_local_secret():
     secret, public = generate_key_pair()
-    write(SEALED_LOCAL_KEY, secret)
+    write(LOCAL_SECRET, secret)
 
 
-def script2() -> bytes:
-    secret = read(SEALED_LOCAL_KEY)
+def save_quote():
+    secret = read(LOCAL_SECRET)
     public = derive_public_from_secret(secret)
     write("/dev/attestation/user_report_data", public)
     quote = read(QUOTE_PATH, binary=True)
-    return quote
-
-
-def save_quote(quote: bytes):
     write(GR_QUOTE, quote, binary=True)
 
 
-script1()
-quote = script2()
-save_quote(quote)
+save_local_secret()
+save_quote()
 
 
 # ---------- DEBUG CODE ----------
