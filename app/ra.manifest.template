@@ -57,6 +57,5 @@ sgx.trusted_files = [
 ]
 
 sgx.allowed_files = [
-#  "file:gr.quote",
-  "file:{{ gr_quote }}",
+  "file:gr.quote",
 ]
