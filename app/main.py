@@ -1,6 +1,5 @@
 import os
-import json
-from app.constants import IAS_API_KEY, GR_QUOTE, IAS_REPORT, IAS_SIGNATURE, IAS_CERTIFICATE
+from constants import IAS_API_KEY, GR_QUOTE, IAS_REPORT, IAS_SIGNATURE, IAS_CERTIFICATE
 
 
 def get_signature() -> str:
@@ -15,7 +14,7 @@ def get_certificate() -> str:
 
 def get_report() -> dict:
     with open(IAS_REPORT, "r") as f:
-        return json.loads(f.read())
+        return f.read().encode("utf-8").hex()
 
 
 def main():
