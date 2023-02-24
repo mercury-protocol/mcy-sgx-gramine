@@ -58,11 +58,5 @@ sgx.trusted_files = [
 
 sgx.allowed_files = [
 #  "file:gr.quote",
-#  "file:ias.report",
-#  "file:ias.sig",
-#  "file:ias.cert",
   "file:{{ gr_quote }}",
-  "file:{{ ias_report }}",
-  "file:{{ ias_signature }}",
-  "file:{{ ias_certificate }}",
 ]
