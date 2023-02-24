@@ -7,7 +7,6 @@ LOCAL_SECRET = "local_secret"
 SHARED_SECRET_MODEL = "shared_secret_model"
 SHARED_SECRET_DATA = "shared_secret_data"
 
-
 # gramine output files
 GR_QUOTE = "gr.quote"
 IAS_REPORT = "ias.report"
