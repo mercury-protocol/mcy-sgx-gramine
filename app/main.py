@@ -10,8 +10,7 @@ def get_signature() -> str:
 
 def get_certificate() -> str:
     with open(IAS_CERTIFICATE, "r") as f:
-        pem_data = f.read().encode("utf-8").hex()
-        return pem_data
+        return f.read().encode("utf-8").hex()
 
 
 def get_report() -> dict:
