@@ -1,6 +1,7 @@
 from ecdsa.keys import SigningKey, VerifyingKey
 from ecdsa.curves import NIST256p
 from ecdsa.ecdh import ECDH
+from cryptography.fernet import Fernet
 from typing import Tuple, Any
 from constants import LOCAL_SECRET
 
@@ -44,3 +45,17 @@ def generate_shared_secret(remote_public_key: str):
     shared_secret = ecdh.generate_sharedsecret_bytes().hex()
 
     return shared_secret
+
+
+def encrypt(shared_secret: str, decrypted: Any) -> Any:
+    shared_secret = bytearray.fromhex(shared_secret)
+    fernet = Fernet(shared_secret)
+    encrypted = fernet.encrypt(decrypted)
+    return encrypted
+
+
+def decrypt(shared_secret: str, encrypted: Any) -> Any:
+    shared_secret = bytearray.fromhex(shared_secret)
+    fernet = Fernet(shared_secret)
+    decrypted = fernet.decrypt(encrypted)
+    return decrypted
