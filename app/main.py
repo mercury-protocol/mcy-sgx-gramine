@@ -12,7 +12,7 @@ def get_certificate() -> str:
         return f.read().encode("utf-8").hex()
 
 
-def get_report() -> dict:
+def get_report() -> str:
     with open(IAS_REPORT, "r") as f:
         return f.read().encode("utf-8").hex()
 
@@ -40,5 +40,12 @@ def main():
 
 if __name__ == "__main__":
     response = main()
+
     from pprint import pprint
+    import json
+    print()
+    print("gramine-sgx-ias-request:")
     pprint(response)
+    print()
+    print("Body decoded:")
+    pprint(json.loads(bytearray.fromhex(response["Body"]).decode("utf-8")))
