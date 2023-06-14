@@ -1,3 +1,4 @@
+from base64 import b64encode
 from ecdsa.keys import SigningKey, VerifyingKey
 from ecdsa.curves import NIST256p
 from ecdsa.ecdh import ECDH
@@ -47,15 +48,15 @@ def generate_shared_secret(remote_public_key: str):
     return shared_secret
 
 
-def encrypt(shared_secret: str, decrypted: Any) -> Any:
-    shared_secret = bytearray.fromhex(shared_secret)
+def encrypt(shared_secret: str, decrypted_data: bytes) -> bytes:
+    shared_secret = b64encode(bytearray.fromhex(shared_secret))
     fernet = Fernet(shared_secret)
-    encrypted = fernet.encrypt(decrypted)
+    encrypted = fernet.encrypt(decrypted_data)
     return encrypted
 
 
-def decrypt(shared_secret: str, encrypted: Any) -> Any:
-    shared_secret = bytearray.fromhex(shared_secret)
+def decrypt(shared_secret: str, encrypted: bytes) -> bytes:
+    shared_secret = b64encode(bytearray.fromhex(shared_secret))
     fernet = Fernet(shared_secret)
     decrypted = fernet.decrypt(encrypted)
     return decrypted
