@@ -6,8 +6,6 @@ QUOTE_PATH = "/dev/attestation/quote"
 
 # encrypted files
 LOCAL_SECRET = "local_secret"
-PUBLIC_MODEL = "public_model"
-PUBLIC_DATA = "public_data"
 SHARED_SECRET_MODEL = "shared_secret_model"
 SHARED_SECRET_DATA = "shared_secret_data"
 
