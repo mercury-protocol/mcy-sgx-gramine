@@ -1,5 +1,7 @@
+import pickle
+from io import StringIO
 from constants import OrderSide, SHARED_SECRET_DATA, SHARED_SECRET_MODEL
-from utils import generate_key_pair, generate_shared_secret, write
+from utils import generate_key_pair, generate_shared_secret, write, decrypt
 
 
 def train_model(order_id: str, side: OrderSide):
@@ -21,7 +23,17 @@ def train_model(order_id: str, side: OrderSide):
     __dummy.dummy_receive_encrypted_model()
 
     # decrypt data and model
+    with open("data.csv", "rb") as file:
+        encrypted_data = file.read()
+    data = decrypt(shared_secret_data, encrypted_data).decode("utf-8")
+    data = StringIO(data)
 
+    with open("model.py", "rb") as file:
+        encrypted_model = file.read()
+        model = decrypt(shared_secret_model, encrypted_model)
 
-if __name__ == '__main__':
-    train_model('1', OrderSide('buy'))
+    exec(model)
+    trained_model = eval("run(data)")
+
+    with open("trained_model.pkl", "wb") as file:
+        pickle.dump(trained_model, file)

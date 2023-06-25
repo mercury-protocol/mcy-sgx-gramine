@@ -54,8 +54,12 @@ sgx.trusted_files = [
   "file:ra.py",
   "file:constants.py",
   "file:utils.py",
+  "file:train_model.py",
+  "file:__dummy.py",  # TODO: remove
 ]
 
 sgx.allowed_files = [
   "file:gr.quote",
+  "file:model.py",  # TODO: model file name should be according to id
+  "file:data.csv",  # TODO: data file name should be according to id
 ]

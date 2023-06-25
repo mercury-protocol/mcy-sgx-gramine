@@ -28,7 +28,23 @@ def dummy_receive_encrypted_model():
     shared_secret = read(SHARED_SECRET_MODEL)
 
     with open("model.py", "w") as file:
-        file.write("print('hello model')\n")
+        file.write(
+"""print('start dummy model training')
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
+
+def run(csv_file):
+    data = np.loadtxt(data, delimiter=",", dtype=int, skiprows=1).transpose()
+    x = data[0].reshape((-1, 1))
+    y = data[1]
+    
+    model = LinearRegression()
+    model.fit(x, y)
+
+    return model
+"""
+        )
     with open("model.py", "rb") as file:
         model = file.read()
         encrypted_model = encrypt(shared_secret, model)
@@ -51,7 +67,9 @@ def dummy_receive_encrypted_data():
 
     with open("data.csv", "w") as file:
         writer = csv.writer(file)
-        writer.writerow([0, 1, 2])
+        writer.writerow(["x", "y"])
+        for i in range(10):
+            writer.writerow([i, i])
     with open("data.csv", "rb") as file:
         data = file.read()
         encrypted_data = encrypt(shared_secret, data)
@@ -66,3 +84,49 @@ def dummy_receive_encrypted_data():
     #     with open('data.csv', 'wb') as file:
     #         file.write(data)
 
+
+def simulate():
+    import numpy as np
+    from sklearn.linear_model import LinearRegression
+    from io import StringIO
+    import pickle
+
+
+    _, remote_public_dummy = generate_key_pair()
+    shared_secret = generate_shared_secret_dummy(remote_public_dummy)
+
+
+    with open("data.csv", "w") as file:
+        writer = csv.writer(file)
+        writer.writerow(["x", "y"])
+        for i in range(10):
+            writer.writerow([i, 2 * i])
+
+    with open("data.csv", "r") as file:
+        data = file.read()
+        data = StringIO(data)
+        data = np.loadtxt(data, delimiter=",", dtype=int, skiprows=1).transpose()
+
+    x = data[0].reshape((-1, 1))
+    y = data[1]
+
+    model = LinearRegression()
+    model.fit(x, y)
+    print(model.coef_)
+
+    with open("model.pkl", "wb") as file:
+        pickle.dump(model, file)
+
+    del model
+    with open("model.pkl", "rb") as file:
+        model = pickle.load(file)
+    print(model.coef_)
+
+    encrypted_model = encrypt(shared_secret, model)
+    del model
+    with open("model.pkl", "wb") as file:
+        pickle.dump(encrypted_model, file)
+
+
+if __name__ == '__main__':
+    simulate()
