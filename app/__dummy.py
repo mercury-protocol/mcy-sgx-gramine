@@ -1,10 +1,10 @@
 # TODO: remove this file once everything is properly implemented
 
-from constants import SHARED_SECRET_DATA, SHARED_SECRET_MODEL
+from constants import LOCAL_SECRET
 from ecdsa.keys import SigningKey, VerifyingKey
 from ecdsa.curves import NIST256p
 from ecdsa.ecdh import ECDH
-from utils import encrypt, decrypt, read, generate_key_pair, generate_shared_secret
+from utils import encrypt, decrypt, write, generate_key_pair, generate_shared_secret
 import csv
 
 
@@ -22,11 +22,7 @@ def generate_shared_secret_dummy(remote_public_key: str):
     return shared_secret
 
 
-def dummy_receive_encrypted_model():
-    # _, remote_public_dummy = generate_key_pair()
-    # shared_secret = generate_shared_secret_dummy(remote_public_dummy)
-    shared_secret = read(SHARED_SECRET_MODEL)
-
+def dummy_receive_encrypted_model(shared_secret, decrypted=False):
     with open("model.py", "w") as file:
         file.write(
 """print('start dummy model training')
@@ -51,20 +47,15 @@ def run(csv_file):
     with open('model.py', 'wb') as file:
         file.write(encrypted_model)
 
-    # to_decrypt = input("model encrypted. decrypt? (y/n)").lower() == "y"
-    # if to_decrypt:
-    #     with open("model.py", "rb") as file:
-    #         encrypted_model = file.read()
-    #         model = decrypt(shared_secret, encrypted_model)
-    #     with open('model.py', 'wb') as file:
-    #         file.write(model)
+    if decrypted:
+        with open("model.py", "rb") as file:
+            encrypted_model = file.read()
+            model = decrypt(shared_secret, encrypted_model)
+        with open('model.py', 'wb') as file:
+            file.write(model)
 
 
-def dummy_receive_encrypted_data():
-    # _, remote_public_dummy = generate_key_pair()
-    # shared_secret = generate_shared_secret_dummy(remote_public_dummy)
-    shared_secret = read(SHARED_SECRET_DATA)
-
+def dummy_receive_encrypted_data(shared_secret, decrypted=False):
     with open("data.csv", "w") as file:
         writer = csv.writer(file)
         writer.writerow(["x", "y"])
@@ -76,31 +67,69 @@ def dummy_receive_encrypted_data():
     with open('data.csv', 'wb') as file:
         file.write(encrypted_data)
 
-    # to_decrypt = input("data encrypted. decrypt? (y/n)").lower() == "y"
-    # if to_decrypt:
-    #     with open("data.csv", "rb") as file:
-    #         encrypted_data = file.read()
-    #         data = decrypt(shared_secret, encrypted_data)
-    #     with open('data.csv', 'wb') as file:
-    #         file.write(data)
+    if decrypted:
+        with open("data.csv", "rb") as file:
+            encrypted_data = file.read()
+            data = decrypt(shared_secret, encrypted_data)
+        with open('data.csv', 'wb') as file:
+            file.write(data)
 
 
 def simulate():
+    from io import StringIO
+    import pickle
+
+    secret, public = generate_key_pair()
+    write(LOCAL_SECRET, secret)
+
+    _, data_public = generate_key_pair()
+    _, model_public = generate_key_pair()
+    shared_secret_data = generate_shared_secret(data_public)
+    shared_secret_model = generate_shared_secret(model_public)
+
+    dummy_receive_encrypted_model(shared_secret_model)
+    dummy_receive_encrypted_data(shared_secret_data)
+
+    # decrypt data and model
+    with open("data.csv", "rb") as file:
+        encrypted_data = file.read()
+    data = decrypt(shared_secret_data, encrypted_data).decode("utf-8")
+    data = StringIO(data)
+
+    with open("model.py", "rb") as file:
+        encrypted_model = file.read()
+        model = decrypt(shared_secret_model, encrypted_model)
+
+    exec(model)
+    trained_model = eval("run(data)")
+    model_coef = trained_model.coef_
+    encrypted_trained_model = encrypt(shared_secret_model, pickle.dumps(trained_model))
+
+    with open("trained_model.pkl", "wb") as file:
+        pickle.dump(encrypted_trained_model, file)
+
+    # delete model, unpickle encrypted model and decrypt it
+    del trained_model
+    del encrypted_trained_model
+    with open("model.pkl", "rb") as file:
+        encrypted_trained_model = pickle.load(file)
+        trained_model = pickle.loads(decrypt(shared_secret_model, encrypted_trained_model))
+    assert model_coef == trained_model.coef_
+
+
+def simulate_light():
     import numpy as np
     from sklearn.linear_model import LinearRegression
     from io import StringIO
     import pickle
 
+    secret, public = generate_key_pair()
+    write(LOCAL_SECRET, secret)
 
-    _, remote_public_dummy = generate_key_pair()
-    shared_secret = generate_shared_secret_dummy(remote_public_dummy)
+    _, model_public = generate_key_pair()
+    shared_secret_model = generate_shared_secret(model_public)
 
-
-    with open("data.csv", "w") as file:
-        writer = csv.writer(file)
-        writer.writerow(["x", "y"])
-        for i in range(10):
-            writer.writerow([i, 2 * i])
+    dummy_receive_encrypted_data(shared_secret_model, decrypted=True)
 
     with open("data.csv", "r") as file:
         data = file.read()
@@ -112,21 +141,32 @@ def simulate():
 
     model = LinearRegression()
     model.fit(x, y)
-    print(model.coef_)
 
+    model_coef = model.coef_
+
+    # pickle model to file
     with open("model.pkl", "wb") as file:
         pickle.dump(model, file)
 
+    # delete model and read it from the file
     del model
     with open("model.pkl", "rb") as file:
         model = pickle.load(file)
-    print(model.coef_)
+    assert model_coef == model.coef_
 
-    encrypted_model = encrypt(shared_secret, model)
-    del model
+    # pickle encrypted model
+    encrypted_model = encrypt(shared_secret_model, pickle.dumps(model))
     with open("model.pkl", "wb") as file:
         pickle.dump(encrypted_model, file)
+
+    # delete model, unpickle encrypted model and decrypt it
+    del model
+    with open("model.pkl", "rb") as file:
+        encrypted_model = pickle.load(file)
+        model = pickle.loads(decrypt(shared_secret_model, encrypted_model))
+    assert model_coef == model.coef_
 
 
 if __name__ == '__main__':
     simulate()
+    simulate_light()
