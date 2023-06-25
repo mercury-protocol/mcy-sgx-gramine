@@ -9,11 +9,11 @@ def dummy_receive_encrypted_model(shared_secret, decrypted=False):
     with open("model.py", "w") as file:
         file.write(
 """print('start dummy model training')
-import numpy as np
-from sklearn.linear_model import LinearRegression
-
 
 def run(data):
+    import numpy as np
+    from sklearn.linear_model import LinearRegression
+
     data = np.loadtxt(data, delimiter=",", dtype=int, skiprows=1).transpose()
     x = data[0].reshape((-1, 1))
     y = data[1]
@@ -94,7 +94,7 @@ def __simulate():
     # delete model, unpickle encrypted model and decrypt it
     del trained_model
     del encrypted_trained_model
-    with open("model.pkl", "rb") as file:
+    with open("trained_model.pkl", "rb") as file:
         encrypted_trained_model = pickle.load(file)
         trained_model = pickle.loads(decrypt(shared_secret_model, encrypted_trained_model))
     assert model_coef == trained_model.coef_
