@@ -1,25 +1,8 @@
 # TODO: remove this file once everything is properly implemented
 
 from constants import LOCAL_SECRET
-from ecdsa.keys import SigningKey, VerifyingKey
-from ecdsa.curves import NIST256p
-from ecdsa.ecdh import ECDH
 from utils import encrypt, decrypt, write, generate_key_pair, generate_shared_secret
 import csv
-
-
-def generate_shared_secret_dummy(remote_public_key: str):
-    secret, public = generate_key_pair()
-
-    secret = SigningKey.from_string(bytearray.fromhex(secret), curve=NIST256p)
-    public = VerifyingKey.from_string(bytearray.fromhex(public), curve=NIST256p)
-
-    ecdh = ECDH(curve=NIST256p, public_key=public, private_key=secret)
-    ecdh.load_received_public_key_bytes(bytearray.fromhex(remote_public_key))
-
-    shared_secret = ecdh.generate_sharedsecret_bytes().hex()
-
-    return shared_secret
 
 
 def dummy_receive_encrypted_model(shared_secret, decrypted=False):
@@ -30,7 +13,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 
-def run(csv_file):
+def run(data):
     data = np.loadtxt(data, delimiter=",", dtype=int, skiprows=1).transpose()
     x = data[0].reshape((-1, 1))
     y = data[1]
@@ -75,7 +58,7 @@ def dummy_receive_encrypted_data(shared_secret, decrypted=False):
             file.write(data)
 
 
-def simulate():
+def __simulate():
     from io import StringIO
     import pickle
 
@@ -117,7 +100,7 @@ def simulate():
     assert model_coef == trained_model.coef_
 
 
-def simulate_light():
+def __simulate_light():
     import numpy as np
     from sklearn.linear_model import LinearRegression
     from io import StringIO
@@ -167,6 +150,20 @@ def simulate_light():
     assert model_coef == model.coef_
 
 
+def __full_dummy_receive():
+    secret, public = generate_key_pair()
+    write(LOCAL_SECRET, secret)
+
+    _, data_public = generate_key_pair()
+    _, model_public = generate_key_pair()
+    shared_secret_data = generate_shared_secret(data_public)
+    shared_secret_model = generate_shared_secret(model_public)
+
+    dummy_receive_encrypted_model(shared_secret_model, decrypted=True)
+    dummy_receive_encrypted_data(shared_secret_data, decrypted=True)
+
+
 if __name__ == '__main__':
-    simulate()
-    simulate_light()
+    # __full_dummy_receive()
+    __simulate()
+    # __simulate_light()
