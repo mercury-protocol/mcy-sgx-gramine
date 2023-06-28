@@ -4,7 +4,7 @@ from constants import OrderSide, SHARED_SECRET_DATA, SHARED_SECRET_MODEL
 from utils import generate_key_pair, generate_shared_secret, write, decrypt, encrypt
 
 
-def train_model(order_id: str, side: OrderSide):
+def train_model(order_id: str):
     # receive public keys
     # TODO: implement properly
     _, data_public = generate_key_pair()
@@ -34,6 +34,7 @@ def train_model(order_id: str, side: OrderSide):
 
     exec(model)
     trained_model = eval("run(data)")
+    # TODO: implement smart check that data doesn't go out
     encrypted_trained_model = encrypt(shared_secret_model, pickle.dumps(trained_model))
 
     with open("trained_model.pkl", "wb") as file:

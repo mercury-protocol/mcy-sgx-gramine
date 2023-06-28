@@ -49,3 +49,7 @@ if __name__ == "__main__":
     print()
     print("Body decoded:")
     pprint(json.loads(bytearray.fromhex(response["Body"]).decode("utf-8")))
+
+    # TODO: terminal command for make
+    # TODO: terminal command for RA
+    # TODO: terminal command for train model

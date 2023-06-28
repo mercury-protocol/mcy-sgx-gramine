@@ -58,7 +58,7 @@ sgx.trusted_files = [
   "file:__dummy.py",  # TODO: remove
 ]
 
-sgx.allowed_files = [
+sgx.allowed_files = [  # TODO: can we allow a full directory here?
   "file:gr.quote",
   "file:model.py",  # TODO: model file name should be according to id
   "file:trained_model.pkl",  # TODO: model file name should be according to id
