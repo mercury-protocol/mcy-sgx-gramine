@@ -23,7 +23,7 @@ def make():
 
 
 def remote_attestation():
-    os.system("gramine-sgx ./sgxapp ra.py save_local_secret save_quote")
+    os.system("gramine-sgx ./sgxapp ra.py")
     # os.system(f"gramine-sgx-ias-request sigrl -k {IAS_API_KEY} -g ef0a0000 -i sigrl")
     # TODO: attestation returns GROUP_OUT_OF_DATE - try to build without insecure configuration
     os.system(f"gramine-sgx-ias-request report"
@@ -40,18 +40,23 @@ def remote_attestation():
     }
 
 
+def train_model():
+    os.system("gramine-sgx ./sgxapp train_model.py")
+
+
 if __name__ == "__main__":
     make()
-    response = remote_attestation()
+    attestation_report = remote_attestation()
+    train_model()
 
     from pprint import pprint
     import json
     print()
     print("gramine-sgx-ias-request:")
-    pprint(response)
+    pprint(attestation_report)
     print()
     print("Body decoded:")
-    pprint(json.loads(bytearray.fromhex(response["Body"]).decode("utf-8")))
+    pprint(json.loads(bytearray.fromhex(attestation_report["Body"]).decode("utf-8")))
 
     # TODO: terminal command for make
     # TODO: terminal command for RA

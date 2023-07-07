@@ -39,3 +39,7 @@ def train_model(order_id: str):
 
     with open("trained_model.pkl", "wb") as file:
         pickle.dump(encrypted_trained_model, file)
+
+
+if __name__ == "__main__":
+    train_model("dummy_order_id")

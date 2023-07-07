@@ -20,15 +20,9 @@ def save_quote():
     write(GR_QUOTE, quote, binary=True)
 
 
-def run():
-    if len(sys.argv) < 2:
-        return
-    for method in sys.argv[1:]:
-        eval(method + "()")
-
-
-if __name__ == '__main__':
-    run()
+if __name__ == "__main__":
+    save_local_secret()
+    save_quote()
 
 
 # ---------- DEBUG CODE ----------
