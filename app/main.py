@@ -10,7 +10,6 @@ def startup():
 
 
 def remote_attestation():
-    # os.system(f"gramine-sgx-ias-request sigrl -k {IAS_API_KEY} -g ef0a0000 -i sigrl")
     # TODO: attestation returns GROUP_OUT_OF_DATE - try to build without insecure configuration
     os.system(f"gramine-sgx-ias-request report"
               f" -k {IAS_API_KEY}"
@@ -34,15 +33,6 @@ if __name__ == "__main__":
     startup()
     attestation_report = remote_attestation()
     train_model()
-
-    from pprint import pprint
-    import json
-    print()
-    print("gramine-sgx-ias-request:")
-    pprint(attestation_report)
-    print()
-    print("Body decoded:")
-    pprint(json.loads(bytearray.fromhex(attestation_report["Body"]).decode("utf-8")))
 
     # TODO: terminal command for make
     # TODO: terminal command for RA
