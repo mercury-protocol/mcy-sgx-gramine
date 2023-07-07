@@ -3,13 +3,13 @@ from utils import read
 from constants import IAS_API_KEY, GR_QUOTE, IAS_REPORT, IAS_SIGNATURE, IAS_CERTIFICATE
 
 
-def make():
+def startup():
     os.system("make distclean")
     os.system("make")
+    os.system("gramine-sgx ./sgxapp startup.py")
 
 
 def remote_attestation():
-    os.system("gramine-sgx ./sgxapp remote_attestation.py")
     # os.system(f"gramine-sgx-ias-request sigrl -k {IAS_API_KEY} -g ef0a0000 -i sigrl")
     # TODO: attestation returns GROUP_OUT_OF_DATE - try to build without insecure configuration
     os.system(f"gramine-sgx-ias-request report"
@@ -31,7 +31,7 @@ def train_model():
 
 
 if __name__ == "__main__":
-    make()
+    startup()
     attestation_report = remote_attestation()
     train_model()
 
