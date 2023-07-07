@@ -54,7 +54,7 @@ def test_dhke():
     assert local_shared_secret == remote_shared_secret
 
     # Test generate_shared_secret function
-    generated_shared_secret = derive_shared_secret(local_secret_key.hex(), remote_public_key.hex())
+    generated_shared_secret = derive_shared_secret(remote_public_key.hex())
     assert generated_shared_secret == local_shared_secret.hex()
 
 

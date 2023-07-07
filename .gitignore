@@ -1,4 +1,4 @@
-.vscode/settings.json
+.vscode
 capp/test.txt
 capp/main
 capp/main.manifest
@@ -12,6 +12,7 @@ capp/main.token
 .idea/modules.xml
 .idea/vcs.xml
 .idea/inspectionProfiles/profiles_settings.xml
+.pytest_cache
 app/key.txt
 app/ecdsa_secret
 app/main.manifest
@@ -20,8 +21,10 @@ app/main.sig
 app/main.token
 app/__pycache__/__init__.cpython-38.pyc
 app/__pycache__/constants.cpython-38.pyc
-scratch.py
+local_public_key
 local_secret_key
+remote_public_key
+remote_public_key_hex
 model_shared_secret_key
 data_shared_secret_key
 gr.quote
