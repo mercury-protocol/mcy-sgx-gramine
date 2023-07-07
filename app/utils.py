@@ -33,25 +33,25 @@ def derive_public_from_secret(secret: str) -> str:
     return secret.get_verifying_key().to_string().hex()
 
 
-def generate_shared_secret(remote_public_key: str):
-    secret = read(LOCAL_SECRET_KEY_PATH)
-    public = derive_public_from_secret(secret)
+def derive_shared_secret(remote_public: str):
+    local_secret = read(LOCAL_SECRET_KEY_PATH)
+    local_public = derive_public_from_secret(local_secret)
 
-    secret = SigningKey.from_string(bytearray.fromhex(secret), curve=NIST256p)
-    public = VerifyingKey.from_string(bytearray.fromhex(public), curve=NIST256p)
+    local_secret = SigningKey.from_string(bytearray.fromhex(local_secret), curve=NIST256p)
+    local_public = VerifyingKey.from_string(bytearray.fromhex(local_public), curve=NIST256p)
 
-    ecdh = ECDH(curve=NIST256p, public_key=public, private_key=secret)
-    ecdh.load_received_public_key_bytes(bytearray.fromhex(remote_public_key))
+    ecdh = ECDH(curve=NIST256p, public_key=local_public, private_key=local_secret)
+    ecdh.load_received_public_key_bytes(bytearray.fromhex(remote_public))
 
     shared_secret = ecdh.generate_sharedsecret_bytes().hex()
 
     return shared_secret
 
 
-def encrypt(shared_secret: str, decrypted_data: bytes) -> bytes:
+def encrypt(shared_secret: str, decrypted: bytes) -> bytes:
     shared_secret = b64encode(bytearray.fromhex(shared_secret))
     fernet = Fernet(shared_secret)
-    encrypted = fernet.encrypt(decrypted_data)
+    encrypted = fernet.encrypt(decrypted)
     return encrypted
 
 

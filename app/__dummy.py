@@ -1,7 +1,7 @@
 # TODO: remove this file once everything is properly implemented
 
 from constants import LOCAL_SECRET_KEY_PATH
-from utils import encrypt, decrypt, write, generate_key_pair, generate_shared_secret
+from utils import encrypt, decrypt, write, generate_key_pair, derive_shared_secret
 import csv
 
 
@@ -67,8 +67,8 @@ def __simulate():
 
     _, data_public = generate_key_pair()
     _, model_public = generate_key_pair()
-    shared_secret_data = generate_shared_secret(data_public)
-    shared_secret_model = generate_shared_secret(model_public)
+    shared_secret_data = derive_shared_secret(data_public)
+    shared_secret_model = derive_shared_secret(model_public)
 
     dummy_receive_encrypted_model(shared_secret_model)
     dummy_receive_encrypted_data(shared_secret_data)
@@ -110,7 +110,7 @@ def __simulate_light():
     write(LOCAL_SECRET_KEY_PATH, secret)
 
     _, model_public = generate_key_pair()
-    shared_secret_model = generate_shared_secret(model_public)
+    shared_secret_model = derive_shared_secret(model_public)
 
     dummy_receive_encrypted_data(shared_secret_model, decrypted=True)
 
@@ -156,8 +156,8 @@ def __full_dummy_receive():
 
     _, data_public = generate_key_pair()
     _, model_public = generate_key_pair()
-    shared_secret_data = generate_shared_secret(data_public)
-    shared_secret_model = generate_shared_secret(model_public)
+    shared_secret_data = derive_shared_secret(data_public)
+    shared_secret_model = derive_shared_secret(model_public)
 
     dummy_receive_encrypted_model(shared_secret_model, decrypted=True)
     dummy_receive_encrypted_data(shared_secret_data, decrypted=True)
