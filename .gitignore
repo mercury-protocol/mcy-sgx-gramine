@@ -7,7 +7,6 @@ capp/main.o
 capp/main.manifest.sgx
 capp/main.sig
 capp/main.token
-.pytest_cache
 app/key.txt
 app/ecdsa_secret
 app/main.manifest
@@ -15,6 +14,7 @@ app/main.manifest.sgx
 app/main.sig
 app/main.token
 __pycache__
+.pytest_cache
 local_public_key
 local_secret_key
 remote_public_key
@@ -29,3 +29,4 @@ sgxapp.manifest
 sgxapp.manifest.sgx
 sgxapp.sig
 sgxapp.token
+test.go
