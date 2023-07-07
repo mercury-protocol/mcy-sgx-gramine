@@ -23,7 +23,7 @@ def make():
 
 
 def remote_attestation():
-    os.system("gramine-sgx ./ra ra.py save_local_secret save_quote")
+    os.system("gramine-sgx ./sgxapp ra.py save_local_secret save_quote")
     # os.system(f"gramine-sgx-ias-request sigrl -k {IAS_API_KEY} -g ef0a0000 -i sigrl")
     # TODO: attestation returns GROUP_OUT_OF_DATE - try to build without insecure configuration
     os.system(f"gramine-sgx-ias-request report"
