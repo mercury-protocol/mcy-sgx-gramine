@@ -40,4 +40,4 @@ clean:
 
 .PHONY: distclean
 distclean: clean
-	$(RM) *.sig *.quote *.cert *.report local_secret_key mode_shared_secret_key data_shared_secret_key
+	$(RM) *.sig *.quote *.cert *.report local_secret_key model_shared_secret_key data_shared_secret_key
