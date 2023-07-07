@@ -1,6 +1,6 @@
 import pickle
 from io import StringIO
-from constants import SHARED_SECRET_DATA, SHARED_SECRET_MODEL
+from constants import DATA_SHARED_SECRET_KEY_PATH, MODEL_SHARED_SECRET_KEY_PATH
 from utils import generate_key_pair, generate_shared_secret, write, decrypt, encrypt
 
 
@@ -12,9 +12,9 @@ def train_model(order_id: str):
 
     # generate the shared secrets and save them
     shared_secret_data = generate_shared_secret(data_public)
-    write(SHARED_SECRET_DATA, shared_secret_data)
+    write(DATA_SHARED_SECRET_KEY_PATH, shared_secret_data)
     shared_secret_model = generate_shared_secret(model_public)
-    write(SHARED_SECRET_MODEL, shared_secret_model)
+    write(MODEL_SHARED_SECRET_KEY_PATH, shared_secret_model)
 
     # receive encrypted data and model
     # TODO: implement properly

@@ -1,6 +1,6 @@
 # TODO: remove this file once everything is properly implemented
 
-from constants import LOCAL_SECRET
+from constants import LOCAL_SECRET_KEY_PATH
 from utils import encrypt, decrypt, write, generate_key_pair, generate_shared_secret
 import csv
 
@@ -63,7 +63,7 @@ def __simulate():
     import pickle
 
     secret, public = generate_key_pair()
-    write(LOCAL_SECRET, secret)
+    write(LOCAL_SECRET_KEY_PATH, secret)
 
     _, data_public = generate_key_pair()
     _, model_public = generate_key_pair()
@@ -107,7 +107,7 @@ def __simulate_light():
     import pickle
 
     secret, public = generate_key_pair()
-    write(LOCAL_SECRET, secret)
+    write(LOCAL_SECRET_KEY_PATH, secret)
 
     _, model_public = generate_key_pair()
     shared_secret_model = generate_shared_secret(model_public)
@@ -152,7 +152,7 @@ def __simulate_light():
 
 def __full_dummy_receive():
     secret, public = generate_key_pair()
-    write(LOCAL_SECRET, secret)
+    write(LOCAL_SECRET_KEY_PATH, secret)
 
     _, data_public = generate_key_pair()
     _, model_public = generate_key_pair()

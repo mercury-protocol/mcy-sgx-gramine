@@ -4,7 +4,7 @@ from ecdsa.curves import NIST256p
 from ecdsa.ecdh import ECDH
 from cryptography.fernet import Fernet
 from typing import Tuple, Any
-from constants import LOCAL_SECRET
+from constants import LOCAL_SECRET_KEY_PATH
 
 
 def write(path: str, data: Any, binary: bool = False):
@@ -34,7 +34,7 @@ def derive_public_from_secret(secret: str) -> str:
 
 
 def generate_shared_secret(remote_public_key: str):
-    secret = read(LOCAL_SECRET)
+    secret = read(LOCAL_SECRET_KEY_PATH)
     public = derive_public_from_secret(secret)
 
     secret = SigningKey.from_string(bytearray.fromhex(secret), curve=NIST256p)
