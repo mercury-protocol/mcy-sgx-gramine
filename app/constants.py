@@ -1,4 +1,4 @@
-from enum import Enum
+
 
 # gramine pseudo filesystem paths
 REPORT_PATH = "/dev/attestation/user_report_data"
@@ -16,8 +16,3 @@ IAS_SIGNATURE = "ias.sig"
 IAS_CERTIFICATE = "ias.cert"
 
 IAS_API_KEY = "909c02172d964178a794d055e98c41d8"  # TODO: store it securely
-
-
-class OrderSide(Enum):
-    BUY = "buy"
-    SELL = "sell"

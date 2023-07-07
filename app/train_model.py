@@ -1,6 +1,6 @@
 import pickle
 from io import StringIO
-from constants import OrderSide, SHARED_SECRET_DATA, SHARED_SECRET_MODEL
+from constants import SHARED_SECRET_DATA, SHARED_SECRET_MODEL
 from utils import generate_key_pair, generate_shared_secret, write, decrypt, encrypt
 
 

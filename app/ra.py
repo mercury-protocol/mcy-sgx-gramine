@@ -22,9 +22,6 @@ def save_quote():
 
 save_local_secret()
 save_quote()
-from train_model import train_model
-from constants import OrderSide
-train_model('1')
 
 
 # ---------- DEBUG CODE ----------
