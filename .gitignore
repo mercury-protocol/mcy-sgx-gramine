@@ -22,3 +22,13 @@ app/__pycache__/__init__.cpython-38.pyc
 app/__pycache__/constants.cpython-38.pyc
 scratch.py
 local_secret_key
+model_shared_secret_key
+data_shared_secret_key
+gr.quote
+ias.cert
+ias.report
+ias.sig
+sgxapp.manifest
+sgxapp.manifest.sgx
+sgxapp.sig
+sgxapp.token

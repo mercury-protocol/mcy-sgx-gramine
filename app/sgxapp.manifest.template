@@ -27,9 +27,9 @@ fs.mounts = [
 
   { type = "tmpfs", path = "/tmp" },
 
-  { path = "/local_secret", uri = "file:local_secret", type = "encrypted", key_name = "_sgx_mrenclave" },
-  { path = "/shared_secret_model", uri = "file:shared_secret_model", type = "encrypted", key_name = "_sgx_mrenclave" },
-  { path = "/shared_secret_data", uri = "file:shared_secret_data", type = "encrypted", key_name = "_sgx_mrenclave" },
+  { path = "/local_secret_key", uri = "file:local_secret_key", type = "encrypted", key_name = "_sgx_mrenclave" },
+  { path = "/model_shared_secret_key", uri = "file:model_shared_secret_key", type = "encrypted", key_name = "_sgx_mrenclave" },
+  { path = "/data_shared_secret_key", uri = "file:data_shared_secret_key", type = "encrypted", key_name = "_sgx_mrenclave" },
 ]
 
 sgx.nonpie_binary = true

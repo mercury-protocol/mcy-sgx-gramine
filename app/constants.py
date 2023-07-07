@@ -5,9 +5,9 @@ REPORT_PATH = "/dev/attestation/user_report_data"
 QUOTE_PATH = "/dev/attestation/quote"
 
 # encrypted files
-LOCAL_SECRET_KEY_PATH = "local_secret"
-MODEL_SHARED_SECRET_KEY_PATH = "shared_secret_model"
-DATA_SHARED_SECRET_KEY_PATH = "shared_secret_data"
+LOCAL_SECRET_KEY_PATH = "local_secret_key"
+MODEL_SHARED_SECRET_KEY_PATH = "model_shared_secret_key"
+DATA_SHARED_SECRET_KEY_PATH = "data_shared_secret_key"
 
 # gramine output files
 GR_QUOTE = "gr.quote"
