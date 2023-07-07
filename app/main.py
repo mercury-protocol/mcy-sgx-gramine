@@ -17,11 +17,13 @@ def get_report() -> str:
         return f.read().encode("utf-8").hex()
 
 
-def main():
+def make():
     os.system("make distclean")
     os.system("make")
 
-    os.system("gramine-sgx ./ra ra.py")
+
+def remote_attestation():
+    os.system("gramine-sgx ./ra ra.py save_local_secret save_quote")
     # os.system(f"gramine-sgx-ias-request sigrl -k {IAS_API_KEY} -g ef0a0000 -i sigrl")
     # TODO: attestation returns GROUP_OUT_OF_DATE - try to build without insecure configuration
     os.system(f"gramine-sgx-ias-request report"
@@ -39,7 +41,8 @@ def main():
 
 
 if __name__ == "__main__":
-    response = main()
+    make()
+    response = remote_attestation()
 
     from pprint import pprint
     import json
@@ -53,3 +56,4 @@ if __name__ == "__main__":
     # TODO: terminal command for make
     # TODO: terminal command for RA
     # TODO: terminal command for train model
+    # TODO: terminal command for destroy sgx

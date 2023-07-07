@@ -1,5 +1,5 @@
 # add to sys.path only if using virtual env
-# import sys
+import sys
 # sys.path.append("/home/mercury/Documents/repos/mcy-sgx-gramine/venv/lib/python3.8/site-packages")
 
 
@@ -20,8 +20,15 @@ def save_quote():
     write(GR_QUOTE, quote, binary=True)
 
 
-save_local_secret()
-save_quote()
+def run():
+    if len(sys.argv) < 2:
+        return
+    for method in sys.argv[1:]:
+        eval(method + "()")
+
+
+if __name__ == '__main__':
+    run()
 
 
 # ---------- DEBUG CODE ----------
