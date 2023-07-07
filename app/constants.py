@@ -1,5 +1,3 @@
-
-
 # gramine pseudo filesystem paths
 REPORT_PATH = "/dev/attestation/user_report_data"
 QUOTE_PATH = "/dev/attestation/quote"

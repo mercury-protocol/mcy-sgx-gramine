@@ -1,20 +1,6 @@
 import os
+from utils import read
 from constants import IAS_API_KEY, GR_QUOTE, IAS_REPORT, IAS_SIGNATURE, IAS_CERTIFICATE
-
-
-def get_signature() -> str:
-    with open(IAS_SIGNATURE, "r") as f:
-        return f.read().encode("utf-8").hex()
-
-
-def get_certificate() -> str:
-    with open(IAS_CERTIFICATE, "r") as f:
-        return f.read().encode("utf-8").hex()
-
-
-def get_report() -> str:
-    with open(IAS_REPORT, "r") as f:
-        return f.read().encode("utf-8").hex()
 
 
 def make():
@@ -34,9 +20,9 @@ def remote_attestation():
               f" -c {IAS_CERTIFICATE} -v")
 
     return {
-        "X-IASReport-Signature": get_signature(),
-        "X-IASReport-Signing-Certificate": get_certificate(),
-        "Body": get_report()
+        "X-IASReport-Signature": read(IAS_SIGNATURE).encode("utf-8").hex(),
+        "X-IASReport-Signing-Certificate": read(IAS_CERTIFICATE).encode("utf-8").hex(),
+        "Body": read(IAS_REPORT).encode("utf-8").hex()
     }
 
 
