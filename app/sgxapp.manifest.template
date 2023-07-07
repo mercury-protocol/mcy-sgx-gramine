@@ -51,9 +51,9 @@ sgx.trusted_files = [
   "file:{{ pillow_path }}",
   "file:{{ python.get_path('stdlib', vars={'installed_base': '/usr/local'}) }}/",
 
-  "file:ra.py",
   "file:constants.py",
   "file:utils.py",
+  "file:remote_attestation.py",
   "file:train_model.py",
   "file:__dummy.py",  # TODO: remove
 ]
