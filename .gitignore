@@ -29,4 +29,3 @@ sgxapp.manifest
 sgxapp.manifest.sgx
 sgxapp.sig
 sgxapp.token
-test.go
