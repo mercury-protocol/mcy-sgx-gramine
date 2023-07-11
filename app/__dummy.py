@@ -1,8 +1,9 @@
 # TODO: remove this file once everything is properly implemented
 
+import csv
+
 from constants import LOCAL_SECRET_KEY_PATH
 from utils import encrypt, decrypt, write, generate_key_pair, derive_shared_secret
-import csv
 
 
 def dummy_receive_encrypted_model(shared_secret, decrypted=False):

@@ -1,9 +1,11 @@
 from base64 import b64encode
+from typing import Tuple, Any
+
 from ecdsa.keys import SigningKey, VerifyingKey
 from ecdsa.curves import NIST256p
 from ecdsa.ecdh import ECDH
 from cryptography.fernet import Fernet
-from typing import Tuple, Any
+
 from constants import LOCAL_SECRET_KEY_PATH
 
 

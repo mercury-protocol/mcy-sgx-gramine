@@ -1,5 +1,7 @@
 import pickle
+
 from io import StringIO
+
 from constants import DATA_SHARED_SECRET_KEY_PATH, MODEL_SHARED_SECRET_KEY_PATH
 from utils import generate_key_pair, derive_shared_secret, write, decrypt, encrypt
 

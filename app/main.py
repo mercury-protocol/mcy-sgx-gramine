@@ -1,4 +1,5 @@
 import os
+
 from utils import read
 from constants import IAS_API_KEY, GR_QUOTE, IAS_REPORT, IAS_SIGNATURE, IAS_CERTIFICATE
 
