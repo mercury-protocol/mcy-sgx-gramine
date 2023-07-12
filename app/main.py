@@ -1,5 +1,8 @@
 import os
 
+from constants import IAS_SIGNATURE, IAS_CERTIFICATE, IAS_REPORT
+from utils import read
+
 
 def startup():
     os.system("make distclean")
@@ -9,7 +12,13 @@ def startup():
 
 def remote_attestation():
     # TODO: attestation returns GROUP_OUT_OF_DATE - try to build without insecure configuration
-    return os.system("gramine-sgx ./sgxapp remote_attestation.py")
+    os.system('python3 -c "import remote_attestation as ra; ra.remote_attestation()"')
+
+    return {
+        "X-IASReport-Signature": read(IAS_SIGNATURE).encode("utf-8").hex(),
+        "X-IASReport-Signing-Certificate": read(IAS_CERTIFICATE).encode("utf-8").hex(),
+        "Body": read(IAS_REPORT).encode("utf-8").hex()
+    }
 
 
 def train_model():
