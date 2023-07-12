@@ -12,7 +12,7 @@ def startup():
 
 def remote_attestation():
     # TODO: attestation returns GROUP_OUT_OF_DATE - try to build without insecure configuration
-    os.system('python3 -c "import remote_attestation as ra; ra.remote_attestation()"')
+    os.system("python3 remote_attestation.py")
 
     return {
         "X-IASReport-Signature": read(IAS_SIGNATURE).encode("utf-8").hex(),

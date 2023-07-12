@@ -1,3 +1,4 @@
+import json
 from base64 import b64encode
 from typing import Tuple, Any
 
@@ -19,6 +20,11 @@ def read(path: str, binary: bool = False) -> Any:
     mode = "rb" if binary else "r"
     with open(path, mode) as f:
         return f.read()
+
+
+def write_json(path: str, data: dict):
+    with open(path, "w") as f:
+        json.dump(data, f, indent=4, sort_keys=True)
 
 
 def generate_key_pair() -> Tuple[str, str]:
