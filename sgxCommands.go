@@ -67,5 +67,6 @@ func trainModel() {
 func main() {
     startup()
     attestationReport := remoteAttestation()
+    fmt.Println(attestationReport)
     trainModel()
 }
