@@ -32,8 +32,19 @@ func startup() {
 }
 
 
+func remoteAttestation() {
+    executeCmd("gramine-sgx", "./sgxapp", "remote_attestation.py")
+}
+
+
+func trainModel() {
+    executeCmd("gramine-sgx", "./sgxapp", "train_model.py")
+}
+
+
 
 func main() {
     startup()
-    //executeCmd("python3", "-c", "import main; main.startup()")
+    remoteAttestation()
+    trainModel()
 }

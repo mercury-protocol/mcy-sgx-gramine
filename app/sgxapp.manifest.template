@@ -54,6 +54,7 @@ sgx.trusted_files = [
   "file:constants.py",
   "file:utils.py",
   "file:startup.py",
+  "file:remote_attestation.py",
   "file:train_model.py",
   "file:__dummy.py",  # TODO: remove
 ]
