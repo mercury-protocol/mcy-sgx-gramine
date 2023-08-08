@@ -7,7 +7,7 @@ from ecdsa.curves import NIST256p
 from ecdsa.ecdh import ECDH
 from cryptography.fernet import Fernet
 
-from constants import LOCAL_SECRET_KEY_PATH
+from constants import LOCAL_SECRET_KEY_PATH, SIMULATED_RECEIVE
 
 
 def write(path: str, data: Any, binary: bool = False):
@@ -68,3 +68,37 @@ def decrypt(shared_secret: str, encrypted: bytes) -> bytes:
     fernet = Fernet(shared_secret)
     decrypted = fernet.decrypt(encrypted)
     return decrypted
+
+
+def receive_data_public_key() -> str:
+    if SIMULATED_RECEIVE:
+        _, data_public = generate_key_pair()
+    else:
+        raise NotImplemented  # TODO: implement
+
+    return data_public
+
+
+def receive_model_public_key() -> str:
+    if SIMULATED_RECEIVE:
+        _, model_public = generate_key_pair()
+    else:
+        raise NotImplemented  # TODO: implement
+
+    return model_public
+
+
+def receive_encrypted_data(data_shared_secret: str):
+    if SIMULATED_RECEIVE:
+        import __dummy
+        __dummy.dummy_receive_encrypted_data(data_shared_secret)
+    else:
+        raise NotImplemented  # TODO: implement
+
+
+def receive_encrypted_model(model_shared_secret: str):
+    if SIMULATED_RECEIVE:
+        import __dummy
+        __dummy.dummy_receive_encrypted_model(model_shared_secret)
+    else:
+        raise NotImplemented  # TODO: implement

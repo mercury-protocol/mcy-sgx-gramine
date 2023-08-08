@@ -14,3 +14,5 @@ IAS_SIGNATURE = "ias.sig"
 IAS_CERTIFICATE = "ias.cert"
 
 IAS_API_KEY = "909c02172d964178a794d055e98c41d8"  # TODO: store it securely
+
+SIMULATED_RECEIVE = True
