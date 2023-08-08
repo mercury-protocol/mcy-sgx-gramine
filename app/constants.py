@@ -6,6 +6,8 @@ QUOTE_PATH = "/dev/attestation/quote"
 LOCAL_SECRET_KEY_PATH = "local_secret_key"
 
 # I/O files
+LOCAL_PUBLIC_KEY_PATH = "local_public_key"
+ATTESTATION_REPORT_PATH = "attestation_report.json"
 DATA_PUBLIC_KEY_PATH = "data_public_key"
 MODEL_PUBLIC_KEY_PATH = "model_public_key"
 ENCRYPTED_DATA_PATH = "encrypted_data.csv"

@@ -41,5 +41,5 @@ clean:
 .PHONY: distclean
 distclean: clean
 	$(RM) *.sig *.quote *.cert *.report attestation_report.json \
-		local_secret_key data_shared_secret_key model_shared_secret_key \
+		local_secret_key local_public_key data_shared_secret_key model_shared_secret_key \
 		data_public_key model_public_key encrypted_data.csv encrypted_model.py encrypted_trained_model.pkl

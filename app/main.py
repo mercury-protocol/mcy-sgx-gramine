@@ -1,6 +1,6 @@
 import os
 
-from constants import IAS_SIGNATURE, IAS_CERTIFICATE, IAS_REPORT
+from constants import IAS_SIGNATURE, IAS_CERTIFICATE, IAS_REPORT, LOCAL_PUBLIC_KEY_PATH
 from utils import read
 
 
@@ -8,6 +8,10 @@ def startup():
     os.system("make distclean")
     os.system("make")
     os.system("gramine-sgx ./sgxapp startup.py")
+
+
+def get_local_public_key():
+    return read(LOCAL_PUBLIC_KEY_PATH)
 
 
 def remote_attestation():
@@ -27,6 +31,7 @@ def train_model():
 
 if __name__ == "__main__":
     startup()
+    local_public_key = get_local_public_key()
     attestation_report = remote_attestation()
     train_model()
 

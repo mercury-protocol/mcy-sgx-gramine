@@ -42,6 +42,16 @@ func startup() {
 }
 
 
+func getLocalPublicKey() string {
+    localPublicKey, err := ioutil.ReadFile("local_public_key")
+        if err != nil {
+        fmt.Println(err)
+    }
+
+    return string(localPublicKey)
+}
+
+
 func remoteAttestation() AttestationReport {
     executeCmd("python3", "remote_attestation.py")
 
@@ -66,6 +76,8 @@ func trainModel() {
 
 func main() {
     startup()
+    localPublicKey := getLocalPublicKey()
+    fmt.Println(localPublicKey)
     attestationReport := remoteAttestation()
     fmt.Println(attestationReport)
     trainModel()
