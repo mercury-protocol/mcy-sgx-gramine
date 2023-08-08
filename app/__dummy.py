@@ -2,12 +2,12 @@
 
 import csv
 
-from constants import LOCAL_SECRET_KEY_PATH
+from constants import LOCAL_SECRET_KEY_PATH, ENCRYPTED_DATA_PATH, ENCRYPTED_MODEL_PATH
 from utils import encrypt, decrypt, write, generate_key_pair, derive_shared_secret
 
 
 def dummy_receive_encrypted_model(shared_secret, decrypted=False):
-    with open("model.py", "w") as file:
+    with open(ENCRYPTED_MODEL_PATH, "w") as file:
         file.write(
 """print('start dummy model training')
 
@@ -25,37 +25,37 @@ def run(data):
     return model
 """
         )
-    with open("model.py", "rb") as file:
+    with open(ENCRYPTED_MODEL_PATH, "rb") as file:
         model = file.read()
         encrypted_model = encrypt(shared_secret, model)
-    with open('model.py', 'wb') as file:
+    with open(ENCRYPTED_MODEL_PATH, 'wb') as file:
         file.write(encrypted_model)
 
     if decrypted:
-        with open("model.py", "rb") as file:
+        with open(ENCRYPTED_MODEL_PATH, "rb") as file:
             encrypted_model = file.read()
             model = decrypt(shared_secret, encrypted_model)
-        with open('model.py', 'wb') as file:
+        with open(ENCRYPTED_MODEL_PATH, 'wb') as file:
             file.write(model)
 
 
 def dummy_receive_encrypted_data(shared_secret, decrypted=False):
-    with open("data.csv", "w") as file:
+    with open(ENCRYPTED_DATA_PATH, "w") as file:
         writer = csv.writer(file)
         writer.writerow(["x", "y"])
         for i in range(10):
             writer.writerow([i, i])
-    with open("data.csv", "rb") as file:
+    with open(ENCRYPTED_DATA_PATH, "rb") as file:
         data = file.read()
         encrypted_data = encrypt(shared_secret, data)
-    with open('data.csv', 'wb') as file:
+    with open(ENCRYPTED_DATA_PATH, 'wb') as file:
         file.write(encrypted_data)
 
     if decrypted:
-        with open("data.csv", "rb") as file:
+        with open(ENCRYPTED_DATA_PATH, "rb") as file:
             encrypted_data = file.read()
             data = decrypt(shared_secret, encrypted_data)
-        with open('data.csv', 'wb') as file:
+        with open(ENCRYPTED_DATA_PATH, 'wb') as file:
             file.write(data)
 
 
@@ -75,12 +75,12 @@ def __simulate():
     dummy_receive_encrypted_data(shared_secret_data)
 
     # decrypt data and model
-    with open("data.csv", "rb") as file:
+    with open(ENCRYPTED_DATA_PATH, "rb") as file:
         encrypted_data = file.read()
     data = decrypt(shared_secret_data, encrypted_data).decode("utf-8")
     data = StringIO(data)
 
-    with open("model.py", "rb") as file:
+    with open(ENCRYPTED_MODEL_PATH, "rb") as file:
         encrypted_model = file.read()
         model = decrypt(shared_secret_model, encrypted_model)
 
@@ -115,7 +115,7 @@ def __simulate_light():
 
     dummy_receive_encrypted_data(shared_secret_model, decrypted=True)
 
-    with open("data.csv", "r") as file:
+    with open(ENCRYPTED_DATA_PATH, "r") as file:
         data = file.read()
         data = StringIO(data)
         data = np.loadtxt(data, delimiter=",", dtype=int, skiprows=1).transpose()

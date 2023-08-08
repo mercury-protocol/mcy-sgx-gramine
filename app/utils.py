@@ -9,7 +9,7 @@ from ecdsa.curves import NIST256p
 from ecdsa.ecdh import ECDH
 from cryptography.fernet import Fernet
 
-from constants import LOCAL_SECRET_KEY_PATH, SIMULATED_RECEIVE
+from constants import LOCAL_SECRET_KEY_PATH, SIMULATED_RECEIVE, ENCRYPTED_DATA_PATH, ENCRYPTED_MODEL_PATH
 
 
 def write(path: str, data: Any, binary: bool = False):
@@ -82,17 +82,23 @@ def receive_public_key(path: str) -> str:
     return read(path)
 
 
-def receive_encrypted_data(data_shared_secret: str):
-    if SIMULATED_RECEIVE:
-        import __dummy
-        __dummy.dummy_receive_encrypted_data(data_shared_secret)
-    else:
-        raise NotImplemented  # TODO: implement
+def receive_data(shared_secret: str):
+    while not os.path.exists(ENCRYPTED_DATA_PATH):
+        time.sleep(1)
+        if SIMULATED_RECEIVE:
+            from __dummy import dummy_receive_encrypted_data
+            dummy_receive_encrypted_data(shared_secret)
+
+    encrypted_data = read(ENCRYPTED_DATA_PATH, binary=True)
+    return decrypt(shared_secret, encrypted_data).decode("utf-8")
 
 
-def receive_encrypted_model(model_shared_secret: str):
-    if SIMULATED_RECEIVE:
-        import __dummy
-        __dummy.dummy_receive_encrypted_model(model_shared_secret)
-    else:
-        raise NotImplemented  # TODO: implement
+def receive_model(shared_secret: str):
+    while not os.path.exists(ENCRYPTED_MODEL_PATH):
+        time.sleep(1)
+        if SIMULATED_RECEIVE:
+            from __dummy import dummy_receive_encrypted_model
+            dummy_receive_encrypted_model(shared_secret)
+
+    encrypted_model = read(ENCRYPTED_MODEL_PATH, binary=True)
+    return decrypt(shared_secret, encrypted_model).decode("utf-8")

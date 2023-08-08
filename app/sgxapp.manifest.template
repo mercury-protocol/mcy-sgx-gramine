@@ -28,8 +28,6 @@ fs.mounts = [
   { type = "tmpfs", path = "/tmp" },
 
   { path = "/local_secret_key", uri = "file:local_secret_key", type = "encrypted", key_name = "_sgx_mrenclave" },
-  { path = "/model_shared_secret_key", uri = "file:model_shared_secret_key", type = "encrypted", key_name = "_sgx_mrenclave" },
-  { path = "/data_shared_secret_key", uri = "file:data_shared_secret_key", type = "encrypted", key_name = "_sgx_mrenclave" },
 ]
 
 sgx.nonpie_binary = true
@@ -63,7 +61,7 @@ sgx.allowed_files = [  # TODO: can we allow a full directory here?
   "file:gr.quote",
   "file:data_public_key",
   "file:model_public_key",
-  "file:data.csv",  # TODO: data file name should be according to id
-  "file:model.py",  # TODO: model file name should be according to id
-  "file:trained_model.pkl",  # TODO: model file name should be according to id
+  "file:encrypted_data.csv",  # TODO: data file name should be according to id
+  "file:encrypted_model.py",  # TODO: model file name should be according to id
+  "file:encrypted_trained_model.pkl",  # TODO: model file name should be according to id
 ]

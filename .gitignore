@@ -30,8 +30,8 @@ sgxapp.manifest.sgx
 sgxapp.sig
 sgxapp.token
 /app/attestation_report.json
-/app/data.csv
+/app/encrypted_data.csv
 /app/data_public_key
-/app/model.py
+/app/encrypted_model.py
 /app/model_public_key
-/app/trained_model.pkl
+/app/encrypted_trained_model.pkl
