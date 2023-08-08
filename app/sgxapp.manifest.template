@@ -61,7 +61,9 @@ sgx.trusted_files = [
 
 sgx.allowed_files = [  # TODO: can we allow a full directory here?
   "file:gr.quote",
+  "file:data_public_key",
+  "file:model_public_key",
+  "file:data.csv",  # TODO: data file name should be according to id
   "file:model.py",  # TODO: model file name should be according to id
   "file:trained_model.pkl",  # TODO: model file name should be according to id
-  "file:data.csv",  # TODO: data file name should be according to id
 ]

@@ -2,14 +2,15 @@ import pickle
 
 from io import StringIO
 
-from constants import DATA_SHARED_SECRET_KEY_PATH, MODEL_SHARED_SECRET_KEY_PATH
-from utils import (receive_data_public_key, receive_model_public_key, receive_encrypted_data, receive_encrypted_model,
+from constants import (DATA_SHARED_SECRET_KEY_PATH, MODEL_SHARED_SECRET_KEY_PATH,
+                       DATA_PUBLIC_KEY_PATH, MODEL_PUBLIC_KEY_PATH)
+from utils import (receive_public_key, receive_encrypted_data, receive_encrypted_model,
                    derive_shared_secret, write, decrypt, encrypt)
 
 
 def train_model():
-    data_public = receive_data_public_key()
-    model_public = receive_model_public_key()
+    data_public = receive_public_key(DATA_PUBLIC_KEY_PATH)
+    model_public = receive_public_key(MODEL_PUBLIC_KEY_PATH)
 
     # generate the shared secrets and save them
     data_shared_secret = derive_shared_secret(data_public)
@@ -35,8 +36,10 @@ def train_model():
 
     exec(model)
     trained_model = eval("run(data)")
+    del data
     # TODO: implement smart check that data doesn't go out
     encrypted_trained_model = encrypt(model_shared_secret, pickle.dumps(trained_model))
+    del trained_model
 
     with open("trained_model.pkl", "wb") as file:
         pickle.dump(encrypted_trained_model, file)

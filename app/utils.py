@@ -1,4 +1,6 @@
 import json
+import os
+import time
 from base64 import b64encode
 from typing import Tuple, Any
 
@@ -41,7 +43,7 @@ def derive_public_from_secret(secret: str) -> str:
     return secret.get_verifying_key().to_string().hex()
 
 
-def derive_shared_secret(remote_public: str):
+def derive_shared_secret(remote_public: str) -> str:
     local_secret = read(LOCAL_SECRET_KEY_PATH)
     local_public = derive_public_from_secret(local_secret)
 
@@ -70,22 +72,14 @@ def decrypt(shared_secret: str, encrypted: bytes) -> bytes:
     return decrypted
 
 
-def receive_data_public_key() -> str:
-    if SIMULATED_RECEIVE:
-        _, data_public = generate_key_pair()
-    else:
-        raise NotImplemented  # TODO: implement
+def receive_public_key(path: str) -> str:
+    while not os.path.exists(path):
+        time.sleep(1)
+        if SIMULATED_RECEIVE:
+            _, public_key = generate_key_pair()
+            write(path, public_key)
 
-    return data_public
-
-
-def receive_model_public_key() -> str:
-    if SIMULATED_RECEIVE:
-        _, model_public = generate_key_pair()
-    else:
-        raise NotImplemented  # TODO: implement
-
-    return model_public
+    return read(path)
 
 
 def receive_encrypted_data(data_shared_secret: str):
