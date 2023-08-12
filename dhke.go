@@ -1,43 +1,30 @@
 package main
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/diffiehellman"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"math/big"
 )
 
 func main() {
-	// Load the other party's public key from a file
-	otherPartyPublicKeyHex, err := ioutil.ReadFile("other_party_public_key.txt")
+	// Generate your private key and public key
+	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Convert the hex public key to a big integer
-	otherPartyPublicKey, success := new(big.Int).SetString(string(otherPartyPublicKeyHex), 16)
-	if !success {
-		log.Fatal("Invalid hexadecimal public key")
-	}
+	// Marshal the public key to send to the other party
+	pubKeyBytes := elliptic.Marshal(privKey.Curve, privKey.PublicKey.X, privKey.PublicKey.Y)
 
-	// Generate our private key and public key
-	privKey, err := diffiehellman.GenerateKey(rand.Reader, 128)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// Simulate receiving the other party's public key
+	// In reality, you would receive this from the other party
+	otherPartyPubKey, _ := ecdsa.Unmarshal(elliptic.P256(), pubKeyBytes)
 
-	// Compute the shared secret
-	sharedSecret := new(big.Int).Exp(otherPartyPublicKey, privKey, diffiehellman.P)
-	sharedSecretBytes := sharedSecret.Bytes()
+	// Perform ECDH key exchange
+	sharedX, _ := privKey.Curve.ScalarMult(otherPartyPubKey.X, otherPartyPubKey.Y, privKey.D.Bytes())
+	sharedSecret := sharedX.Bytes()
 
-	// Hash the shared secret using SHA-256 to create a symmetric key
-	hash := sha256.New()
-	hash.Write(sharedSecretBytes)
-	symmetricKey := hash.Sum(nil)
-
-	fmt.Println("Symmetric Key:", hex.EncodeToString(symmetricKey))
+	fmt.Println("Shared Secret:", sharedSecret)
 }
