@@ -4,27 +4,44 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"encoding/hex"
 	"fmt"
+	"io/ioutil"
 	"log"
 )
 
 func main() {
-	// Generate your private key and public key
+	// Load the other party's public key from a file
+	remotePubKeyHex, err := ioutil.ReadFile("remote_public_key")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Convert the hex public key to bytes
+	remotePubKeyBytes, err := hex.DecodeString(string(remotePubKeyHex))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Unmarshal the remote public key
+	remotePubKey, _ := ecdsa.Unmarshal(elliptic.P256(), remotePubKeyBytes)
+
+	// Generate your private key
 	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Marshal the public key to send to the other party
-	pubKeyBytes := elliptic.Marshal(privKey.Curve, privKey.PublicKey.X, privKey.PublicKey.Y)
-
-	// Simulate receiving the other party's public key
-	// In reality, you would receive this from the other party
-	otherPartyPubKey, _ := ecdsa.Unmarshal(elliptic.P256(), pubKeyBytes)
+	// Marshal your public key into bytes
+	localPubKeyBytes := elliptic.Marshal(privKey.Curve, privKey.PublicKey.X, privKey.PublicKey.Y)
 
 	// Perform ECDH key exchange
-	sharedX, _ := privKey.Curve.ScalarMult(otherPartyPubKey.X, otherPartyPubKey.Y, privKey.D.Bytes())
+	sharedX, _ := privKey.Curve.ScalarMult(remotePubKey.X, remotePubKey.Y, privKey.D.Bytes())
 	sharedSecret := sharedX.Bytes()
 
-	fmt.Println("Shared Secret:", sharedSecret)
+	// Print local public key in hex format
+	fmt.Println("Local Public Key (Hex):", hex.EncodeToString(localPubKeyBytes))
+
+	// Print the shared secret in hex format
+	fmt.Println("Shared Secret (Hex):", hex.EncodeToString(sharedSecret))
 }
