@@ -24,7 +24,14 @@ func main() {
 	}
 
 	// Unmarshal the remote public key
-	remotePubKey, _ := ecdsa.Unmarshal(elliptic.P256(), remotePubKeyBytes)
+	curve := elliptic.P256()
+	remotePubKeyX, remotePubKeyY := elliptic.Unmarshal(curve, remotePubKeyBytes)
+
+	remotePubKey := ecdsa.PublicKey{
+	    Curve: curve,
+	    X:     remotePubKeyX,
+	    Y:     remotePubKeyY,
+	}
 
 	// Generate your private key
 	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
