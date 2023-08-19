@@ -3,36 +3,36 @@ package main
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/rand"
 	"fmt"
 	"log"
 	"math/big"
 )
 
 func main() {
-	// Bytes representing the ECDSA public key
-	pubKeyBytes := []byte{
-		0x04, // Uncompressed point format indicator
-		0x5D, 0x5F, 0x38, 0xA3, 0x9C, 0x50, 0xD6, 0x97,
-		// ... (more bytes representing X and Y coordinates)
+	// Generate an ECDSA private key and corresponding public key
+	privKeyA, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	// Create an ECDSA public key struct directly from the bytes
-	pubKey := createECPublicKey(pubKeyBytes)
-	if pubKey == nil {
-		log.Fatal("Failed to create ECDSA public key")
+	privKeyB, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	fmt.Println("ECDSA Public Key:", pubKey)
-}
+	// Calculate the shared point on the curve using party A's private key and party B's public key
+	sharedX, sharedY := elliptic.P256().ScalarMult(privKeyB.PublicKey.X, privKeyB.PublicKey.Y, privKeyA.D.Bytes())
 
-func createECPublicKey(pubKeyBytes []byte) *ecdsa.PublicKey {
-	// Construct an ECDSA public key struct directly
-	curve := elliptic.P256() // Use the appropriate curve
-	x := new(big.Int).SetBytes(pubKeyBytes[1 : curve.Params().BitSize/8+1])
-	y := new(big.Int).SetBytes(pubKeyBytes[curve.Params().BitSize/8+1:])
-	return &ecdsa.PublicKey{
-		Curve: curve,
-		X:     x,
-		Y:     y,
+	// Create a shared public key using the shared point
+	sharedPubKey := ecdsa.PublicKey{
+		Curve: elliptic.P256(),
+		X:     sharedX,
+		Y:     sharedY,
 	}
+
+	// Calculate the shared secret (x-coordinate of the shared point)
+	sharedSecret := sharedX.Bytes()
+
+	fmt.Println("Shared Secret:", sharedSecret)
 }
