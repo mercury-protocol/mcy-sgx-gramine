@@ -12,20 +12,17 @@ import (
 )
 
 func main() {
-	// Load the other party's public key from a file
+	// Load remote public key from file
 	remotePubKeyHex, err := ioutil.ReadFile("public")
 	if err != nil {
 		log.Fatal(err)
 	}
-	//fmt.Println("remotePubKeyHex:", string(remotePubKeyHex))
 
 	// Convert the hex public key to bytes
 	remotePubKeyBytes, err := hex.DecodeString(string(remotePubKeyHex))
 	if err != nil {
 		log.Fatal(err)
 	}
-	//fmt.Println("remotePubKeyBytes: ", remotePubKeyBytes)
-	//fmt.Printf("%T\n", remotePubKeyBytes)
 
 	remotePubKey := createECPublicKey(remotePubKeyBytes)
 	fmt.Println("remotePubKey: ", remotePubKey)
@@ -33,7 +30,7 @@ func main() {
 
 	///////////////////////////////////////////////////////////////6curve
 
-    // Generate your private key
+    // Generate private key
 	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		log.Fatal(err)
@@ -41,12 +38,20 @@ func main() {
 	fmt.Println("privKey: ", privKey)
     fmt.Printf("%T\n", privKey)
 
+    // Save the public key in the same format as the Python script
+	pubKeyBytes := append(privKey.PublicKey.X.Bytes(), privKey.PublicKey.Y.Bytes()...)
+	pubKeyHex := hex.EncodeToString(pubKeyBytes)
+	err = ioutil.WriteFile("public_go", []byte(pubKeyHex), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
 
+    // Generate shared secret
     sharedX, sharedY := elliptic.P256().ScalarMult(remotePubKey.X, remotePubKey.Y, privKey.D.Bytes())
     fmt.Println("sharedX, sharedY: ", sharedX, sharedY)
     fmt.Printf("%T%T\n", sharedX, sharedY)
 
-    sharedSecret := new(big.Int).SetBytes(x.Bytes())
+    sharedSecret := new(big.Int).SetBytes(sharedX.Bytes())
 	fmt.Println("sharedSecret:", sharedSecret)
 }
 
