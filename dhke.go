@@ -11,23 +11,6 @@ import (
 	"log"
 )
 
-func main() {
-	remotePubKey := loadRemotePublicKey()
-	fmt.Println("remotePubKey: ", remotePubKey)
-	fmt.Printf("%T\n", remotePubKey)
-
-	privKey := generatePrivateKey()
-	fmt.Println("privKey: ", privKey)
-    fmt.Printf("%T\n", privKey)
-
-    savePublicKey(*privKey)
-
-    sharedSecret := generateSharedSecret(*remotePubKey, *privKey)
-    fmt.Println("sharedSecret:", sharedSecret)
-	fmt.Printf("%T\n", sharedSecret)
-}
-
-
 func loadRemotePublicKey() *ecdsa.PublicKey {
 	remotePubKeyHex, err := ioutil.ReadFile("public_python")
 	if err != nil {
@@ -72,4 +55,30 @@ func generateSharedSecret(remotePubKey ecdsa.PublicKey, privKey ecdsa.PrivateKey
     sharedSecret := new(big.Int).SetBytes(sharedX.Bytes())
 
 	return sharedSecret
+}
+
+func saveSharedSecret(sharedSecret big.Int) {
+    sharedSecretHex := hex.EncodeToString(sharedSecret.Bytes())
+	err := ioutil.WriteFile("shared_secret_go", []byte(sharedSecretHex), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func main() {
+	remotePubKey := loadRemotePublicKey()
+	fmt.Println("remotePubKey: ", remotePubKey)
+	fmt.Printf("%T\n", remotePubKey)
+
+	privKey := generatePrivateKey()
+	fmt.Println("privKey: ", privKey)
+    fmt.Printf("%T\n", privKey)
+
+    savePublicKey(*privKey)
+
+    sharedSecret := generateSharedSecret(*remotePubKey, *privKey)
+    fmt.Println("sharedSecret:", sharedSecret)
+	fmt.Printf("%T\n", sharedSecret)
+
+	saveSharedSecret(*sharedSecret)  // for testing purposes only
 }
