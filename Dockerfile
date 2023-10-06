@@ -1,41 +1,14 @@
-FROM ubuntu:20.04
+FROM gramineproject/gramine:latest
 
-# Configuration
-ENV OOT_DRIVER_BIN=sgx_linux_x64_driver_2.11.54c9c4c.bin
-ENV DCAP_DRIVER_BIN=sgx_linux_x64_driver_1.41.bin
-ENV SGX_SDK_BIN=sgx_linux_x64_sdk_2.19.100.3.bin
-ENV DISTRO=ubuntu20.04-server
-ENV DOWNLOAD_PATH=https://download.01.org/intel-sgx/latest/linux-latest/distro/${DISTRO}/
+# Install Python (adjust the version if needed)
+RUN apt-get update && apt-get install -y python3 python3-pip
 
-# Install dependencies
-RUN set -xe - y && \
-    apt-get update -y && \
-    apt-get install -y python3-pip && \
-    apt-get install -y build-essential curl wget && \
-    apt-get clean
+WORKDIR /
 
+COPY app /
+COPY requirements.txt requirements.txt
 
-RUN wget ${DOWNLOAD_PATH}${OOT_DRIVER_BIN} && \
-    chmod +x ${OOT_DRIVER_BIN} && \
-    echo -e 'no\n/opt' | ./${OOT_DRIVER_BIN} && \
-    rm -rf ${OOT_DRIVER_BIN}
-RUN wget ${DOWNLOAD_PATH}${DCAP_DRIVER_BIN} && \
-    chmod +x ${DCAP_DRIVER_BIN} && \
-    echo -e 'no\n/opt' | ./${DCAP_DRIVER_BIN} && \
-    rm -rf ${DCAP_DRIVER_BIN}
+RUN pip3 install --upgrade pip
+RUN pip3 install -r requirements.txt
 
-# Install SXX SDK
-RUN wget ${DOWNLOAD_PATH}${SGX_SDK_BIN} && \
-    chmod +x ${SGX_SDK_BIN} && \
-    echo -e 'no\n/opt' | ./${SGX_SDK_BIN} && \
-    rm -rf ${SGX_SDK_BIN}
-ENV PATH="/opt/sgxsdk/bin:${PATH}"
-
-# Install python packages
-COPY requirements.txt requirements_test.txt ./
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Set working directory and copy source code
-WORKDIR /app
-COPY app ./
+CMD ["python3", "main.py"]
