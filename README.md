@@ -27,9 +27,9 @@ devices have to be passed for the container and that needs root privileges
         model = pickle.loads(decrypt(shared_secret_model, encrypted_model))
 
 
-
-Note: if you are using virtual environment for local run, you have to add this to the top of ra.py:<br>
+---
+_Note: if you are using virtual environment for local run, you have to add this to the top of ra.py:_<br>
 `import sys`<br>
 `sys.path.append("<VENV PATH>/lib/python<VERSION>/site-packages")`<br>
-example:<br>
+_example:_<br>
 `"/home/mercury/Documents/repos/mcy-sgx-gramine/venv/lib/python3.8/site-packages"`
