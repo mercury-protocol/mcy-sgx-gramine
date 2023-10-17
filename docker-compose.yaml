@@ -1,8 +1,9 @@
-version: '3.8'
+version: '3.3'
 
 services:
   app:
     build:
       context: .
-    ports:
-      - "8080:8080"
+    devices:
+      - /dev/sgx_enclave
+      - /dev/sgx_provision
