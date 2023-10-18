@@ -1,20 +1,12 @@
 ARCH_LIBDIR ?= /lib/$(shell $(CC) -dumpmachine)
 
-ifeq ($(DEBUG),1)
-GRAMINE_LOG_LEVEL = debug
-else
-GRAMINE_LOG_LEVEL = error
-endif
-
 .PHONY: all
 all: sgxapp.manifest
 all: sgxapp.manifest.sgx sgxapp.sig sgxapp.token
 
 sgxapp.manifest: sgxapp.manifest.template
 	gramine-manifest \
-		-Dlog_level=$(GRAMINE_LOG_LEVEL) \
 		-Darch_libdir=$(ARCH_LIBDIR) \
-		-Dentrypoint=$(realpath $(shell sh -c "command -v python3")) \
 		$< > $@
 
 # Make on Ubuntu <= 20.04 doesn't support "Rules with Grouped Targets" (`&:`),

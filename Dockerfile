@@ -1,4 +1,5 @@
 FROM gramineproject/gramine:latest
+RUN gramine-sgx-gen-private-key
 
 # Update package lists and install essential packages
 RUN apt-get update \

@@ -1,11 +1,11 @@
-#loader.argv = ["--entrypoint", "/usr/bin/python3.8",
 #"--arch_libdir", "/lib/x86_64-linux-gnu",
 
 loader.uid = 1000  # run as root to be able to access gramine os files with python
 loader.entrypoint = "file:{{ gramine.libos }}"
-libos.entrypoint = "{{ entrypoint }}"
+libos.entrypoint = "/usr/bin/python3.8"
 
-loader.log_level = "{{ log_level }}"
+# can be set to "debug"
+loader.log_level = "error"
 
 loader.env.LD_LIBRARY_PATH = "/lib:/usr/lib:{{ arch_libdir }}:/usr/{{ arch_libdir }}"
 
@@ -38,7 +38,7 @@ sgx.ra_client_spid = "741871B230A61340FEBE8B50A803525F"  # TODO: do not hardcode
 
 sgx.trusted_files = [
   "file:{{ gramine.libos }}",
-  "file:{{ entrypoint }}",
+  "file:/usr/bin/python3.8",
   "file:{{ gramine.runtimedir() }}/",
   "file:{{ arch_libdir }}/",
   "file:/usr/{{ arch_libdir }}/",
