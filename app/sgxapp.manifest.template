@@ -1,6 +1,5 @@
 #loader.argv = ["--entrypoint", "/usr/bin/python3.8",
 #"--arch_libdir", "/lib/x86_64-linux-gnu",
-#"--pillow_path", "/home/mercury/Documents/repos/mcy-sgx-gramine/venv/lib/python3.8/site-packages/"]
 
 loader.uid = 1000  # run as root to be able to access gramine os files with python
 loader.entrypoint = "file:{{ gramine.libos }}"
@@ -23,7 +22,6 @@ fs.mounts = [
   { uri = "file:{{ arch_libdir }}", path = "{{ arch_libdir }}" },
   { uri = "file:/usr", path = "/usr" },
   { uri = "file:/etc", path = "/etc" },
-  { uri = "file:{{ pillow_path }}", path = "{{ pillow_path }}" },
 
   { type = "tmpfs", path = "/tmp" },
 
@@ -46,7 +44,6 @@ sgx.trusted_files = [
   "file:/usr/{{ arch_libdir }}/",
   "file:{{ python.stdlib }}/",
   "file:{{ python.distlib }}/",
-  "file:{{ pillow_path }}",
   "file:{{ python.get_path('stdlib', vars={'installed_base': '/usr/local'}) }}/",
 
   "file:constants.py",
