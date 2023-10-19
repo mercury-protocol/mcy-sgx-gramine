@@ -2,29 +2,25 @@
 {% set ENTRYPOINT = "/usr/bin/python3.8" %}
 {% set LOG_LEVEL = "error" %}
 
-loader.uid = 1000  # run as root to be able to access gramine os files with python
-loader.entrypoint = "file:{{ gramine.libos }}"
 libos.entrypoint = "{{ ENTRYPOINT }}"
 
-
+loader.uid = 1000  # run as root to be able to access gramine os files with python
+loader.entrypoint = "file:{{ gramine.libos }}"
 loader.log_level = "{{ LOG_LEVEL }}"
 loader.env.LD_LIBRARY_PATH = "/lib:/usr/lib:{{ ARCH_LIBDIR }}:/usr/{{ ARCH_LIBDIR }}"
 loader.env.OMP_NUM_THREADS = "8"
+loader.pal_internal_mem_size = "128M"
 
 # TODO: remove this config
 # TODO: we have to run the full sgxapp at once, not separately by calling arguments like this: ./sgxapp startup.py
 loader.insecure__use_cmdline_argv = true
-
-loader.pal_internal_mem_size = "128M"
 
 fs.mounts = [
   { uri = "file:{{ gramine.runtimedir() }}", path = "/lib" },
   { uri = "file:{{ ARCH_LIBDIR }}", path = "{{ ARCH_LIBDIR }}" },
   { uri = "file:/usr", path = "/usr" },
   { uri = "file:/etc", path = "/etc" },
-
   { type = "tmpfs", path = "/tmp" },
-
   { path = "/local_secret_key", uri = "file:local_secret_key", type = "encrypted", key_name = "_sgx_mrenclave" },
 ]
 
