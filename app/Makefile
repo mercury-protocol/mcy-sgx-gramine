@@ -1,13 +1,9 @@
-ARCH_LIBDIR ?= /lib/$(shell $(CC) -dumpmachine)
-
 .PHONY: all
 all: sgxapp.manifest
 all: sgxapp.manifest.sgx sgxapp.sig sgxapp.token
 
 sgxapp.manifest: sgxapp.manifest.template
-	gramine-manifest \
-		-Darch_libdir=$(ARCH_LIBDIR) \
-		$< > $@
+	gramine-manifest $< > $@
 
 # Make on Ubuntu <= 20.04 doesn't support "Rules with Grouped Targets" (`&:`),
 # for details on this workaround see

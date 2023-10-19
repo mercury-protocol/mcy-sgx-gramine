@@ -1,16 +1,14 @@
-#"--arch_libdir", "/lib/x86_64-linux-gnu",
+{% set ARCH_LIBDIR = "/lib/x86_64-linux-gnu" %}
+{% set ENTRYPOINT = "/usr/bin/python3.8" %}
+{% set LOG_LEVEL = "error" %}
 
 loader.uid = 1000  # run as root to be able to access gramine os files with python
 loader.entrypoint = "file:{{ gramine.libos }}"
-libos.entrypoint = "/usr/bin/python3.8"
+libos.entrypoint = "{{ ENTRYPOINT }}"
 
-# can be set to "debug"
-loader.log_level = "error"
 
-loader.env.LD_LIBRARY_PATH = "/lib:/usr/lib:{{ arch_libdir }}:/usr/{{ arch_libdir }}"
-
-# Restrict the maximum number of threads to prevent insufficient memory
-# issue, observed on CentOS/RHEL.
+loader.log_level = "{{ LOG_LEVEL }}"
+loader.env.LD_LIBRARY_PATH = "/lib:/usr/lib:{{ ARCH_LIBDIR }}:/usr/{{ ARCH_LIBDIR }}"
 loader.env.OMP_NUM_THREADS = "8"
 
 loader.insecure__use_cmdline_argv = true
@@ -19,7 +17,7 @@ loader.pal_internal_mem_size = "128M"
 
 fs.mounts = [
   { uri = "file:{{ gramine.runtimedir() }}", path = "/lib" },
-  { uri = "file:{{ arch_libdir }}", path = "{{ arch_libdir }}" },
+  { uri = "file:{{ ARCH_LIBDIR }}", path = "{{ ARCH_LIBDIR }}" },
   { uri = "file:/usr", path = "/usr" },
   { uri = "file:/etc", path = "/etc" },
 
@@ -38,10 +36,10 @@ sgx.ra_client_spid = "741871B230A61340FEBE8B50A803525F"  # TODO: do not hardcode
 
 sgx.trusted_files = [
   "file:{{ gramine.libos }}",
-  "file:/usr/bin/python3.8",
+  "file:{{ ENTRYPOINT }}",
   "file:{{ gramine.runtimedir() }}/",
-  "file:{{ arch_libdir }}/",
-  "file:/usr/{{ arch_libdir }}/",
+  "file:{{ ARCH_LIBDIR }}/",
+  "file:/usr/{{ ARCH_LIBDIR }}/",
   "file:{{ python.stdlib }}/",
   "file:{{ python.distlib }}/",
   "file:{{ python.get_path('stdlib', vars={'installed_base': '/usr/local'}) }}/",
