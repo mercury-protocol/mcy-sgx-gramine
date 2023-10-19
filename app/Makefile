@@ -10,9 +10,7 @@ sgxapp.manifest.sgx sgxapp.sig: sgx_sign
 
 .INTERMEDIATE: sgx_sign
 sgx_sign: sgxapp.manifest
-	gramine-sgx-sign \
-		--manifest $< \
-		--output $<.sgx
+	gramine-sgx-sign --manifest $< --output $<.sgx
 
 sgxapp.token: sgxapp.sig
 	gramine-sgx-get-token --output $@ --sig $<
