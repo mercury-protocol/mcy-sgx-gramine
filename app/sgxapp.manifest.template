@@ -11,6 +11,8 @@ loader.log_level = "{{ LOG_LEVEL }}"
 loader.env.LD_LIBRARY_PATH = "/lib:/usr/lib:{{ ARCH_LIBDIR }}:/usr/{{ ARCH_LIBDIR }}"
 loader.env.OMP_NUM_THREADS = "8"
 
+# TODO: remove this config
+# TODO: we have to run the full sgxapp at once, not separately by calling arguments like this: ./sgxapp startup.py
 loader.insecure__use_cmdline_argv = true
 
 loader.pal_internal_mem_size = "128M"

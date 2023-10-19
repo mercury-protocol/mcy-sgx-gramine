@@ -5,9 +5,6 @@ all: sgxapp.manifest.sgx sgxapp.sig sgxapp.token
 sgxapp.manifest: sgxapp.manifest.template
 	gramine-manifest $< > $@
 
-# Make on Ubuntu <= 20.04 doesn't support "Rules with Grouped Targets" (`&:`),
-# for details on this workaround see
-# https://github.com/gramineproject/gramine/blob/e8735ea06c/CI-Examples/helloworld/Makefile
 sgxapp.manifest.sgx sgxapp.sig: sgx_sign
 	@:
 
