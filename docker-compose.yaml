@@ -1,0 +1,9 @@
+version: '3.3'
+
+services:
+  app:
+    build:
+      context: .
+    devices:
+      - /dev/sgx_enclave
+      - /dev/sgx_provision

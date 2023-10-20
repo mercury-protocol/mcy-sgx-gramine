@@ -1,51 +1,38 @@
 import os
-from constants import IAS_API_KEY, GR_QUOTE, IAS_REPORT, IAS_SIGNATURE, IAS_CERTIFICATE
+
+from constants import IAS_SIGNATURE, IAS_CERTIFICATE, IAS_REPORT, LOCAL_PUBLIC_KEY_PATH
+from utils import read
 
 
-def get_signature() -> str:
-    with open(IAS_SIGNATURE, "r") as f:
-        return f.read().encode("utf-8").hex()
-
-
-def get_certificate() -> str:
-    with open(IAS_CERTIFICATE, "r") as f:
-        return f.read().encode("utf-8").hex()
-
-
-def get_report() -> str:
-    with open(IAS_REPORT, "r") as f:
-        return f.read().encode("utf-8").hex()
-
-
-def main():
+def startup():
     os.system("make distclean")
     os.system("make")
+    os.system("gramine-sgx ./sgxapp startup.py")
 
-    os.system("gramine-sgx ./ra ra.py")
-    # os.system(f"gramine-sgx-ias-request sigrl -k {IAS_API_KEY} -g ef0a0000 -i sigrl")
+
+def get_local_public_key():
+    return read(LOCAL_PUBLIC_KEY_PATH)
+
+
+def remote_attestation():
     # TODO: attestation returns GROUP_OUT_OF_DATE - try to build without insecure configuration
-    os.system(f"gramine-sgx-ias-request report"
-              f" -k {IAS_API_KEY}"
-              f" -q {GR_QUOTE}"
-              f" -r {IAS_REPORT}"
-              f" -s {IAS_SIGNATURE}"
-              f" -c {IAS_CERTIFICATE} -v")
+    os.system("python3 remote_attestation.py")
 
     return {
-        "X-IASReport-Signature": get_signature(),
-        "X-IASReport-Signing-Certificate": get_certificate(),
-        "Body": get_report()
+        "X-IASReport-Signature": read(IAS_SIGNATURE).encode("utf-8").hex(),
+        "X-IASReport-Signing-Certificate": read(IAS_CERTIFICATE).encode("utf-8").hex(),
+        "Body": read(IAS_REPORT).encode("utf-8").hex()
     }
 
 
-if __name__ == "__main__":
-    response = main()
+def train_model():
+    os.system("gramine-sgx ./sgxapp train_model.py")
 
-    from pprint import pprint
-    import json
-    print()
-    print("gramine-sgx-ias-request:")
-    pprint(response)
-    print()
-    print("Body decoded:")
-    pprint(json.loads(bytearray.fromhex(response["Body"]).decode("utf-8")))
+
+if __name__ == "__main__":
+    startup()
+    local_public_key = get_local_public_key()
+    attestation_report = remote_attestation()
+    train_model()
+
+    # TODO: terminal command for destroy sgx

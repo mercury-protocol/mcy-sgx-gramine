@@ -1,6 +1,6 @@
 from ecdsa.ecdh import ECDH
 from ecdsa.curves import NIST256p
-from app.utils import generate_key_pair, derive_public_from_secret, generate_shared_secret
+from app.utils import generate_key_pair, derive_public_from_secret, derive_shared_secret
 
 
 def test_dhke():
@@ -54,7 +54,7 @@ def test_dhke():
     assert local_shared_secret == remote_shared_secret
 
     # Test generate_shared_secret function
-    generated_shared_secret = generate_shared_secret(local_secret_key.hex(), remote_public_key.hex())
+    generated_shared_secret = derive_shared_secret(remote_public_key.hex())
     assert generated_shared_secret == local_shared_secret.hex()
 
 

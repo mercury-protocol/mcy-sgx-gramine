@@ -1,28 +1,35 @@
-FROM ubuntu:20.04
+FROM gramineproject/gramine:v1.5
+# TODO: this should be run at each container startup, not at image build
+RUN gramine-sgx-gen-private-key
 
-# Configuration
-ENV SGX_SDK_BIN=sgx_linux_x64_sdk_2.19.100.3.bin
-ENV DISTRO=ubuntu20.04-server
+# Update package lists and install essential packages
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        python3.8 \
+        python3.8-dev \
+        python3.8-distutils \
+        python3.8-venv \
+        python3-pip \
+        curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-RUN set -xe - y && \
-    apt-get update -y && \
-    apt-get install -y python3-pip && \
-    apt-get install -y build-essential curl wget && \
-    apt-get clean
+# Make python3.8 the default python version
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1 \
+    && update-alternatives --config python3
 
-# Install SXX SDK
-RUN wget https://download.01.org/intel-sgx/latest/linux-latest/distro/${DISTRO}/${SGX_SDK_BIN} && \
-    chmod +x ${SGX_SDK_BIN} && \
-    echo -e 'no\n/opt' | ./${SGX_SDK_BIN} && \
-    rm -rf ${SGX_SDK_BIN}
-ENV PATH="/opt/sgxsdk/bin:${PATH}"
+# Verify Python and pip installation
+RUN python3 --version && pip3 --version
 
-# Install python packages
-COPY requirements.txt requirements_test.txt ./
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Set working directory and copy source code
-WORKDIR /app
-COPY app ./
+WORKDIR /
+
+COPY app /
+COPY requirements.txt requirements.txt
+
+RUN pip3 install --upgrade pip
+RUN pip3 install -r requirements.txt
+
+ENTRYPOINT ["python3", "main.py"]
+# TODO: the AESM service is not installed properly for some reason
