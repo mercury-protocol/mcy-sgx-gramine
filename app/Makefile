@@ -1,6 +1,6 @@
 .PHONY: all
 all: sgxapp.manifest
-all: sgxapp.manifest.sgx sgxapp.sig sgxapp.token
+all: sgxapp.manifest.sgx sgxapp.sig
 
 sgxapp.manifest: sgxapp.manifest.template
 	gramine-manifest $< > $@
@@ -11,9 +11,6 @@ sgxapp.manifest.sgx sgxapp.sig: sgx_sign
 .INTERMEDIATE: sgx_sign
 sgx_sign: sgxapp.manifest
 	gramine-sgx-sign --manifest $< --output $<.sgx
-
-sgxapp.token: sgxapp.sig
-	gramine-sgx-get-token --output $@ --sig $<
 
 .PHONY: clean
 clean:
