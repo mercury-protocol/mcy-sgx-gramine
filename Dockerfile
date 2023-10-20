@@ -1,4 +1,5 @@
 FROM gramineproject/gramine:v1.5
+# TODO: this should be run at each container startup, not at image build
 RUN gramine-sgx-gen-private-key
 
 # Update package lists and install essential packages
@@ -31,3 +32,4 @@ RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 
 ENTRYPOINT ["python3", "main.py"]
+# TODO: the AESM service is not installed properly for some reason
