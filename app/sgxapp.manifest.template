@@ -7,7 +7,7 @@ libos.entrypoint = "{{ ENTRYPOINT }}"
 loader.uid = 1000  # run as root to be able to access gramine os files with python
 loader.entrypoint = "file:{{ gramine.libos }}"
 loader.log_level = "{{ LOG_LEVEL }}"
-loader.env.LD_LIBRARY_PATH = "/lib:/usr/lib:{{ ARCH_LIBDIR }}:/usr/{{ ARCH_LIBDIR }}"
+loader.env.LD_LIBRARY_PATH = "/lib:/usr/lib:{{ ARCH_LIBDIR }}"
 loader.env.OMP_NUM_THREADS = "8"
 loader.pal_internal_mem_size = "128M"
 
@@ -37,10 +37,9 @@ sgx.trusted_files = [
   "file:{{ ENTRYPOINT }}",
   "file:{{ gramine.runtimedir() }}/",
   "file:{{ ARCH_LIBDIR }}/",
-  "file:/usr/{{ ARCH_LIBDIR }}/",
-  "file:{{ python.stdlib }}/",
-  "file:{{ python.distlib }}/",
-  "file:{{ python.get_path('stdlib', vars={'installed_base': '/usr/local'}) }}/",
+{% for path in python.get_sys_path(ENTRYPOINT) %}
+  "file:{{ path }}{{ '/' if path.is_dir() else '' }}",
+{% endfor %}
 
   "file:constants.py",
   "file:utils.py",
