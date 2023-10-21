@@ -41,16 +41,10 @@ sgx.trusted_files = [
   "file:{{ path }}{{ '/' if path.is_dir() else '' }}",
 {% endfor %}
 
-  "file:constants.py",
-  "file:utils.py",
-  "file:startup.py",
-  "file:remote_attestation.py",
-  "file:verify_attestation.py",
-  "file:train_model.py",
-  "file:__dummy.py",  # TODO: remove
+  "file:trusted_src/",
 ]
 
-sgx.allowed_files = [  # TODO: can we allow a full directory here?
+sgx.allowed_files = [
   "file:gr.quote",
   "file:local_public_key",
   "file:data_public_key",
