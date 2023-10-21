@@ -5,13 +5,12 @@ from constants import IAS_API_KEY, GR_QUOTE, IAS_REPORT, IAS_SIGNATURE, IAS_CERT
 
 
 def remote_attestation():
-    # TODO: attestation returns GROUP_OUT_OF_DATE - try to build without insecure configuration
-    os.system(f"gramine-sgx-ias-request report"
+    os.system("gramine-sgx-ias-request report"
               f" -k {IAS_API_KEY}"
               f" -q {GR_QUOTE}"
               f" -r {IAS_REPORT}"
               f" -s {IAS_SIGNATURE}"
-              f" -c {IAS_CERTIFICATE} -v")
+              f" -c {IAS_CERTIFICATE}")
 
     attestation_report = {
         "X-IASReport-Signature": read(IAS_SIGNATURE).encode("utf-8").hex(),

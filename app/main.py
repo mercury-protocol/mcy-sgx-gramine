@@ -1,6 +1,6 @@
 import os
 
-from constants import IAS_SIGNATURE, IAS_CERTIFICATE, IAS_REPORT, LOCAL_PUBLIC_KEY_PATH
+from constants import LOCAL_PUBLIC_KEY_PATH
 from utils import read
 
 
@@ -15,14 +15,11 @@ def get_local_public_key():
 
 
 def remote_attestation():
-    # TODO: attestation returns GROUP_OUT_OF_DATE - try to build without insecure configuration
     os.system("python3 remote_attestation.py")
 
-    return {
-        "X-IASReport-Signature": read(IAS_SIGNATURE).encode("utf-8").hex(),
-        "X-IASReport-Signing-Certificate": read(IAS_CERTIFICATE).encode("utf-8").hex(),
-        "Body": read(IAS_REPORT).encode("utf-8").hex()
-    }
+
+def verify_attestation():
+    os.system("python3 verify_attestation.py")
 
 
 def train_model():
@@ -30,9 +27,21 @@ def train_model():
 
 
 if __name__ == "__main__":
+    # TODO: these commands shall be performed at docker container startup
+    os.system("/restart_aesm.sh")
+    os.system("gramine-sgx-gen-private-key")
+
     startup()
     local_public_key = get_local_public_key()
-    attestation_report = remote_attestation()
-    train_model()
+    remote_attestation()  # TODO: attestation returns GROUP_OUT_OF_DATE
+    verify_attestation()  # This has to be done on trusted machine other than the operator
+    # train_model()
 
-    # TODO: terminal command for destroy sgx
+    # TODO: fix this issue related to train_model() run in container:
+    # (NOTE: on local, the default sgx.max_threads = 4 is working,
+    # but in container we have to set it to 32 and it's still considerably slower than in local)
+
+    # error: There are no available TCS pages left for a new thread!
+    # Please try to increase sgx.max_threads in the manifest.
+    # The current value is 4
+    # Segmentation fault (core dumped)
