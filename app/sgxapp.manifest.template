@@ -11,9 +11,7 @@ loader.env.LD_LIBRARY_PATH = "/lib:/usr/lib:{{ ARCH_LIBDIR }}:/usr/{{ ARCH_LIBDI
 loader.env.OMP_NUM_THREADS = "8"
 loader.pal_internal_mem_size = "128M"
 
-# TODO: remove this config
-# TODO: we have to run the full sgxapp at once, not separately by calling arguments like this: ./sgxapp startup.py
-loader.insecure__use_cmdline_argv = true
+loader.argv = ["sgxapp", "trusted_src/trusted_main.py"]
 
 fs.mounts = [
   { uri = "file:{{ gramine.runtimedir() }}", path = "/lib" },
@@ -41,7 +39,6 @@ sgx.trusted_files = [
 {% for path in python.get_sys_path(ENTRYPOINT) %}
   "file:{{ path }}{{ '/' if path.is_dir() else '' }}",
 {% endfor %}
-
   "file:trusted_src/",
 ]
 

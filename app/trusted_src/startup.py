@@ -9,7 +9,3 @@ def startup():
     write(REPORT_PATH, public)
     quote = read(QUOTE_PATH, binary=True)
     write(GR_QUOTE, quote, binary=True)
-
-
-if __name__ == "__main__":
-    startup()

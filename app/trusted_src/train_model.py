@@ -28,7 +28,3 @@ def train_model():
 
     with open(ENCRYPTED_TRAINED_MODEL_PATH, "wb") as file:
         pickle.dump(encrypted_trained_model, file)
-
-
-if __name__ == "__main__":
-    train_model()
