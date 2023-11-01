@@ -39,22 +39,14 @@ def is_running_in_docker():
 
 
 if __name__ == "__main__":
-    # TODO: these commands shall be performed at docker container startup
     if is_running_in_docker():
         os.system("/restart_aesm.sh")
         os.system("gramine-sgx-gen-private-key")
 
+    # os.system("make")
+    # os.system("gramine-sgx ./sgxapp")
     startup()
     local_public_key = get_local_public_key()
     remote_attestation()  # TODO: attestation returns GROUP_OUT_OF_DATE
     verify_attestation()  # This has to be done on trusted machine other than the operator
-    # train_model()
-
-    # TODO: fix this issue related to train_model() run in container:
-    # (NOTE: on local, the default sgx.max_threads = 4 is working,
-    # but in container we have to set it to 32 and it's still considerably slower than in local)
-
-    # error: There are no available TCS pages left for a new thread!
-    # Please try to increase sgx.max_threads in the manifest.
-    # The current value is 4
-    # Segmentation fault (core dumped)
+    train_model()
