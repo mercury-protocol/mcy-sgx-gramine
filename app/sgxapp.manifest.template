@@ -1,5 +1,3 @@
-{% set ARCH_LIBDIR = "/lib/x86_64-linux-gnu" %}
-{% set ENTRYPOINT = "/usr/bin/python3.8" %}
 {% set LOG_LEVEL = "error" %}
 
 libos.entrypoint = "{{ ENTRYPOINT }}"
