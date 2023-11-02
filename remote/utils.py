@@ -9,15 +9,16 @@ from ecdsa.ecdh import ECDH
 from cryptography.fernet import Fernet
 
 
-def write(path: str, data: Any, binary: bool = False):
-    mode = "wb" if binary else "w"
-    with open(path, mode) as f:
+def write(path: str, data: Any):
+    directory_path = os.path.dirname(path)
+    if directory_path and not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+    with open(path, "w") as f:
         f.write(data)
 
 
-def read(path: str, binary: bool = False) -> Any:
-    mode = "rb" if binary else "r"
-    with open(path, mode) as f:
+def read(path: str) -> Any:
+    with open(path, "r") as f:
         return f.read()
 
 

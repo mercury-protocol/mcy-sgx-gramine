@@ -37,7 +37,7 @@ def train_model():
     return run(DATA_PATH)
 
 
-def simulate():
+def simulate_remote():
     check_attestation()
 
     secret, public = generate_key_pair()
@@ -59,4 +59,4 @@ def simulate():
 
 
 if __name__ == "__main__":
-    simulate()
+    simulate_remote()
