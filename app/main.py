@@ -22,3 +22,5 @@ if __name__ == "__main__":
 
     os.system("make")
     os.system("gramine-sgx ./sgxapp")
+
+# TODO: now we have to run remote attestation manually - do it in a separate thread once gr.quote is ready
