@@ -1,14 +1,16 @@
+import json
 import csv
 import os
 import pickle
 import time
 from io import StringIO
-from ecdsa.keys import SigningKey, VerifyingKey
-from ecdsa.curves import NIST256p
-from ecdsa.ecdh import ECDH
 
-from app.trusted_src.utils import encrypt, decrypt, write, read, generate_key_pair
+from remote.utils import encrypt, decrypt, write, read, generate_key_pair, derive_shared_secret
 
+
+IAS_REPORT = "../app/ias.report"
+IAS_SIGNATURE = "../app/ias.sig"
+IAS_CERTIFICATE = "../app/ias.cert"
 
 DATA_PUBLIC_KEY_PATH = "../app/data_public_key"
 MODEL_PUBLIC_KEY_PATH = "../app/model_public_key"
@@ -19,36 +21,34 @@ ENCRYPTED_MODEL_PATH = "../app/encrypted_model.py"
 ENCRYPTED_TRAINED_MODEL_PATH = "../app/encrypted_trained_model.pkl"
 
 
-def derive_shared_secret(secret: str, public: str, remote_public: str) -> str:
-    secret = SigningKey.from_string(bytearray.fromhex(secret), curve=NIST256p)
-    public = VerifyingKey.from_string(bytearray.fromhex(public), curve=NIST256p)
-
-    ecdh = ECDH(curve=NIST256p, public_key=public, private_key=secret)
-    ecdh.load_received_public_key_bytes(bytearray.fromhex(remote_public))
-
-    shared_secret = ecdh.generate_sharedsecret_bytes().hex()
-
-    return shared_secret
+def check_attestation():
+    # TODO: GROUP_OUT_OF_DATE should be fixed in attestation and not be accepted here
+    attestation_report = {
+        "X-IASReport-Signature": read(IAS_SIGNATURE),
+        "X-IASReport-Signing-Certificate": read(IAS_CERTIFICATE),
+        "Body": json.loads(read(IAS_REPORT))
+    }
+    assert attestation_report["Body"]["isvEnclaveQuoteStatus"] in ["OK", "GROUP_OUT_OF_DATE"]
 
 
 def send_encrypted_model(shared_secret: str):
     with open(ENCRYPTED_MODEL_PATH, "w") as file:
         file.write(
-            """print('start dummy model training')
+"""print('start dummy model training')
 
-            def run(data):
-                import numpy as np
-                from sklearn.linear_model import LinearRegression
+def run(data):
+    import numpy as np
+    from sklearn.linear_model import LinearRegression
 
-                data = np.loadtxt(data, delimiter=",", dtype=int, skiprows=1).transpose()
-                x = data[0].reshape((-1, 1))
-                y = data[1]
+    data = np.loadtxt(data, delimiter=",", dtype=int, skiprows=1).transpose()
+    x = data[0].reshape((-1, 1))
+    y = data[1]
 
-                model = LinearRegression()
-                model.fit(x, y)
+    model = LinearRegression()
+    model.fit(x, y)
 
-                return model
-            """
+    return model
+"""
         )
     with open(ENCRYPTED_MODEL_PATH, "rb") as file:
         model = file.read()
@@ -86,13 +86,11 @@ def get_expected_model(shared_secret: str):
 
 
 def simulate():
-    # TODO: GROUP_OUT_OF_DATE should be fixed in attestation and not be accepted here
-    attestation_report = read(ATTESTATION_REPORT_PATH)
-    assert attestation_report["Body"]["isvEnclaveQuoteStatus"] in ["OK", "GROUP_OUT_OF_DATE"]
+    check_attestation()
 
     secret, public = generate_key_pair()
-    write(DATA_PUBLIC_KEY_PATH, secret)
-    write(MODEL_PUBLIC_KEY_PATH, secret)
+    write(DATA_PUBLIC_KEY_PATH, public)
+    write(MODEL_PUBLIC_KEY_PATH, public)
 
     remote_public = read(REMOTE_PUBLIC_KEY_PATH)
     shared_secret = derive_shared_secret(secret, public, remote_public)
@@ -103,6 +101,7 @@ def simulate():
     while not os.path.exists(ENCRYPTED_TRAINED_MODEL_PATH):
         print("Encrypted trained model not received yet, waiting...")
         time.sleep(5)
+    print("Encrypted trained model received")
 
     with open(ENCRYPTED_TRAINED_MODEL_PATH, "rb") as file:
         encrypted_trained_model = pickle.load(file)
@@ -111,6 +110,7 @@ def simulate():
     expected_trained_model = get_expected_model(shared_secret)
 
     assert trained_model.coef_ == expected_trained_model.coef_
+    print("Model training was successful!")
 
 
 if __name__ == "__main__":
