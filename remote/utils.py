@@ -1,6 +1,8 @@
+import os
+import pickle
+import time
 from base64 import b64encode
 from typing import Tuple, Any
-
 from ecdsa.keys import SigningKey, VerifyingKey
 from ecdsa.curves import NIST256p
 from ecdsa.ecdh import ECDH
@@ -17,6 +19,13 @@ def read(path: str, binary: bool = False) -> Any:
     mode = "rb" if binary else "r"
     with open(path, mode) as f:
         return f.read()
+
+
+def wait_file(path: str):
+    print(f"waiting for {path}")
+    while not os.path.exists(path):
+        time.sleep(1)
+    print(f"{path} received")
 
 
 def generate_key_pair() -> Tuple[str, str]:
@@ -52,3 +61,11 @@ def decrypt(shared_secret: str, encrypted: bytes) -> bytes:
     fernet = Fernet(shared_secret)
     decrypted = fernet.decrypt(encrypted)
     return decrypted
+
+
+def load_trained_model(path: str, shared_secret: str):
+    with open(path, "rb") as file:
+        encrypted_trained_model = pickle.load(file)
+        trained_model = pickle.loads(decrypt(shared_secret, encrypted_trained_model))
+
+    return trained_model

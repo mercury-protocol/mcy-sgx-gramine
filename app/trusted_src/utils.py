@@ -29,6 +29,13 @@ def write_json(path: str, data: dict):
         json.dump(data, f, indent=4, sort_keys=True)
 
 
+def wait_file(path: str):
+    print(f"waiting for {path}")
+    while not os.path.exists(path):
+        time.sleep(1)
+    print(f"{path} received")
+
+
 def generate_key_pair() -> Tuple[str, str]:
     ecdh = ECDH(curve=NIST256p)
     ecdh.generate_private_key()
@@ -73,23 +80,17 @@ def decrypt(shared_secret: str, encrypted: bytes) -> bytes:
 
 
 def receive_public_key(path: str) -> str:
-    while not os.path.exists(path):
-        time.sleep(1)
-
+    wait_file(path)
     return read(path)
 
 
 def receive_data(shared_secret: str):
-    while not os.path.exists(ENCRYPTED_DATA_PATH):
-        time.sleep(1)
-
+    wait_file(ENCRYPTED_DATA_PATH)
     encrypted_data = read(ENCRYPTED_DATA_PATH, binary=True)
     return decrypt(shared_secret, encrypted_data).decode("utf-8")
 
 
 def receive_model(shared_secret: str):
-    while not os.path.exists(ENCRYPTED_MODEL_PATH):
-        time.sleep(1)
-
+    wait_file(ENCRYPTED_MODEL_PATH)
     encrypted_model = read(ENCRYPTED_MODEL_PATH, binary=True)
     return decrypt(shared_secret, encrypted_model).decode("utf-8")

@@ -1,4 +1,6 @@
 import os
+import threading
+from attestation import remote_attestation
 
 
 def is_running_in_docker():
@@ -13,6 +15,10 @@ def is_running_in_docker():
     return False
 
 
+def run_sgxapp():
+    os.system("gramine-sgx ./sgxapp")
+
+
 if __name__ == "__main__":
     if is_running_in_docker():
         os.system("/restart_aesm.sh")
@@ -21,6 +27,12 @@ if __name__ == "__main__":
         os.system("make distclean")
 
     os.system("make")
-    os.system("gramine-sgx ./sgxapp")
 
-# TODO: now we have to run remote attestation manually - do it in a separate thread once gr.quote is ready
+    sgxapp_thread = threading.Thread(target=run_sgxapp)
+    remote_attestation_thread = threading.Thread(target=remote_attestation)
+
+    sgxapp_thread.start()
+    remote_attestation_thread.start()
+
+    sgxapp_thread.join()
+    remote_attestation_thread.join()

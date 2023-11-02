@@ -1,9 +1,6 @@
 import json
-import os
-import pickle
-import time
 
-from remote.utils import encrypt, decrypt, write, read, generate_key_pair, derive_shared_secret
+from remote.utils import encrypt, write, read, generate_key_pair, derive_shared_secret, wait_file, load_trained_model
 
 
 DATA_PATH = "data.csv"
@@ -24,6 +21,8 @@ ENCRYPTED_TRAINED_MODEL_PATH = "../app/encrypted_trained_model.pkl"
 
 def check_attestation():
     # TODO: GROUP_OUT_OF_DATE should be fixed in attestation and not be accepted here
+    wait_file(IAS_REPORT)
+
     attestation_report = {
         "X-IASReport-Signature": read(IAS_SIGNATURE),
         "X-IASReport-Signing-Certificate": read(IAS_CERTIFICATE),
@@ -66,15 +65,8 @@ def simulate():
     send_encrypted_model(shared_secret)
     send_encrypted_data(shared_secret)
 
-    while not os.path.exists(ENCRYPTED_TRAINED_MODEL_PATH):
-        print("Encrypted trained model not received yet, waiting...")
-        time.sleep(5)
-    print("Encrypted trained model received")
-
-    with open(ENCRYPTED_TRAINED_MODEL_PATH, "rb") as file:
-        encrypted_trained_model = pickle.load(file)
-        trained_model = pickle.loads(decrypt(shared_secret, encrypted_trained_model))
-
+    wait_file(ENCRYPTED_TRAINED_MODEL_PATH)
+    trained_model = load_trained_model(ENCRYPTED_TRAINED_MODEL_PATH, shared_secret)
     expected_trained_model = train_model()
 
     assert trained_model.coef_ == expected_trained_model.coef_
