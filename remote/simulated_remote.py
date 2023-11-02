@@ -1,6 +1,6 @@
 import json
 
-from remote.utils import encrypt, write, read, generate_key_pair, derive_shared_secret, wait_file, load_trained_model
+from utils import encrypt, write, read, generate_key_pair, derive_shared_secret, wait_file, load_trained_model
 
 
 DATA_PATH = "data.csv"
@@ -48,7 +48,7 @@ def send_encrypted_data(shared_secret: str):
 
 
 def train_model():
-    from remote.model import run
+    from model import run
     return run(DATA_PATH)
 
 

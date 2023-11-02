@@ -7,3 +7,5 @@ services:
     devices:
       - /dev/sgx_enclave
       - /dev/sgx_provision
+    volumes:
+      - ./app/io_files:/io_files
