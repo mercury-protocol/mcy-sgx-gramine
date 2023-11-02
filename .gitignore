@@ -2,8 +2,9 @@
 .idea
 __pycache__
 .pytest_cache
-/app/io_files/
 /app/sgxapp.sig
 /app/sgxapp.manifest
 /app/sgxapp.manifest.sgx
 /app/local_secret_key
+/app/input/
+/app/output/

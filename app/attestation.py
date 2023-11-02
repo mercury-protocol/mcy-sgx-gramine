@@ -2,10 +2,10 @@ import os
 import time
 
 
-GR_QUOTE = "io_files/gr.quote"
-IAS_REPORT = "io_files/ias.report"
-IAS_SIGNATURE = "io_files/ias.sig"
-IAS_CERTIFICATE = "io_files/ias.cert"
+GR_QUOTE = "output/gr.quote"
+IAS_REPORT = "output/ias.report"
+IAS_SIGNATURE = "output/ias.sig"
+IAS_CERTIFICATE = "output/ias.cert"
 
 IAS_API_KEY = "909c02172d964178a794d055e98c41d8"  # TODO: store it securely
 

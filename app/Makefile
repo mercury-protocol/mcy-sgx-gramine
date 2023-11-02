@@ -18,4 +18,4 @@ clean:
 
 .PHONY: distclean
 distclean: clean
-	$(RM) -rf io_files local_secret_key
+	$(RM) -rf input output local_secret_key

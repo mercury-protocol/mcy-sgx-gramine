@@ -8,4 +8,5 @@ services:
       - /dev/sgx_enclave
       - /dev/sgx_provision
     volumes:
-      - ./app/io_files:/io_files
+      - ./app/input:/input
+      - ./app/output:/output
