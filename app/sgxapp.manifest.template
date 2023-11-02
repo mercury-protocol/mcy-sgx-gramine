@@ -11,9 +11,7 @@ loader.env.LD_LIBRARY_PATH = "/lib:/usr/lib:{{ ARCH_LIBDIR }}:/usr/{{ ARCH_LIBDI
 loader.env.OMP_NUM_THREADS = "8"
 loader.pal_internal_mem_size = "128M"
 
-# TODO: remove this config
-# TODO: we have to run the full sgxapp at once, not separately by calling arguments like this: ./sgxapp startup.py
-loader.insecure__use_cmdline_argv = true
+loader.argv = ["sgxapp", "trusted_src/trusted_main.py"]
 
 fs.mounts = [
   { uri = "file:{{ gramine.runtimedir() }}", path = "/lib" },
@@ -25,8 +23,8 @@ fs.mounts = [
 ]
 
 sgx.nonpie_binary = true
-sgx.enclave_size = "1G"
-sgx.thread_num = 32
+sgx.enclave_size = "2G"
+sgx.max_threads = 32
 sgx.edmm_enable = {{ 'true' if env.get('EDMM', '0') == '1' else 'false' }}
 sgx.remote_attestation = "epid"
 sgx.ra_client_linkable = false
@@ -38,24 +36,19 @@ sgx.trusted_files = [
   "file:{{ gramine.runtimedir() }}/",
   "file:{{ ARCH_LIBDIR }}/",
   "file:/usr/{{ ARCH_LIBDIR }}/",
-  "file:{{ python.stdlib }}/",
-  "file:{{ python.distlib }}/",
-  "file:{{ python.get_path('stdlib', vars={'installed_base': '/usr/local'}) }}/",
-
-  "file:constants.py",
-  "file:utils.py",
-  "file:startup.py",
-  "file:remote_attestation.py",
-  "file:train_model.py",
-  "file:__dummy.py",  # TODO: remove
+{% for path in python.get_sys_path(ENTRYPOINT) %}
+  "file:{{ path }}{{ '/' if path.is_dir() else '' }}",
+{% endfor %}
+  "file:trusted_src/",
 ]
 
-sgx.allowed_files = [  # TODO: can we allow a full directory here?
+# TODO: allowed files should not be used
+sgx.allowed_files = [
   "file:gr.quote",
   "file:local_public_key",
   "file:data_public_key",
   "file:model_public_key",
-  "file:encrypted_data.csv",  # TODO: data file name should be according to id
-  "file:encrypted_model.py",  # TODO: model file name should be according to id
-  "file:encrypted_trained_model.pkl",  # TODO: model file name should be according to id
+  "file:encrypted_data.csv",
+  "file:encrypted_model.py",
+  "file:encrypted_trained_model.pkl",
 ]

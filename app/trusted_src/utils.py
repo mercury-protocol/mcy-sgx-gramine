@@ -9,7 +9,7 @@ from ecdsa.curves import NIST256p
 from ecdsa.ecdh import ECDH
 from cryptography.fernet import Fernet
 
-from constants import LOCAL_SECRET_KEY_PATH, SIMULATED_RECEIVE, ENCRYPTED_DATA_PATH, ENCRYPTED_MODEL_PATH
+from constants import LOCAL_SECRET_KEY_PATH, ENCRYPTED_DATA_PATH, ENCRYPTED_MODEL_PATH
 
 
 def write(path: str, data: Any, binary: bool = False):
@@ -27,6 +27,13 @@ def read(path: str, binary: bool = False) -> Any:
 def write_json(path: str, data: dict):
     with open(path, "w") as f:
         json.dump(data, f, indent=4, sort_keys=True)
+
+
+def wait_file(path: str):
+    print(f"waiting for {path}")
+    while not os.path.exists(path):
+        time.sleep(1)
+    print(f"{path} received")
 
 
 def generate_key_pair() -> Tuple[str, str]:
@@ -73,32 +80,17 @@ def decrypt(shared_secret: str, encrypted: bytes) -> bytes:
 
 
 def receive_public_key(path: str) -> str:
-    while not os.path.exists(path):
-        time.sleep(1)
-        if SIMULATED_RECEIVE:
-            _, public_key = generate_key_pair()
-            write(path, public_key)
-
+    wait_file(path)
     return read(path)
 
 
 def receive_data(shared_secret: str):
-    while not os.path.exists(ENCRYPTED_DATA_PATH):
-        time.sleep(1)
-        if SIMULATED_RECEIVE:
-            from __dummy import dummy_receive_encrypted_data
-            dummy_receive_encrypted_data(shared_secret)
-
+    wait_file(ENCRYPTED_DATA_PATH)
     encrypted_data = read(ENCRYPTED_DATA_PATH, binary=True)
     return decrypt(shared_secret, encrypted_data).decode("utf-8")
 
 
 def receive_model(shared_secret: str):
-    while not os.path.exists(ENCRYPTED_MODEL_PATH):
-        time.sleep(1)
-        if SIMULATED_RECEIVE:
-            from __dummy import dummy_receive_encrypted_model
-            dummy_receive_encrypted_model(shared_secret)
-
+    wait_file(ENCRYPTED_MODEL_PATH)
     encrypted_model = read(ENCRYPTED_MODEL_PATH, binary=True)
     return decrypt(shared_secret, encrypted_model).decode("utf-8")
