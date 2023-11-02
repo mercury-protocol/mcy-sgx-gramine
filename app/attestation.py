@@ -7,7 +7,7 @@ IAS_REPORT = "output/ias.report"
 IAS_SIGNATURE = "output/ias.sig"
 IAS_CERTIFICATE = "output/ias.cert"
 
-IAS_API_KEY = "909c02172d964178a794d055e98c41d8"  # TODO: store it securely
+IAS_API_KEY = os.environ["IAS_API_KEY"]
 
 
 # TODO: attestation returns GROUP_OUT_OF_DATE

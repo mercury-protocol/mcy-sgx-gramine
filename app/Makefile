@@ -2,8 +2,12 @@
 all: sgxapp.manifest
 all: sgxapp.manifest.sgx sgxapp.sig
 
+RA_CLIENT_SPID ?=
+
 sgxapp.manifest: sgxapp.manifest.template
-	gramine-manifest $< > $@
+	gramine-manifest \
+	-DRA_CLIENT_SPID=$(RA_CLIENT_SPID) \
+	$< > $@
 
 sgxapp.manifest.sgx sgxapp.sig: sgx_sign
 	@:

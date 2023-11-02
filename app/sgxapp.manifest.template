@@ -28,7 +28,7 @@ sgx.max_threads = 32
 sgx.edmm_enable = {{ 'true' if env.get('EDMM', '0') == '1' else 'false' }}
 sgx.remote_attestation = "epid"
 sgx.ra_client_linkable = false
-sgx.ra_client_spid = "741871B230A61340FEBE8B50A803525F"  # TODO: do not hardcode
+sgx.ra_client_spid = "{{ RA_CLIENT_SPID }}"
 
 sgx.trusted_files = [
   "file:{{ gramine.libos }}",

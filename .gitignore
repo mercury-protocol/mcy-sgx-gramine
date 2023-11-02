@@ -8,3 +8,4 @@ __pycache__
 /app/local_secret_key
 /app/input/
 /app/output/
+/.env
