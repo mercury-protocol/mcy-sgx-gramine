@@ -6,17 +6,17 @@ from remote.utils import encrypt, write, read, generate_key_pair, derive_shared_
 DATA_PATH = "data.csv"
 MODEL_PATH = "model.py"
 
-IAS_REPORT = "../app/ias.report"
-IAS_SIGNATURE = "../app/ias.sig"
-IAS_CERTIFICATE = "../app/ias.cert"
+IAS_REPORT = "../app/io_files/ias.report"
+IAS_SIGNATURE = "../app/io_files/ias.sig"
+IAS_CERTIFICATE = "../app/io_files/ias.cert"
 
-DATA_PUBLIC_KEY_PATH = "../app/data_public_key"
-MODEL_PUBLIC_KEY_PATH = "../app/model_public_key"
-REMOTE_PUBLIC_KEY_PATH = "../app/local_public_key"
-ATTESTATION_REPORT_PATH = "../app/attestation_report.json"
-ENCRYPTED_DATA_PATH = "../app/encrypted_data.csv"
-ENCRYPTED_MODEL_PATH = "../app/encrypted_model.py"
-ENCRYPTED_TRAINED_MODEL_PATH = "../app/encrypted_trained_model.pkl"
+DATA_PUBLIC_KEY_PATH = "../app/io_files/data_public_key"
+MODEL_PUBLIC_KEY_PATH = "../app/io_files/model_public_key"
+REMOTE_PUBLIC_KEY_PATH = "../app/io_files/local_public_key"
+ATTESTATION_REPORT_PATH = "../app/io_files/attestation_report.json"
+ENCRYPTED_DATA_PATH = "../app/io_files/encrypted_data.csv"
+ENCRYPTED_MODEL_PATH = "../app/io_files/encrypted_model.py"
+ENCRYPTED_TRAINED_MODEL_PATH = "../app/io_files/encrypted_trained_model.pkl"
 
 
 def check_attestation():

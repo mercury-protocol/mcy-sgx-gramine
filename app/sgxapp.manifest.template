@@ -44,11 +44,11 @@ sgx.trusted_files = [
 
 # TODO: allowed files should not be used
 sgx.allowed_files = [
-  "file:gr.quote",
-  "file:local_public_key",
-  "file:data_public_key",
-  "file:model_public_key",
-  "file:encrypted_data.csv",
-  "file:encrypted_model.py",
-  "file:encrypted_trained_model.pkl",
+  "file:io_files/gr.quote",
+  "file:io_files/local_public_key",
+  "file:io_files/data_public_key",
+  "file:io_files/model_public_key",
+  "file:io_files/encrypted_data.csv",
+  "file:io_files/encrypted_model.py",
+  "file:io_files/encrypted_trained_model.pkl",
 ]
