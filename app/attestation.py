@@ -1,22 +1,13 @@
 import os
-import time
 
 from env import IAS_API_KEY
-
-
-GR_QUOTE = "output/gr.quote"
-IAS_REPORT = "output/ias.report"
-IAS_SIGNATURE = "output/ias.sig"
-IAS_CERTIFICATE = "output/ias.cert"
+from sgx_constants import GR_QUOTE, IAS_REPORT, IAS_SIGNATURE, IAS_CERTIFICATE
+from sgx_utils import wait_file
 
 
 # TODO: attestation returns GROUP_OUT_OF_DATE
 def remote_attestation():
-    print(f"waiting for {GR_QUOTE}")
-    while not os.path.exists(GR_QUOTE):
-        time.sleep(1)
-    print(f"{GR_QUOTE} received")
-
+    wait_file(GR_QUOTE)
     os.system("gramine-sgx-ias-request report"
               f" -k {IAS_API_KEY}"
               f" -q {GR_QUOTE}"

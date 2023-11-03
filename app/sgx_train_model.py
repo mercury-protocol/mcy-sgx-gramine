@@ -1,8 +1,8 @@
 import pickle
 from io import StringIO
 
-from constants import DATA_PUBLIC_KEY_PATH, MODEL_PUBLIC_KEY_PATH, ENCRYPTED_TRAINED_MODEL_PATH
-from utils import receive_public_key, receive_data, receive_model, derive_shared_secret, encrypt
+from sgx_constants import DATA_PUBLIC_KEY_PATH, MODEL_PUBLIC_KEY_PATH, ENCRYPTED_TRAINED_MODEL_PATH
+from sgx_utils import receive_public_key, receive_data, receive_model, derive_shared_secret, encrypt
 
 
 def train_model():
