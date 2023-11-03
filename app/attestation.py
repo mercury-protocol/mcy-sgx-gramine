@@ -1,13 +1,13 @@
 import os
 import time
 
+from env import IAS_API_KEY
+
 
 GR_QUOTE = "output/gr.quote"
 IAS_REPORT = "output/ias.report"
 IAS_SIGNATURE = "output/ias.sig"
 IAS_CERTIFICATE = "output/ias.cert"
-
-IAS_API_KEY = os.environ["IAS_API_KEY"]
 
 
 # TODO: attestation returns GROUP_OUT_OF_DATE

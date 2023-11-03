@@ -1,9 +1,7 @@
 import os
 import threading
 from attestation import remote_attestation
-
-
-RA_CLIENT_SPID = os.environ["RA_CLIENT_SPID"]
+from env import RA_CLIENT_SPID
 
 
 def is_running_in_docker():
