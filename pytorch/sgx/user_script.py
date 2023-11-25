@@ -60,18 +60,6 @@ class Network(nn.Module):
         return F.log_softmax(x)
 
 
-def load_network():
-    network = Network()
-    network.load_state_dict(torch.load(NETWORK_PATH))
-    return network
-
-
-def load_optimizer(network):
-    optimizer = optim.SGD(network.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
-    optimizer.load_state_dict(torch.load(OPTIMIZER_PATH))
-    return optimizer
-
-
 initial_network = Network()
 initial_optimizer = optim.SGD(initial_network.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 
@@ -86,10 +74,7 @@ test_losses = []
 test_counter = []
 
 
-def train(epoch):
-    network = load_network()
-    optimizer = load_optimizer(network)
-
+def train(network, optimizer, epoch):
     network.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         optimizer.zero_grad()
@@ -104,16 +89,9 @@ def train(epoch):
             train_losses.append(loss.item())
             train_counter.append(
                 (batch_idx*64) + ((epoch-1)*len(train_loader.dataset)))
-            torch.save(network.state_dict(), NETWORK_PATH)
-            torch.save(optimizer.state_dict(), OPTIMIZER_PATH)
-
-    torch.save(network.state_dict(), NETWORK_PATH)
-    torch.save(optimizer.state_dict(), OPTIMIZER_PATH)
 
 
-def test(epoch):
-    network = load_network()
-
+def test(network, epoch):
     network.eval()
     test_loss = 0
     correct = 0
