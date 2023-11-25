@@ -1,22 +1,7 @@
 import json
 
-from remote.utils import encrypt, write, read, generate_key_pair, derive_shared_secret, wait_file, load_trained_model
-
-
-DATA_PATH = "data.csv"
-MODEL_PATH = "model.py"
-
-IAS_REPORT = "../app/ias.report"
-IAS_SIGNATURE = "../app/ias.sig"
-IAS_CERTIFICATE = "../app/ias.cert"
-
-DATA_PUBLIC_KEY_PATH = "../app/data_public_key"
-MODEL_PUBLIC_KEY_PATH = "../app/model_public_key"
-REMOTE_PUBLIC_KEY_PATH = "../app/local_public_key"
-ATTESTATION_REPORT_PATH = "../app/attestation_report.json"
-ENCRYPTED_DATA_PATH = "../app/encrypted_data.csv"
-ENCRYPTED_MODEL_PATH = "../app/encrypted_model.py"
-ENCRYPTED_TRAINED_MODEL_PATH = "../app/encrypted_trained_model.pkl"
+from constants import *
+from utils import *
 
 
 def check_attestation():
@@ -48,11 +33,11 @@ def send_encrypted_data(shared_secret: str):
 
 
 def train_model():
-    from remote.model import run
+    from model import run
     return run(DATA_PATH)
 
 
-def simulate():
+def simulate_remote():
     check_attestation()
 
     secret, public = generate_key_pair()
@@ -74,4 +59,4 @@ def simulate():
 
 
 if __name__ == "__main__":
-    simulate()
+    simulate_remote()

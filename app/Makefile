@@ -1,9 +1,18 @@
+ARCH_LIBDIR ?= /lib/$(shell $(CC) -dumpmachine)
+ENTRYPOINT ?= $(realpath $(shell sh -c "command -v python3"))
+
 .PHONY: all
 all: sgxapp.manifest
 all: sgxapp.manifest.sgx sgxapp.sig
 
+RA_CLIENT_SPID ?=
+
 sgxapp.manifest: sgxapp.manifest.template
-	gramine-manifest $< > $@
+	gramine-manifest \
+	-DARCH_LIBDIR=$(ARCH_LIBDIR) \
+	-DENTRYPOINT=$(ENTRYPOINT) \
+	-DRA_CLIENT_SPID=$(RA_CLIENT_SPID) \
+	$< > $@
 
 sgxapp.manifest.sgx sgxapp.sig: sgx_sign
 	@:
@@ -18,6 +27,4 @@ clean:
 
 .PHONY: distclean
 distclean: clean
-	$(RM) *.sig *.quote *.cert *.report attestation_report.json \
-		local_secret_key local_public_key data_shared_secret_key model_shared_secret_key \
-		data_public_key model_public_key encrypted_data.csv encrypted_model.py encrypted_trained_model.pkl
+	$(RM) -rf input output local_secret_key

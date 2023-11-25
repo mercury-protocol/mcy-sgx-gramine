@@ -1,5 +1,5 @@
-from constants import QUOTE_PATH, REPORT_PATH,  GR_QUOTE, LOCAL_SECRET_KEY_PATH, LOCAL_PUBLIC_KEY_PATH
-from utils import read, write, generate_key_pair
+from sgx_constants import QUOTE_PATH, REPORT_PATH,  GR_QUOTE, LOCAL_SECRET_KEY_PATH, LOCAL_PUBLIC_KEY_PATH
+from sgx_utils import read, write, generate_key_pair
 
 
 def startup():

@@ -1,6 +1,7 @@
 import os
 import threading
 from attestation import remote_attestation
+from env import RA_CLIENT_SPID
 
 
 def is_running_in_docker():
@@ -26,7 +27,7 @@ if __name__ == "__main__":
     else:
         os.system("make distclean")
 
-    os.system("make")
+    os.system(f"make RA_CLIENT_SPID={RA_CLIENT_SPID}")
 
     sgxapp_thread = threading.Thread(target=run_sgxapp)
     remote_attestation_thread = threading.Thread(target=remote_attestation)

@@ -1,5 +1,3 @@
-{% set ARCH_LIBDIR = "/lib/x86_64-linux-gnu" %}
-{% set ENTRYPOINT = "/usr/bin/python3.8" %}
 {% set LOG_LEVEL = "error" %}
 
 libos.entrypoint = "{{ ENTRYPOINT }}"
@@ -11,7 +9,7 @@ loader.env.LD_LIBRARY_PATH = "/lib:/usr/lib:{{ ARCH_LIBDIR }}:/usr/{{ ARCH_LIBDI
 loader.env.OMP_NUM_THREADS = "8"
 loader.pal_internal_mem_size = "128M"
 
-loader.argv = ["sgxapp", "trusted_src/trusted_main.py"]
+loader.argv = ["sgxapp", "sgx_main.py"]
 
 fs.mounts = [
   { uri = "file:{{ gramine.runtimedir() }}", path = "/lib" },
@@ -28,7 +26,7 @@ sgx.max_threads = 32
 sgx.edmm_enable = {{ 'true' if env.get('EDMM', '0') == '1' else 'false' }}
 sgx.remote_attestation = "epid"
 sgx.ra_client_linkable = false
-sgx.ra_client_spid = "741871B230A61340FEBE8B50A803525F"  # TODO: do not hardcode
+sgx.ra_client_spid = "{{ RA_CLIENT_SPID }}"
 
 sgx.trusted_files = [
   "file:{{ gramine.libos }}",
@@ -39,16 +37,20 @@ sgx.trusted_files = [
 {% for path in python.get_sys_path(ENTRYPOINT) %}
   "file:{{ path }}{{ '/' if path.is_dir() else '' }}",
 {% endfor %}
-  "file:trusted_src/",
+  "file:sgx_constants.py",
+  "file:sgx_main.py",
+  "file:sgx_startup.py",
+  "file:sgx_train_model.py",
+  "file:sgx_utils.py",
 ]
 
 # TODO: allowed files should not be used
 sgx.allowed_files = [
-  "file:gr.quote",
-  "file:local_public_key",
-  "file:data_public_key",
-  "file:model_public_key",
-  "file:encrypted_data.csv",
-  "file:encrypted_model.py",
-  "file:encrypted_trained_model.pkl",
+  "file:input/data_public_key",
+  "file:input/model_public_key",
+  "file:input/encrypted_data.csv",
+  "file:input/encrypted_model.py",
+  "file:output/gr.quote",
+  "file:output/local_public_key",
+  "file:output/encrypted_trained_model.pkl",
 ]
