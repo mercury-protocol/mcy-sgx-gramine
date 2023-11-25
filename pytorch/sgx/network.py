@@ -4,11 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+from pytorch.constants import MODEL_PATH, OPTIMIZER_PATH, INITIAL_NETWORK_PATH, INITIAL_OPTIMIZER_PATH
 
-INITIAL_NETWORK_PATH = "../results/initial_network.pkl"
-INITIAL_OPTIMIZER_PATH = "../results/initial_optimizer.pkl"
-MODEL_PATH = "../results/model.pth"
-OPTIMIZER_PATH = "../results/optimizer.pth"
 
 LEARNING_RATE = 0.01
 MOMENTUM = 0.5

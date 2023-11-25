@@ -10,5 +10,5 @@ __pycache__
 /app/output/
 /.env
 
-/_pytorch/mnist_digits/
-/_pytorch/results/
+/pytorch/mnist_digits/
+/pytorch/results/

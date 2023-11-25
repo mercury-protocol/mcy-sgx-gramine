@@ -3,11 +3,10 @@ import torch
 from data import test_loader
 from network import INITIAL_NETWORK_PATH, INITIAL_OPTIMIZER_PATH
 from train import train
-from _pytorch.normal.eval import make_predictions
 
+from pytorch.constants import MODEL_PATH, OPTIMIZER_PATH
+from pytorch.normal.eval import make_predictions
 
-MODEL_PATH = "../results/model.pth"
-OPTIMIZER_PATH = "../results/optimizer.pth"
 
 N_EPOCHS = 2
 

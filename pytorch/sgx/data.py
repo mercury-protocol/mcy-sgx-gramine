@@ -1,8 +1,8 @@
 import torch
 import torchvision
 
+from pytorch.constants import DATA_PATH
 
-DATA_PATH = "../mnist_digits/"
 
 BATCH_SIZE_TRAIN = 64
 BATCH_SIZE_TEST = 1000

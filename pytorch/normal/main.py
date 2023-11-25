@@ -1,14 +1,11 @@
 from eval import check_data, evaluate_training, make_predictions
+from pytorch.constants import DATA_PATH, MODEL_PATH, OPTIMIZER_PATH
 
 
 # ------------------- get the data ----------------
 import torch
 import torchvision
 
-
-DATA_PATH = "../mnist_digits/"
-MODEL_PATH = "../results/model.pth"
-OPTIMIZER_PATH = "../results/optimizer.pth"
 
 N_EPOCHS = 2
 BATCH_SIZE_TRAIN = 64
