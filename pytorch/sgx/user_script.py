@@ -1,4 +1,4 @@
-from pytorch.external_constants import DATA_PATH, MODEL_PATH, OPTIMIZER_PATH
+from pytorch.external_constants import DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH
 
 
 # ------------------- get the data ----------------
@@ -41,9 +41,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 
-class Net(nn.Module):
+class Network(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
+        super(Network, self).__init__()
         self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
         self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
         self.conv2_drop = nn.Dropout2d()
@@ -61,8 +61,8 @@ class Net(nn.Module):
 
 
 def load_network():
-    network = Net()
-    network.load_state_dict(torch.load(MODEL_PATH))
+    network = Network()
+    network.load_state_dict(torch.load(NETWORK_PATH))
     return network
 
 
@@ -72,10 +72,10 @@ def load_optimizer(network):
     return optimizer
 
 
-initial_network = Net()
+initial_network = Network()
 initial_optimizer = optim.SGD(initial_network.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 
-torch.save(initial_network.state_dict(), MODEL_PATH)
+torch.save(initial_network.state_dict(), NETWORK_PATH)
 torch.save(initial_optimizer.state_dict(), OPTIMIZER_PATH)
 
 
@@ -104,10 +104,10 @@ def train(epoch):
             train_losses.append(loss.item())
             train_counter.append(
                 (batch_idx*64) + ((epoch-1)*len(train_loader.dataset)))
-            torch.save(network.state_dict(), MODEL_PATH)
+            torch.save(network.state_dict(), NETWORK_PATH)
             torch.save(optimizer.state_dict(), OPTIMIZER_PATH)
 
-    torch.save(network.state_dict(), MODEL_PATH)
+    torch.save(network.state_dict(), NETWORK_PATH)
     torch.save(optimizer.state_dict(), OPTIMIZER_PATH)
 
 

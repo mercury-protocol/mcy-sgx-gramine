@@ -1,5 +1,5 @@
 from eval import check_data, evaluate_training, make_predictions
-from pytorch.external_constants import DATA_PATH, MODEL_PATH, OPTIMIZER_PATH
+from pytorch.external_constants import DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH
 
 
 # ------------------- get the data ----------------
@@ -65,7 +65,7 @@ class Net(nn.Module):
 
 def load_network():
     network = Net()
-    network.load_state_dict(torch.load(MODEL_PATH))
+    network.load_state_dict(torch.load(NETWORK_PATH))
     return network
 
 
@@ -78,7 +78,7 @@ def load_optimizer(network):
 initial_network = Net()
 initial_optimizer = optim.SGD(initial_network.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 
-torch.save(initial_network.state_dict(), MODEL_PATH)
+torch.save(initial_network.state_dict(), NETWORK_PATH)
 torch.save(initial_optimizer.state_dict(), OPTIMIZER_PATH)
 
 
@@ -107,10 +107,10 @@ def train(epoch):
             train_losses.append(loss.item())
             train_counter.append(
                 (batch_idx*64) + ((epoch-1)*len(train_loader.dataset)))
-            torch.save(network.state_dict(), MODEL_PATH)
+            torch.save(network.state_dict(), NETWORK_PATH)
             torch.save(optimizer.state_dict(), OPTIMIZER_PATH)
 
-    torch.save(network.state_dict(), MODEL_PATH)
+    torch.save(network.state_dict(), NETWORK_PATH)
     torch.save(optimizer.state_dict(), OPTIMIZER_PATH)
 
 

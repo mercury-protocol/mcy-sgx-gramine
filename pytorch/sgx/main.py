@@ -12,20 +12,7 @@ for e in range(1, N_EPOCHS + 1):
     train(e)
     test(e)
 
-
-# ------------------- evaluate the model ----------------
-network_under_training = load_network()
+# ------------------- evaluate the network ----------------
+network = load_network()
 evaluate_training(train_counter, train_losses, test_counter, test_losses)
-make_predictions(network_under_training, test_loader)
-
-
-# ------------------- continued training from checkpoints ----------------
-for e in range(N_EPOCHS + 1, N_EPOCHS + 2):
-    train(e)
-    test(e)
-
-
-# ------------------- evaluate the better model ----------------
-final_network = load_network()
-evaluate_training(train_counter, train_losses, test_counter, test_losses)
-make_predictions(final_network, test_loader)
+make_predictions(network, test_loader)
