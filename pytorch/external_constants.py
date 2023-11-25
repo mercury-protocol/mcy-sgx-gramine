@@ -1,5 +1,3 @@
 DATA_PATH = "../mnist_digits/"
 MODEL_PATH = "../results/model.pth"
 OPTIMIZER_PATH = "../results/optimizer.pth"
-INITIAL_NETWORK_PATH = "../results/initial_network.pkl"
-INITIAL_OPTIMIZER_PATH = "../results/initial_optimizer.pkl"

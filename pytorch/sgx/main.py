@@ -1,40 +1,31 @@
-import pickle
-import torch
-from data import test_loader
-from network import INITIAL_NETWORK_PATH, INITIAL_OPTIMIZER_PATH
-from train import train
+from pytorch.normal.eval import evaluate_training, make_predictions
 
-from pytorch.external_constants import MODEL_PATH, OPTIMIZER_PATH
-from pytorch.normal.eval import make_predictions
+from user_script import load_network, train, test, test_loader, train_losses, train_counter, test_losses, test_counter
 
 
 N_EPOCHS = 2
 
-
-def load_network():
-    with open(INITIAL_NETWORK_PATH, "rb") as file:
-        network = pickle.load(file)
-    network.load_state_dict(torch.load(MODEL_PATH))
-    return network
-
-
-def load_optimizer():
-    with open(INITIAL_OPTIMIZER_PATH, "rb") as file:
-        optimizer = pickle.load(file)
-    optimizer.load_state_dict(torch.load(OPTIMIZER_PATH))
-    return optimizer
-
-
 # ------------------- train the model ----------------
-for _ in range(N_EPOCHS):
-    _network = load_network()
-    _optimizer = load_optimizer()
 
-    train(_network, _optimizer)
+test(0)
+for e in range(1, N_EPOCHS + 1):
+    train(e)
+    test(e)
 
-    torch.save(_network.state_dict(), MODEL_PATH)
-    torch.save(_optimizer.state_dict(), OPTIMIZER_PATH)
+
+# ------------------- evaluate the model ----------------
+network_under_training = load_network()
+evaluate_training(train_counter, train_losses, test_counter, test_losses)
+make_predictions(network_under_training, test_loader)
+
+
+# ------------------- continued training from checkpoints ----------------
+for e in range(N_EPOCHS + 1, N_EPOCHS + 2):
+    train(e)
+    test(e)
+
 
 # ------------------- evaluate the better model ----------------
 final_network = load_network()
+evaluate_training(train_counter, train_losses, test_counter, test_losses)
 make_predictions(final_network, test_loader)

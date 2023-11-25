@@ -1,4 +1,3 @@
-from pytorch.normal.eval import evaluate_training, make_predictions
 from pytorch.external_constants import DATA_PATH, MODEL_PATH, OPTIMIZER_PATH
 
 
@@ -130,27 +129,3 @@ def test(epoch):
     print('\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
-
-
-test(0)
-for e in range(1, N_EPOCHS + 1):
-    train(e)
-    test(e)
-
-
-# ------------------- evaluate the model ----------------
-network_under_training = load_network()
-evaluate_training(train_counter, train_losses, test_counter, test_losses)
-make_predictions(network_under_training, test_loader)
-
-
-# ------------------- continued training from checkpoints ----------------
-for e in range(N_EPOCHS + 1, N_EPOCHS + 2):
-    train(e)
-    test(e)
-
-
-# ------------------- evaluate the better model ----------------
-final_network = load_network()
-evaluate_training(train_counter, train_losses, test_counter, test_losses)
-make_predictions(final_network, test_loader)
