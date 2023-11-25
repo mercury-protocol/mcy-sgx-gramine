@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-from pytorch.constants import MODEL_PATH, OPTIMIZER_PATH, INITIAL_NETWORK_PATH, INITIAL_OPTIMIZER_PATH
+from pytorch.external_constants import MODEL_PATH, OPTIMIZER_PATH, INITIAL_NETWORK_PATH, INITIAL_OPTIMIZER_PATH
 
 
 LEARNING_RATE = 0.01

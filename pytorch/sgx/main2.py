@@ -1,5 +1,5 @@
-from pytorch.normal.eval import check_data, evaluate_training, make_predictions
-from pytorch.constants import DATA_PATH, MODEL_PATH, OPTIMIZER_PATH
+from pytorch.normal.eval import evaluate_training, make_predictions
+from pytorch.external_constants import DATA_PATH, MODEL_PATH, OPTIMIZER_PATH
 
 
 # ------------------- get the data ----------------
@@ -34,8 +34,6 @@ test_loader = torch.utils.data.DataLoader(
                                    torchvision.transforms.Normalize((0.1307,), (0.3081,))
                                ])),
     batch_size=BATCH_SIZE_TEST, shuffle=True)
-
-# check_data(test_loader)
 
 
 # ------------------- build the network ----------------

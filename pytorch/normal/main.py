@@ -1,5 +1,5 @@
 from eval import check_data, evaluate_training, make_predictions
-from pytorch.constants import DATA_PATH, MODEL_PATH, OPTIMIZER_PATH
+from pytorch.external_constants import DATA_PATH, MODEL_PATH, OPTIMIZER_PATH
 
 
 # ------------------- get the data ----------------

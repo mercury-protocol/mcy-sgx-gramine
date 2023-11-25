@@ -1,7 +1,7 @@
 import torch
 import torchvision
 
-from pytorch.constants import DATA_PATH
+from pytorch.external_constants import DATA_PATH
 
 
 BATCH_SIZE_TRAIN = 64

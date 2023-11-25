@@ -4,7 +4,7 @@ from data import test_loader
 from network import INITIAL_NETWORK_PATH, INITIAL_OPTIMIZER_PATH
 from train import train
 
-from pytorch.constants import MODEL_PATH, OPTIMIZER_PATH
+from pytorch.external_constants import MODEL_PATH, OPTIMIZER_PATH
 from pytorch.normal.eval import make_predictions
 
 
