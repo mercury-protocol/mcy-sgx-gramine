@@ -9,3 +9,6 @@ __pycache__
 /app/input/
 /app/output/
 /.env
+
+/_pytorch/mnist_digits/
+/_pytorch/results/
