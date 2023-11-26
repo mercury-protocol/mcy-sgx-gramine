@@ -1,4 +1,5 @@
-from pytorch.external_constants import DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH
+from pytorch.external_constants import DATA_PATH
+from pytorch.sgx.required_utils import NetworkFactory, OptimizerFactory
 
 
 # ------------------- get the data ----------------
@@ -60,11 +61,8 @@ class Network(nn.Module):
         return F.log_softmax(x)
 
 
-initial_network = Network()
-initial_optimizer = optim.SGD(initial_network.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
-
-torch.save(initial_network.state_dict(), NETWORK_PATH)
-torch.save(initial_optimizer.state_dict(), OPTIMIZER_PATH)
+network_factory = NetworkFactory(Network)
+optimizer_factory = OptimizerFactory(optim.SGD, lr=LEARNING_RATE, momentum=MOMENTUM)
 
 
 # ------------------- train the model ----------------
