@@ -11,9 +11,19 @@ class AbstractFactory(ABC):
         return self.product_class(*args, *self.args, **self.kwargs)
 
 
-class DataLoaderFactory(AbstractFactory):
+class DataSetFactory(AbstractFactory):
     def create(self, data_path):
         return super().create(data_path)
+
+
+class DataLoaderFactory(AbstractFactory):
+    def __init__(self, data_set_factory: DataSetFactory, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.data_set_factory = data_set_factory
+
+    def create(self, data_path):
+        data_set = self.data_set_factory.create(data_path)
+        return super().create(data_set)
 
 
 class NetworkFactory(AbstractFactory):
