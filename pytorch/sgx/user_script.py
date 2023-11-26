@@ -1,12 +1,13 @@
-from pytorch.external_constants import DATA_PATH
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+import torchvision
+
 from pytorch.sgx.required_utils import DataSetFactory, DataLoaderFactory, NetworkFactory, OptimizerFactory
 
 
-# ------------------- get the data ----------------
-import torch
-import torchvision
-
-
+# ------------------- config ----------------
 N_EPOCHS = 2
 BATCH_SIZE_TRAIN = 64
 BATCH_SIZE_TEST = 1000
@@ -19,36 +20,8 @@ RANDOM_SEED = 1
 torch.backends.cudnn.enabled = False
 torch.manual_seed(RANDOM_SEED)
 
-data_set_factory = DataSetFactory(
-    torchvision.datasets.MNIST,
-    train=True,
-    download=True,
-    transform=torchvision.transforms.Compose([
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize((0.1307,), (0.3081,))
-    ])
-)
-data_loader_factory = DataLoaderFactory(
-    data_set_factory,
-torch.utils.data.DataLoader,
-    batch_size=BATCH_SIZE_TRAIN,
-    shuffle=True)
-
-test_data_loader = torch.utils.data.DataLoader(
-    torchvision.datasets.MNIST(DATA_PATH, train=False, download=True,
-                               transform=torchvision.transforms.Compose([
-                                   torchvision.transforms.ToTensor(),
-                                   torchvision.transforms.Normalize((0.1307,), (0.3081,))
-                               ])),
-    batch_size=BATCH_SIZE_TEST, shuffle=True)
-
 
 # ------------------- build the network ----------------
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-
-
 class Network(nn.Module):
     def __init__(self):
         super(Network, self).__init__()
@@ -68,9 +41,39 @@ class Network(nn.Module):
         return F.log_softmax(x)
 
 
+# ------------------- create required objects ----------------
 network_factory = NetworkFactory(Network)
 optimizer_factory = OptimizerFactory(optim.SGD, lr=LEARNING_RATE, momentum=MOMENTUM)
 
+data_set_factory = DataSetFactory(
+    torchvision.datasets.MNIST,
+    train=True,
+    download=True,
+    transform=torchvision.transforms.Compose([
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize((0.1307,), (0.3081,))
+    ])
+)
+data_loader_factory = DataLoaderFactory(
+    data_set_factory,
+torch.utils.data.DataLoader,
+    batch_size=BATCH_SIZE_TRAIN,
+    shuffle=True)
+
+test_data_set_factory = DataSetFactory(
+    torchvision.datasets.MNIST,
+    train=False,
+    download=True,
+    transform=torchvision.transforms.Compose([
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize((0.1307,), (0.3081,))
+    ])
+)
+test_data_loader_factory = DataLoaderFactory(
+    test_data_set_factory,
+torch.utils.data.DataLoader,
+    batch_size=BATCH_SIZE_TEST,
+    shuffle=True)
 
 # ------------------- train the model ----------------
 train_losses = []
@@ -96,7 +99,7 @@ def train(data_loader, network, optimizer, epoch):
                 (batch_idx*64) + ((epoch-1) * len(data_loader.dataset)))
 
 
-def test(data_loader, network, epoch):
+def test(data_loader, test_data_loader, network, epoch):
     network.eval()
     test_loss = 0
     correct = 0
