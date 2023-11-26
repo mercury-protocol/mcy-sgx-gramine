@@ -1,7 +1,8 @@
-
 import os
 import time
+
 from mcy_dist_ai import parse_worker_nodes_count, aggregate_gradients, aggregate_gradients_and_save_model
+
 
 if __name__ == "__main__":
     worker_nodes_count = parse_worker_nodes_count()
@@ -17,7 +18,7 @@ if __name__ == "__main__":
             time.sleep(1)
 
         aggregate_gradients()
-        # time.sleep(1)
+        time.sleep(1)
 
     # aggregate last updates
     files_in_current_directory = os.listdir()

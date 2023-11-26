@@ -1,10 +1,12 @@
-import torch
-from torch import save, load
-import os
-import time
 import argparse
+import os
+import sys
+import time
+import torch
 
-output_model_file = "model_state.pt"
+
+OUTPUT_MODEL_FILE = "model_state.pt"
+
 
 def aggregate_gradients():
     files_in_current_directory = os.listdir()
@@ -26,15 +28,15 @@ def aggregate_gradients():
         for param_other in params[1:]:
             param.add_(param_other)
 
-    with open(output_model_file, 'wb') as f:
-        save(state_dict_list[0], f)
+    with open(OUTPUT_MODEL_FILE, 'wb') as f:
+        torch.save(state_dict_list[0], f)
 
     for fname in gradient_update_files:
         os.remove(fname)
 
     if os.path.exists("training_complete"):
-         model_path = "trained_model.pth"
-         save(state_dict_list[0], model_path)
+        model_path = "trained_model.pth"
+        torch.save(state_dict_list[0], model_path)
 
 
 def aggregate_gradients_and_save_model():
@@ -58,16 +60,16 @@ def aggregate_gradients_and_save_model():
             param.add_(param_other)
 
     model_path = "trained_model.pth"
-    save(state_dict_list[0], model_path)
+    torch.save(state_dict_list[0], model_path)
 
     for fname in gradient_update_files:
         os.remove(fname)
     
 
-
 def split_dataset():
     # TODO
     return
+
 
 def parse_worker_nodes_count():
     parser = argparse.ArgumentParser()
@@ -75,8 +77,9 @@ def parse_worker_nodes_count():
     args = parser.parse_args()
     if args.worker_count is None:
         print("Missing worker nodes count")
-        os._exit(1)
+        sys.exit(1)
     return args.worker_count
+
 
 def parse_node_num():
     parser = argparse.ArgumentParser()
@@ -84,32 +87,35 @@ def parse_node_num():
     args = parser.parse_args()
     if args.node_num is None:
         print("Missing node number")
-        os._exit(1)
+        sys.exit(1)
     return args.node_num
+
 
 def export_gradients(model, node_num):
     fname = f"gradient_updates_{node_num}.pt"
     with open(fname, 'wb') as f:
-            save(model.state_dict(), f)
+        torch.save(model.state_dict(), f)
     return fname
+
 
 def wait_for_gradient_updates(model, node_num):
     fname = f"gradient_updates_{node_num}.pt"
     
-    while not os.path.exists(output_model_file):
-                time.sleep(1)
+    while not os.path.exists(OUTPUT_MODEL_FILE):
+        time.sleep(1)
 
-    with open(output_model_file, 'rb') as f:
-            model.load_state_dict(load(f)) 
-            os.remove(output_model_file)
+    with open(OUTPUT_MODEL_FILE, 'rb') as f:
+        model.load_state_dict(torch.load(f))
+        os.remove(OUTPUT_MODEL_FILE)
 
     return model
+
 
 def complete_training(model, node_num):
     fname = f"gradient_last_updates_{node_num}.pt"
     
     with open(fname, 'wb') as f:
-            save(model.state_dict(), f)
+        torch.save(model.state_dict(), f)
 
     with open(f"training_complete_{node_num}", 'w'):
         pass

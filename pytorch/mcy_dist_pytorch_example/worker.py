@@ -1,18 +1,13 @@
-import os
-import time
-import torch 
-import argparse
-from PIL import Image
-from torch import nn, save, load
+import torch
+from torch import nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
+
 from mcy_dist_ai import parse_node_num, export_gradients, wait_for_gradient_updates, complete_training
 
-import shutil
 
-# Image Classifier Neural Network
 class ImageClassifier(nn.Module): 
     def __init__(self):
         super(ImageClassifier, self).__init__()
@@ -30,10 +25,12 @@ class ImageClassifier(nn.Module):
     def forward(self, x): 
         return self.model(x)
 
+
 # Instance of the neural network, loss, optimizer 
 clf = ImageClassifier()
 opt = Adam(clf.parameters(), lr=1e-3)
 loss_fn = nn.CrossEntropyLoss() 
+
 
 # Training flow 
 if __name__ == "__main__": 
@@ -55,8 +52,7 @@ if __name__ == "__main__":
     for epoch in range(2):  # train for 10 epochs
         current_batch = 0
         for batch in dataset:             
-            X, y = batch 
-            #X, y = X.to('cuda'), y.to('cuda') 
+            X, y = batch
             yhat = clf(X) 
             loss = loss_fn(yhat, y) 
 
@@ -75,10 +71,3 @@ if __name__ == "__main__":
         print(f"Epoch: {epoch} loss is {loss.item()}")
 
     complete_training(clf, node_num)
-
-
-"""     img = Image.open('img_3.jpg') 
-    img_tensor = ToTensor()(img).unsqueeze(0)
-
-    print(torch.argmax(clf(img_tensor))) """
-
