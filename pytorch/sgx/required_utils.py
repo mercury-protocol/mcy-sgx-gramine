@@ -1,18 +1,26 @@
-class NetworkFactory:
-    def __init__(self, network_class, *args, **kwargs):
-        self.network_class = network_class
-        self.args = args or list()
-        self.kwargs = kwargs or dict()
-
-    def create_network(self):
-        return self.network_class(*self.args, **self.kwargs)
+from abc import ABC
 
 
-class OptimizerFactory:
-    def __init__(self, optimizer_class, *args, **kwargs):
-        self.optimizer_class = optimizer_class
-        self.args = args or list()
-        self.kwargs = kwargs or dict()
+class AbstractFactory(ABC):
+    def __init__(self, product_class, *args, **kwargs):
+        self.product_class = product_class
+        self.args = args
+        self.kwargs = kwargs
 
-    def create_optimizer(self, network_parameters):
-        return self.optimizer_class(network_parameters, *self.args, **self.kwargs)
+    def create(self, *args):
+        return self.product_class(*args, *self.args, **self.kwargs)
+
+
+class DataLoaderFactory(AbstractFactory):
+    def create(self, data_path):
+        return super().create(data_path)
+
+
+class NetworkFactory(AbstractFactory):
+    def create(self):
+        return super().create()
+
+
+class OptimizerFactory(AbstractFactory):
+    def create(self, network_parameters):
+        return super().create(network_parameters)

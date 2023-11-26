@@ -1,24 +1,22 @@
-from pytorch.normal.eval import evaluate_training, make_predictions
-
 import os
 import torch
 from user_script import (
-    train,
+    train, network_factory, optimizer_factory,
     test, test_loader, train_losses, train_counter, test_losses, test_counter
 )
 from pytorch.external_constants import NETWORK_PATH, OPTIMIZER_PATH
-from pytorch.sgx.user_script import network_factory, optimizer_factory
+from pytorch.normal.eval import evaluate_training, make_predictions
 
 
 def load_network():
-    network = network_factory.create_network()
+    network = network_factory.create()
     if os.path.exists(NETWORK_PATH):
         network.load_state_dict(torch.load(NETWORK_PATH))
     return network
 
 
 def load_optimizer(network):
-    optimizer = optimizer_factory.create_optimizer(network.parameters())
+    optimizer = optimizer_factory.create(network.parameters())
     if os.path.exists(OPTIMIZER_PATH):
         optimizer.load_state_dict(torch.load(OPTIMIZER_PATH))
     return optimizer
