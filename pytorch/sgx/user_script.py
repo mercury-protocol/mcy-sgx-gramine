@@ -41,8 +41,6 @@ class Network(nn.Module):
 
 
 # ------------------- create required objects ----------------
-N_EPOCHS = 2
-
 network_factory = NetworkFactory(Network)
 optimizer_factory = OptimizerFactory(optim.SGD, lr=LEARNING_RATE, momentum=MOMENTUM)
 

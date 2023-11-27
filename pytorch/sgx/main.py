@@ -1,7 +1,7 @@
 import os
 import torch
 from user_script import (
-    train, data_loader_factory, network_factory, optimizer_factory, N_EPOCHS,
+    train, data_loader_factory, network_factory, optimizer_factory,
     test, test_data_loader_factory, train_losses, train_counter, test_losses, test_counter
 )
 from pytorch.external_constants import DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH
@@ -33,7 +33,7 @@ def train_network():
     network = load_network()
     test(data_loader, test_data_loader, network, 0)
 
-    for epoch in range(1, N_EPOCHS + 1):
+    for epoch in range(1, 3):
         network = load_network()
         optimizer = load_optimizer(network)
 
