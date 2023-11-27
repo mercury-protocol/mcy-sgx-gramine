@@ -1,11 +1,15 @@
 import os
 import torch
 from user_script import (
-    train, data_loader_factory, network_factory, optimizer_factory,
+    train, data_loader_factory, network_factory, optimizer_factory, N_EPOCHS,
     test, test_data_loader_factory, train_losses, train_counter, test_losses, test_counter
 )
 from pytorch.external_constants import DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH
 from pytorch.normal.eval import evaluate_training, make_predictions
+
+
+data_loader = data_loader_factory.create(DATA_PATH)
+test_data_loader = test_data_loader_factory.create(DATA_PATH)
 
 
 def load_network():
@@ -22,22 +26,32 @@ def load_optimizer(network):
     return optimizer
 
 
-# ------------------- train the model ----------------
-data_loader = data_loader_factory.create(DATA_PATH)
-test_data_loader = test_data_loader_factory.create(DATA_PATH)
+def train_network():
+    global data_loader
+    global test_data_loader
 
-_network = load_network()
-test(data_loader, test_data_loader, _network, 0)
-for epoch in range(1, 3):
-    _network = load_network()
-    _optimizer = load_optimizer(_network)
-    train(data_loader, _network, _optimizer, epoch)
-    test(data_loader, test_data_loader, _network, epoch)
-    torch.save(_network.state_dict(), NETWORK_PATH)
-    torch.save(_optimizer.state_dict(), OPTIMIZER_PATH)
+    network = load_network()
+    test(data_loader, test_data_loader, network, 0)
+
+    for epoch in range(1, N_EPOCHS + 1):
+        network = load_network()
+        optimizer = load_optimizer(network)
+
+        train(data_loader, network, optimizer, epoch)
+        test(data_loader, test_data_loader, network, epoch)
+
+        torch.save(network.state_dict(), NETWORK_PATH)
+        torch.save(optimizer.state_dict(), OPTIMIZER_PATH)
 
 
-# ------------------- evaluate the network ----------------
-_network = load_network()
-evaluate_training(train_counter, train_losses, test_counter, test_losses)
-make_predictions(_network, test_data_loader)
+def evaluate_network():
+    global test_data_loader
+
+    network = load_network()
+    evaluate_training(train_counter, train_losses, test_counter, test_losses)
+    make_predictions(network, test_data_loader)
+
+
+if __name__ == "__main__":
+    train_network()
+    evaluate_network()
