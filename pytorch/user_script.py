@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torchvision
 
+from pytorch.data_manipulation.datasets import SplitMNISTDataSet  # this will be implemented by the user
 from pytorch.required_utils import DataSetFactory, DataLoaderFactory, NetworkFactory, OptimizerFactory
 
 
@@ -44,9 +45,7 @@ network_factory = NetworkFactory(Network)
 optimizer_factory = OptimizerFactory(optim.SGD, lr=LEARNING_RATE, momentum=MOMENTUM)
 
 data_set_factory = DataSetFactory(
-    torchvision.datasets.MNIST,
-    train=True,
-    download=True,
+    SplitMNISTDataSet,
     transform=torchvision.transforms.Compose([
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize((0.1307,), (0.3081,))

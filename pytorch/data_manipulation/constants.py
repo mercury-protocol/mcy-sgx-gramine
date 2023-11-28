@@ -1,5 +1,5 @@
-SPLIT_DATA_PATH = "../io/split_data/"
-MNIST_IMAGES_PATH = "../io/data/MNIST/raw/"
+SPLIT_DATA_PATH = "../io/split_data"
+MNIST_IMAGES_PATH = "../io/data/MNIST/raw"
 
 BATCH_SIZE_TRAIN = 64
 BATCH_SIZE_TEST = 1000

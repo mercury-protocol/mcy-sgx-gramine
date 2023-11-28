@@ -4,12 +4,9 @@ from user_script import (
     train, data_loader_factory, network_factory, optimizer_factory,
     train_losses, train_counter
 )
-from pytorch.constants import DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH
+from pytorch.constants import SPLIT_DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH
 from pytorch.helpers.eval import evaluate_training, make_predictions
 from pytorch.helpers.test_network import test, test_losses, test_counter, test_data_loader
-
-
-data_loader = data_loader_factory.create(DATA_PATH)
 
 
 def load_network():
@@ -27,7 +24,8 @@ def load_optimizer(network):
 
 
 def train_network():
-    global data_loader
+    data_parts = os.listdir(SPLIT_DATA_PATH)
+    data_loader = data_loader_factory.create(f"{SPLIT_DATA_PATH}/{data_parts[0]}/")
 
     network = load_network()
     test(data_loader, network, 0)

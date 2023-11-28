@@ -47,7 +47,7 @@ if __name__ == "__main__":
     from pytorch.helpers.eval import check_data
 
     custom_dataset = SplitMNISTDataSet(
-        SPLIT_DATA_PATH + "part1",
+        SPLIT_DATA_PATH + "/part1",
         transform=torchvision.transforms.Compose([
             torchvision.transforms.ToTensor(),
             torchvision.transforms.Normalize(NORMALIZE_MEAN, NORMALIZE_STD)
