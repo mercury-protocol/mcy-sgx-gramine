@@ -1,15 +1,9 @@
-from eval import check_data
-
-
-# ------------------- get the data ----------------
 import torch
 import torchvision
 
+from pytorch.helpers.eval import check_data
+from pytorch.data_manipulation.constants import BATCH_SIZE_TRAIN, BATCH_SIZE_TEST, RANDOM_SEED
 
-BATCH_SIZE_TRAIN = 64
-BATCH_SIZE_TEST = 1000
-
-RANDOM_SEED = 1
 
 torch.backends.cudnn.enabled = False
 torch.manual_seed(RANDOM_SEED)
@@ -30,4 +24,6 @@ test_loader = torch.utils.data.DataLoader(
                                ])),
     batch_size=BATCH_SIZE_TEST, shuffle=True)
 
-check_data(test_loader)
+
+if __name__ == "__main__":
+    check_data(test_loader)

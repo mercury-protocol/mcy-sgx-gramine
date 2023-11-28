@@ -3,10 +3,6 @@ import numpy as np
 import random
 
 
-INPUT_DATA_PATH = "io/data/MNIST/raw"
-OUTPUT_DATA_PATH = "io/split_data"
-
-
 def read_idx3_file(file_path):
     with open(file_path, 'rb') as f:
         # Read the magic number
@@ -105,12 +101,17 @@ def split_and_save_data(
 
 
 if __name__ == "__main__":
-    idx3_path = f'{INPUT_DATA_PATH}/train-images-idx3-ubyte'
-    idx1_path = f'{INPUT_DATA_PATH}/train-labels-idx1-ubyte'
-    output_part1_idx3 = f'{OUTPUT_DATA_PATH}/part1/train-images-idx3-ubyte'
-    output_part1_idx1 = f'{OUTPUT_DATA_PATH}/part1/train-labels-idx1-ubyte'
-    output_part2_idx3 = f'{OUTPUT_DATA_PATH}/part2/train-images-idx3-ubyte'
-    output_part2_idx1 = f'{OUTPUT_DATA_PATH}/part2/train-labels-idx1-ubyte'
+    from pytorch.data_manipulation.constants import MNIST_IMAGES_PATH, SPLIT_DATA_PATH
+
+    INPUT_DATA_PATH = MNIST_IMAGES_PATH
+    OUTPUT_DATA_PATH = SPLIT_DATA_PATH
+
+    idx3_path = INPUT_DATA_PATH + 'train-images-idx3-ubyte'
+    idx1_path = INPUT_DATA_PATH + 'train-labels-idx1-ubyte'
+    output_part1_idx3 = OUTPUT_DATA_PATH + 'part1/train-images-idx3-ubyte'
+    output_part1_idx1 = OUTPUT_DATA_PATH + 'part1/train-labels-idx1-ubyte'
+    output_part2_idx3 = OUTPUT_DATA_PATH + 'part2/train-images-idx3-ubyte'
+    output_part2_idx1 = OUTPUT_DATA_PATH + 'part2/train-labels-idx1-ubyte'
 
     split_and_save_data(
         idx3_path,
