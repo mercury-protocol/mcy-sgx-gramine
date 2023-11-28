@@ -17,15 +17,6 @@ def check_data(test_loader):
     plt.show()
 
 
-def evaluate_training(train_counter, train_losses, test_counter, test_losses):
-    plt.plot(train_counter, train_losses, color='blue')
-    plt.scatter(test_counter, test_losses, color='red')
-    plt.legend(['Train Loss', 'Test Loss'], loc='upper right')
-    plt.xlabel('number of training examples seen')
-    plt.ylabel('negative log likelihood loss')
-    plt.show()
-
-
 def make_predictions(network, test_loader):
     examples = list(enumerate(test_loader))
     batch_idx, (example_data, example_targets) = random.choice(examples)

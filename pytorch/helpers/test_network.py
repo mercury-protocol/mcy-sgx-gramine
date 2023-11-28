@@ -8,9 +8,6 @@ from pytorch.constants import DATA_PATH
 BATCH_SIZE_TEST = 1000
 
 
-test_losses = []
-test_counter = []
-
 test_data_loader = torch.utils.data.DataLoader(
     torchvision.datasets.MNIST(DATA_PATH, train=False, download=True,
                                transform=torchvision.transforms.Compose([
@@ -20,9 +17,7 @@ test_data_loader = torch.utils.data.DataLoader(
     batch_size=BATCH_SIZE_TEST, shuffle=True)
 
 
-def test(data_loader, network, epoch):
-    global test_losses
-    global test_counter
+def test(network):
     global test_data_loader
 
     network.eval()
@@ -35,8 +30,6 @@ def test(data_loader, network, epoch):
             pred = output.data.max(1, keepdim=True)[1]
             correct += pred.eq(target.data.view_as(pred)).sum()
     test_loss /= len(test_data_loader.dataset)
-    test_losses.append(test_loss)
-    test_counter.append(epoch * len(data_loader.dataset))
     print('\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_data_loader.dataset),
         100. * correct / len(test_data_loader.dataset)))
