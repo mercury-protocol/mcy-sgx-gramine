@@ -2,9 +2,8 @@ import struct
 import numpy as np
 import random
 
-from constants import DATA_PATH
 
-
+INPUT_DATA_PATH = "io/data/MNIST/raw"
 OUTPUT_DATA_PATH = "io/split_data"
 
 
@@ -106,8 +105,8 @@ def split_and_save_data(
 
 
 if __name__ == "__main__":
-    idx3_path = f'{DATA_PATH}/train-images-idx3-ubyte'
-    idx1_path = f'{DATA_PATH}/train-labels-idx1-ubyte'
+    idx3_path = f'{INPUT_DATA_PATH}/train-images-idx3-ubyte'
+    idx1_path = f'{INPUT_DATA_PATH}/train-labels-idx1-ubyte'
     output_part1_idx3 = f'{OUTPUT_DATA_PATH}/part1/train-images-idx3-ubyte'
     output_part1_idx1 = f'{OUTPUT_DATA_PATH}/part1/train-labels-idx1-ubyte'
     output_part2_idx3 = f'{OUTPUT_DATA_PATH}/part2/train-images-idx3-ubyte'
