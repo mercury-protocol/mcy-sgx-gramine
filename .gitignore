@@ -10,5 +10,6 @@ __pycache__
 /app/output/
 /.env
 
-/pytorch/mnist_digits/
-/pytorch/results/
+/pytorch/data/
+/pytorch/test_data/
+/pytorch/state_dicts/

@@ -4,12 +4,12 @@ from user_script import (
     train, data_loader_factory, network_factory, optimizer_factory,
     test, test_data_loader_factory, train_losses, train_counter, test_losses, test_counter
 )
-from pytorch.external_constants import DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH
+from pytorch.external_constants import DATA_PATH, TEST_DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH
 from pytorch.normal.eval import evaluate_training, make_predictions
 
 
 data_loader = data_loader_factory.create(DATA_PATH)
-test_data_loader = test_data_loader_factory.create(DATA_PATH)
+test_data_loader = test_data_loader_factory.create(TEST_DATA_PATH)
 
 
 def load_network():
