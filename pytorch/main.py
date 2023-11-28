@@ -2,14 +2,14 @@ import os
 import torch
 from user_script import (
     train, data_loader_factory, network_factory, optimizer_factory,
-    test, test_data_loader_factory, train_losses, train_counter, test_losses, test_counter
+    train_losses, train_counter
 )
-from pytorch.constants import DATA_PATH, TEST_DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH
+from pytorch.constants import DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH
 from pytorch.helpers.eval import evaluate_training, make_predictions
+from pytorch.helpers.test_network import test, test_losses, test_counter, test_data_loader
 
 
 data_loader = data_loader_factory.create(DATA_PATH)
-test_data_loader = test_data_loader_factory.create(TEST_DATA_PATH)
 
 
 def load_network():
@@ -28,25 +28,22 @@ def load_optimizer(network):
 
 def train_network():
     global data_loader
-    global test_data_loader
 
     network = load_network()
-    test(data_loader, test_data_loader, network, 0)
+    test(data_loader, network, 0)
 
     for epoch in range(1, 3):
         network = load_network()
         optimizer = load_optimizer(network)
 
         train(data_loader, network, optimizer, epoch)
-        test(data_loader, test_data_loader, network, epoch)
+        test(data_loader, network, epoch)
 
         torch.save(network.state_dict(), NETWORK_PATH)
         torch.save(optimizer.state_dict(), OPTIMIZER_PATH)
 
 
 def evaluate_network():
-    global test_data_loader
-
     network = load_network()
     evaluate_training(train_counter, train_losses, test_counter, test_losses)
     make_predictions(network, test_data_loader)

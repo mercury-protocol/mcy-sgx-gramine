@@ -1,5 +1,4 @@
 from eval import check_data
-from pytorch.constants import DATA_PATH, TEST_DATA_PATH
 
 
 # ------------------- get the data ----------------
@@ -16,7 +15,7 @@ torch.backends.cudnn.enabled = False
 torch.manual_seed(RANDOM_SEED)
 
 train_loader = torch.utils.data.DataLoader(
-    torchvision.datasets.MNIST(DATA_PATH, train=True, download=True,
+    torchvision.datasets.MNIST("mnist_digits", train=True, download=True,
                                transform=torchvision.transforms.Compose([
                                    torchvision.transforms.ToTensor(),
                                    torchvision.transforms.Normalize((0.1307,), (0.3081,))
@@ -24,7 +23,7 @@ train_loader = torch.utils.data.DataLoader(
     batch_size=BATCH_SIZE_TRAIN, shuffle=True)
 
 test_loader = torch.utils.data.DataLoader(
-    torchvision.datasets.MNIST(TEST_DATA_PATH, train=False, download=True,
+    torchvision.datasets.MNIST("mnist_digits", train=False, download=True,
                                transform=torchvision.transforms.Compose([
                                    torchvision.transforms.ToTensor(),
                                    torchvision.transforms.Normalize((0.1307,), (0.3081,))

@@ -9,7 +9,6 @@ from pytorch.required_utils import DataSetFactory, DataLoaderFactory, NetworkFac
 
 # ------------------- config ----------------
 BATCH_SIZE_TRAIN = 64
-BATCH_SIZE_TEST = 1000
 LEARNING_RATE = 0.01
 MOMENTUM = 0.5
 LOG_INTERVAL = 10
@@ -63,8 +62,6 @@ data_loader_factory = DataLoaderFactory(
 # ------------------- train the model ----------------
 train_losses = []
 train_counter = []
-test_losses = []
-test_counter = []
 
 
 def train(data_loader, network, optimizer, epoch):
@@ -82,38 +79,3 @@ def train(data_loader, network, optimizer, epoch):
             train_losses.append(loss.item())
             train_counter.append(
                 (batch_idx*64) + ((epoch-1) * len(data_loader.dataset)))
-
-
-# ------------------- test the model (not required) ----------------
-test_data_set_factory = DataSetFactory(
-    torchvision.datasets.MNIST,
-    train=False,
-    download=True,
-    transform=torchvision.transforms.Compose([
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize((0.1307,), (0.3081,))
-    ])
-)
-test_data_loader_factory = DataLoaderFactory(
-    test_data_set_factory,
-    torch.utils.data.DataLoader,
-    batch_size=BATCH_SIZE_TEST,
-    shuffle=True)
-
-
-def test(data_loader, test_data_loader, network, epoch):
-    network.eval()
-    test_loss = 0
-    correct = 0
-    with torch.no_grad():
-        for data, target in test_data_loader:
-            output = network(data)
-            test_loss += F.nll_loss(output, target, size_average=False).item()
-            pred = output.data.max(1, keepdim=True)[1]
-            correct += pred.eq(target.data.view_as(pred)).sum()
-    test_loss /= len(test_data_loader.dataset)
-    test_losses.append(test_loss)
-    test_counter.append(epoch * len(data_loader.dataset))
-    print('\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_data_loader.dataset),
-        100. * correct / len(test_data_loader.dataset)))
