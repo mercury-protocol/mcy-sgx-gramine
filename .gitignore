@@ -10,6 +10,4 @@ __pycache__
 /app/output/
 /.env
 
-/pytorch/data/
-/pytorch/test_data/
-/pytorch/state_dicts/
+/pytorch/io/

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torchvision
 
-from pytorch.sgx.required_utils import DataSetFactory, DataLoaderFactory, NetworkFactory, OptimizerFactory
+from pytorch.required_utils import DataSetFactory, DataLoaderFactory, NetworkFactory, OptimizerFactory
 
 
 # ------------------- config ----------------
