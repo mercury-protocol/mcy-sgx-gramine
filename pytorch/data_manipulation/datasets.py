@@ -1,7 +1,7 @@
-import torch
-from torch.utils.data import Dataset
-import torchvision
 import numpy as np
+import torch
+import torchvision
+from torch.utils.data import Dataset
 
 
 class SplitMNISTDataSet(Dataset):
@@ -14,8 +14,8 @@ class SplitMNISTDataSet(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        image = self.images[idx]
-        label = int(self.labels[idx])  # Convert to integer
+        image = np.copy(self.images[idx])
+        label = int(self.labels[idx])
         if self.transform:
             image = self.transform(image)
         return image, label
