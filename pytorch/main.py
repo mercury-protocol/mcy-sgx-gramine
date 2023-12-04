@@ -3,7 +3,9 @@ import torch
 
 from user_script import train, data_loader_factory, network_factory, optimizer_factory
 
-from pytorch.constants import SPLIT_DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH, SPLIT_NETWORK_PATH, SPLIT_OPTIMIZER_PATH
+from pytorch.constants import (
+    SPLIT_DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH, SPLIT_NETWORK_PATH, SPLIT_OPTIMIZER_PATH, AGGREGATED_NETWORK_PATH
+)
 from pytorch.helpers.eval import make_predictions
 from pytorch.helpers.test_network import test, test_data_loader
 
@@ -39,7 +41,7 @@ def train_network():
 
 
 def evaluate_network():
-    network = load_network()
+    network = load_network(AGGREGATED_NETWORK_PATH)
     test(network)
     make_predictions(network, test_data_loader)
 
