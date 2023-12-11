@@ -1,75 +1,69 @@
-import argparse
-import os
-import sys
-import time
 import torch
+from torch import save, load, nn
+import os
+import time
+import argparse
 
+output_model_file = "model_state.pt"
 
-OUTPUT_MODEL_FILE = "model_state.pt"
-
-
-def aggregate_gradients():
+def aggregate_gradients(model, opt):
     files_in_current_directory = os.listdir()
 
     gradient_update_files = [file for file in files_in_current_directory if 'gradient_updates' in file]
+    gradient_updates = [torch.load(file) for file in gradient_update_files]
 
-    state_dict_list = []
-    for fname in gradient_update_files:
-        with open(fname, 'rb') as f:
-            f.seek(0)
-            state_dict = torch.load(f)
-            state_dict_list.append(state_dict)
-
-    if len(state_dict_list) == 0:
-        return
-
-    for params in zip(*[state_dict.values() for state_dict in state_dict_list]):
-        param = params[0]
-        for param_other in params[1:]:
-            param.add_(param_other)
-
-    with open(OUTPUT_MODEL_FILE, 'wb') as f:
-        torch.save(state_dict_list[0], f)
-
-    for fname in gradient_update_files:
-        os.remove(fname)
-
-    if os.path.exists("training_complete"):
-        model_path = "trained_model.pth"
-        torch.save(state_dict_list[0], model_path)
-
-
-def aggregate_gradients_and_save_model():
-    files_in_current_directory = os.listdir()
-
-    gradient_update_files = [file for file in files_in_current_directory if 'gradient_updates' in file]
-
-    state_dict_list = []
-    for fname in gradient_update_files:
-        with open(fname, 'rb') as f:
-            f.seek(0)
-            state_dict = torch.load(f)
-            state_dict_list.append(state_dict)
-
-    if len(state_dict_list) == 0:
-        return
-
-    for params in zip(*[state_dict.values() for state_dict in state_dict_list]):
-        param = params[0]
-        for param_other in params[1:]:
-            param.add_(param_other)
-
-    model_path = "trained_model.pth"
-    torch.save(state_dict_list[0], model_path)
-
-    for fname in gradient_update_files:
-        os.remove(fname)
+    if len(gradient_updates) == 0:
+         return
     
+    avg_aggr_gradients(model=model, gradient_updates=gradient_updates)
+            
+    opt.step()
+    opt.zero_grad()
+
+    with open(output_model_file, 'wb') as f:
+        save(model.state_dict(), f)
+
+    for fname in gradient_update_files:
+        os.remove(fname)
+
+    model_path = "~/trained_model1.pth"
+    save(model.state_dict(), model_path)
+
+
+def aggregate_gradients_and_save_model(model, opt):
+    files_in_current_directory = os.listdir()
+
+    gradient_update_files = [file for file in files_in_current_directory if 'gradient_last_updates' in file]
+    gradient_updates = [torch.load(file) for file in gradient_update_files]
+
+    if len(gradient_updates) == 0:
+         return
+    
+    avg_aggr_gradients(model=model, gradient_updates=gradient_updates)
+            
+    opt.step()
+    opt.zero_grad()
+
+    model_path = "~/trained_model.pth"
+    save(model.state_dict(), model_path)
+
+    for fname in gradient_update_files:
+        os.remove(fname)
+
+def avg_aggr_gradients(model, gradient_updates): 
+    aggregated_gradients = gradient_updates[0]
+    for gradient in gradient_updates[1:]:
+        for name, param in model.named_parameters():
+            aggregated_gradients[name] = torch.add(aggregated_gradients[name], gradient[name])
+
+    for name, param in model.named_parameters():
+        aggregated_gradients[name] /= len(gradient_updates)
+        param.grad = aggregated_gradients[name]
+
 
 def split_dataset():
     # TODO
     return
-
 
 def parse_worker_nodes_count():
     parser = argparse.ArgumentParser()
@@ -77,9 +71,8 @@ def parse_worker_nodes_count():
     args = parser.parse_args()
     if args.worker_count is None:
         print("Missing worker nodes count")
-        sys.exit(1)
+        os._exit(1)
     return args.worker_count
-
 
 def parse_node_num():
     parser = argparse.ArgumentParser()
@@ -87,35 +80,32 @@ def parse_node_num():
     args = parser.parse_args()
     if args.node_num is None:
         print("Missing node number")
-        sys.exit(1)
+        os._exit(1)
     return args.node_num
 
-
 def export_gradients(model, node_num):
+    gradients = {name: p.grad.data for name, p in model.named_parameters()}
     fname = f"gradient_updates_{node_num}.pt"
     with open(fname, 'wb') as f:
-        torch.save(model.state_dict(), f)
+            save(gradients, f)
     return fname
-
 
 def wait_for_gradient_updates(model, node_num):
     fname = f"gradient_updates_{node_num}.pt"
     
-    while not os.path.exists(OUTPUT_MODEL_FILE):
-        time.sleep(1)
+    while not os.path.exists(output_model_file):
+                time.sleep(1)
 
-    with open(OUTPUT_MODEL_FILE, 'rb') as f:
-        model.load_state_dict(torch.load(f))
-        os.remove(OUTPUT_MODEL_FILE)
-
-    return model
-
+    with open(output_model_file, 'rb') as f:
+            model.load_state_dict(load(f)) 
+            os.remove(output_model_file)
 
 def complete_training(model, node_num):
     fname = f"gradient_last_updates_{node_num}.pt"
-    
+    save(model.state_dict(), f"~/trained_{node_num}.pt")
+
     with open(fname, 'wb') as f:
-        torch.save(model.state_dict(), f)
+            save(model.state_dict(), f)
 
     with open(f"training_complete_{node_num}", 'w'):
         pass
