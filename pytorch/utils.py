@@ -21,7 +21,6 @@ def load_optimizer(network: nn.Module, path=OPTIMIZER_PATH):
     return optimizer
 
 
-def save_network_params(network: nn.Module, path):
-    gradients = {name: p.grad.data for name, p in network.named_parameters()}
-    with open(path, 'wb') as f:
-        torch.save(gradients, f)
+def save_gradients(network: nn.Module, path):
+    gradients = {name: param.grad.data for name, param in network.named_parameters()}
+    torch.save(gradients, path)
