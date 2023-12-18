@@ -1,9 +1,14 @@
 import torch
-from torch import save, load, nn
+from torch import save, load
+from torchvision import datasets
+from torchvision.transforms import ToTensor
 import os
 import time
 import argparse
+from random import Random
+from .data_partitioner import DataPartitioner
 
+output_model_path = "/Users/lajosdeme/Desktop/"
 output_model_file = "model_state.pt"
 
 def aggregate_gradients(model, opt):
@@ -26,7 +31,7 @@ def aggregate_gradients(model, opt):
     for fname in gradient_update_files:
         os.remove(fname)
 
-    model_path = "~/trained_model1.pth"
+    model_path = f"{output_model_path}/trained_model1.pth"
     save(model.state_dict(), model_path)
 
 
@@ -44,7 +49,7 @@ def aggregate_gradients_and_save_model(model, opt):
     opt.step()
     opt.zero_grad()
 
-    model_path = "~/trained_model.pth"
+    model_path = f"{output_model_path}/trained_model.pth"
     save(model.state_dict(), model_path)
 
     for fname in gradient_update_files:
@@ -61,10 +66,24 @@ def avg_aggr_gradients(model, gradient_updates):
         param.grad = aggregated_gradients[name]
 
 
-def split_dataset():
-    # TODO
-    return
+def parse_worker_args_test():
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("--worker_count", type=int, help="Worker nodes count")
+    parser.add_argument("--node_num", type=int, help="Node number")
+   
+    args = parser.parse_args()
 
+    if args.worker_count is None:
+        print("Missing worker nodes count")
+        os._exit(1)
+
+    if args.node_num is None:
+        print("Missing node number")
+        os._exit(1)
+
+    return args
+     
 def parse_worker_nodes_count():
     parser = argparse.ArgumentParser()
     parser.add_argument("--worker_count", type=int, help="Worker nodes count")
@@ -102,10 +121,41 @@ def wait_for_gradient_updates(model, node_num):
 
 def complete_training(model, node_num):
     fname = f"gradient_last_updates_{node_num}.pt"
-    save(model.state_dict(), f"~/trained_{node_num}.pt")
+    save(model.state_dict(), f"{output_model_path}/trained_{node_num}.pt")
 
     with open(fname, 'wb') as f:
             save(model.state_dict(), f)
 
     with open(f"training_complete_{node_num}", 'w'):
         pass
+
+# TODO
+def download_dataset():
+     dataset = datasets.MNIST(root="data", download=True, train=True, transform=ToTensor())
+     return dataset
+
+
+# Now dataset is split to equal sizes
+# TODO: Calculate data chunk sizes according to node compute power and pass that in here
+def partition_dataset(dataset, worker_nodes_count):
+    partition_sizes = [1.0 / worker_nodes_count for _ in range(worker_nodes_count)]
+    partition = DataPartitioner(dataset, partition_sizes)
+    return partition
+
+def get_data_partition_for_worker(partition, node_num):
+     return partition.use(node_num-1)
+
+def export_data_partitions(partitions, worker_nodes_count):
+    for i in range(worker_nodes_count):
+         parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+         fname = f"partition_{i+1}.pth"
+         save_path = os.path.join(parent_dir, fname)
+
+         partition = partitions.use(i)
+         
+         save(partition, save_path)
+
+def load_data(node_num):
+    fname = f"partition_{node_num}.pth"
+    return load(fname)
+     

@@ -8,7 +8,7 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
-from mcy_dist_ai import parse_node_num, export_gradients, wait_for_gradient_updates, complete_training
+from mcy_dist_ai import export_gradients, wait_for_gradient_updates, complete_training, partition_dataset, get_data_partition_for_worker, parse_node_num, load_data
 from torch.utils.data import random_split
 
 import shutil
@@ -39,24 +39,15 @@ loss_fn = nn.CrossEntropyLoss()
 # Training flow 
 if __name__ == "__main__": 
     node_num = parse_node_num()
-
     # Get data 
-    mnist_dataset = datasets.MNIST(root="data", download=True, train=True, transform=ToTensor())
-
-    train_size = int(0.8 * len(mnist_dataset))
-    test_size = len(mnist_dataset) - train_size
-    train_dataset, test_dataset = random_split(mnist_dataset, [train_size, test_size])
-
-    # TODO: Split the dataset properly in the leader node and send chunk to the worker
-    total_samples = len(train_dataset)
-    samples_to_keep = total_samples // 2
-
-    train = torch.utils.data.Subset(train_dataset, range(samples_to_keep))
+    # mnist_dataset = datasets.MNIST(root="data", download=True, train=True, transform=ToTensor())
     
-    if node_num % 2 == 0:
-        train = torch.utils.data.Subset(train_dataset, range(samples_to_keep, total_samples))
+    # TODO: Split the dataset in the watcher node and send chunk to the worker
+    # partitioned_dataset = partition_dataset(mnist_dataset, world_size)
+    # partition = get_data_partition_for_worker(partitioned_dataset, node_num)
+    partitioned_dataset = load_data(node_num=node_num)
 
-    dataset = DataLoader(train, 500)
+    dataset = DataLoader(partitioned_dataset, 500)
 
     for epoch in range(1):  # train for 10 epochs
         current_batch = 0
@@ -79,16 +70,3 @@ if __name__ == "__main__":
         print(f"Epoch: {epoch} loss is {loss.item()}")
 
     complete_training(clf, node_num)
-
-
-"""     img = Image.open('img_3.jpg') 
-    img_tensor = ToTensor()(img).unsqueeze(0)
-
-    print(torch.argmax(clf(img_tensor))) """
-
-
-"""             if current_batch % 100 == 0:
-                gradients = [param.grad.clone().detach() if param.grad is not None else None for param in clf.parameters()]
-                print("GRADIENTS: ")
-                print(gradients)
-                print("\n") """
