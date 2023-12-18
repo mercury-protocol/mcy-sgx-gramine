@@ -1,27 +1,14 @@
 import os
 import torch
 
-from user_script import train, data_loader_factory, network_factory, optimizer_factory
+from user_script import train, data_loader_factory
 
 from pytorch.constants import (
-    SPLIT_DATA_PATH, NETWORK_PATH, OPTIMIZER_PATH, SPLIT_NETWORK_PATH, SPLIT_OPTIMIZER_PATH, AGGREGATED_NETWORK_PATH
+    SPLIT_DATA_PATH, SPLIT_NETWORK_PATH, SPLIT_OPTIMIZER_PATH, AGGREGATED_NETWORK_PATH
 )
 from pytorch.helpers.eval import make_predictions
 from pytorch.helpers.test_network import test, test_data_loader
-
-
-def load_network(path=NETWORK_PATH):
-    network = network_factory.create()
-    if os.path.exists(path):
-        network.load_state_dict(torch.load(path))
-    return network
-
-
-def load_optimizer(network, path=OPTIMIZER_PATH):
-    optimizer = optimizer_factory.create(network.parameters())
-    if os.path.exists(path):
-        optimizer.load_state_dict(torch.load(path))
-    return optimizer
+from pytorch.utils import load_network, load_optimizer
 
 
 def train_network():

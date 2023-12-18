@@ -1,23 +1,34 @@
 import os
 import torch
+from torch import nn
 
-from constants import SPLIT_NETWORK_PATH, AGGREGATED_NETWORK_PATH
+from pytorch.constants import SPLIT_NETWORK_PATH, AGGREGATED_NETWORK_PATH
+from pytorch.utils import load_network, load_optimizer
 
 
 def leader():
     gradient_update_paths = [f"{SPLIT_NETWORK_PATH}/{path}/network.pth" for path in os.listdir(SPLIT_NETWORK_PATH)]
+    gradient_updates = [torch.load(path) for path in gradient_update_paths]
 
-    state_dict_list = []
-    for path in gradient_update_paths:
-        with open(path, 'rb') as f:
-            f.seek(0)
-            state_dict = torch.load(f)
-            state_dict_list.append(state_dict)
+    network = load_network()
+    optimizer = load_optimizer(network)
+    avg_aggr_gradients(network=network, gradient_updates=gradient_updates)
 
-    for params in zip(*[state_dict.values() for state_dict in state_dict_list]):
-        params[0].add_(*params[1:])
+    optimizer.step()
+    optimizer.zero_grad()
 
-    torch.save(state_dict_list[0], AGGREGATED_NETWORK_PATH)
+    torch.save(network.state_dict(), AGGREGATED_NETWORK_PATH)
+
+
+def avg_aggr_gradients(network: nn.Module, gradient_updates):
+    aggregated_gradients = gradient_updates[0]
+    for gradient in gradient_updates[1:]:
+        for name, param in network.named_parameters():
+            aggregated_gradients[name] = torch.add(aggregated_gradients[name], gradient[name])
+
+    for name, param in network.named_parameters():
+        aggregated_gradients[name] /= len(gradient_updates)
+        param.grad = aggregated_gradients[name]
 
 
 if __name__ == "__main__":
