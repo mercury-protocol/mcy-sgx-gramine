@@ -3,7 +3,7 @@ ecdsa==0.18.0
 numpy==1.24.4
 pandas==2.0.3
 torch==2.1.1
-torchvision=0.16.1
+torchvision==0.16.1
 
 scikit-learn==1.2.2
-matplotlib==3.8.2
+matplotlib==3.7.4
