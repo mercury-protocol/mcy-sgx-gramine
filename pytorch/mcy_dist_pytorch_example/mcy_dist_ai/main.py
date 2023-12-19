@@ -12,58 +12,58 @@ OUTPUT_MODEL_PATH = "/Users/lajosdeme/Desktop/"
 OUTPUT_MODEL_FILE = "model_state.pt"
 
 
-def aggregate_gradients(model, opt):
-    files_in_current_directory = os.listdir()
+def aggregate_gradients(network, optimizer):
+    listdir = os.listdir()
 
-    gradient_update_files = [file for file in files_in_current_directory if 'gradient_updates' in file]
+    gradient_update_files = [file for file in listdir if 'gradient_updates' in file]
     gradient_updates = [torch.load(file) for file in gradient_update_files]
 
     if len(gradient_updates) == 0:
         return
     
-    avg_aggr_gradients(model=model, gradient_updates=gradient_updates)
+    avg_aggr_gradients(network=network, gradient_updates=gradient_updates)
             
-    opt.step()
-    opt.zero_grad()
+    optimizer.step()
+    optimizer.zero_grad()
 
     with open(OUTPUT_MODEL_FILE, 'wb') as f:
-        save(model.state_dict(), f)
+        save(network.state_dict(), f)
 
     for fname in gradient_update_files:
         os.remove(fname)
 
     model_path = f"{OUTPUT_MODEL_PATH}/trained_model1.pth"
-    save(model.state_dict(), model_path)
+    save(network.state_dict(), model_path)
 
 
-def aggregate_gradients_and_save_model(model, opt):
-    files_in_current_directory = os.listdir()
+def aggregate_gradients_and_save_model(network, optimizer):
+    listdir = os.listdir()
 
-    gradient_update_files = [file for file in files_in_current_directory if 'gradient_last_updates' in file]
+    gradient_update_files = [file for file in listdir if 'gradient_last_updates' in file]
     gradient_updates = [torch.load(file) for file in gradient_update_files]
 
     if len(gradient_updates) == 0:
         return
     
-    avg_aggr_gradients(model=model, gradient_updates=gradient_updates)
+    avg_aggr_gradients(network=network, gradient_updates=gradient_updates)
             
-    opt.step()
-    opt.zero_grad()
+    optimizer.step()
+    optimizer.zero_grad()
 
     model_path = f"{OUTPUT_MODEL_PATH}/trained_model.pth"
-    save(model.state_dict(), model_path)
+    save(network.state_dict(), model_path)
 
     for fname in gradient_update_files:
         os.remove(fname)
 
 
-def avg_aggr_gradients(model, gradient_updates): 
+def avg_aggr_gradients(network, gradient_updates):
     aggregated_gradients = gradient_updates[0]
     for gradient in gradient_updates[1:]:
-        for name, param in model.named_parameters():
+        for name, param in network.named_parameters():
             aggregated_gradients[name] = torch.add(aggregated_gradients[name], gradient[name])
 
-    for name, param in model.named_parameters():
+    for name, param in network.named_parameters():
         aggregated_gradients[name] /= len(gradient_updates)
         param.grad = aggregated_gradients[name]
 
@@ -124,12 +124,12 @@ def wait_for_gradient_updates(model):
         os.remove(OUTPUT_MODEL_FILE)
 
 
-def complete_training(model, node_num):
+def complete_training(network, node_num):
     fname = f"gradient_last_updates_{node_num}.pt"
-    save(model.state_dict(), f"{OUTPUT_MODEL_PATH}/trained_{node_num}.pt")
+    save(network.state_dict(), f"{OUTPUT_MODEL_PATH}/trained_{node_num}.pt")
 
     with open(fname, 'wb') as f:
-        save(model.state_dict(), f)
+        save(network.state_dict(), f)
 
     with open(f"training_complete_{node_num}", 'w'):
         pass
