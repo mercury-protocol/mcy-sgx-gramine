@@ -1,5 +1,4 @@
 import torch
-from torch import save, load
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 import os
@@ -26,14 +25,13 @@ def aggregate_gradients(network, optimizer):
     optimizer.step()
     optimizer.zero_grad()
 
-    with open(OUTPUT_MODEL_FILE, 'wb') as f:
-        save(network.state_dict(), f)
+    model_path = f"{OUTPUT_MODEL_PATH}/trained_model1.pth"
+    torch.save(network.state_dict(), model_path)
 
     for fname in gradient_update_files:
         os.remove(fname)
 
-    model_path = f"{OUTPUT_MODEL_PATH}/trained_model1.pth"
-    save(network.state_dict(), model_path)
+    torch.save(network.state_dict(), OUTPUT_MODEL_FILE)
 
 
 def aggregate_gradients_and_save_model(network, optimizer):
@@ -44,14 +42,14 @@ def aggregate_gradients_and_save_model(network, optimizer):
 
     if len(gradient_updates) == 0:
         return
-    
+
     avg_aggr_gradients(network=network, gradient_updates=gradient_updates)
-            
+
     optimizer.step()
     optimizer.zero_grad()
 
     model_path = f"{OUTPUT_MODEL_PATH}/trained_model.pth"
-    save(network.state_dict(), model_path)
+    torch.save(network.state_dict(), model_path)
 
     for fname in gradient_update_files:
         os.remove(fname)
@@ -111,7 +109,7 @@ def export_gradients(model, node_num):
     gradients = {name: p.grad.data for name, p in model.named_parameters()}
     fname = f"gradient_updates_{node_num}.pt"
     with open(fname, 'wb') as f:
-        save(gradients, f)
+        torch.save(gradients, f)
     return fname
 
 
@@ -120,16 +118,16 @@ def wait_for_gradient_updates(model):
         time.sleep(1)
 
     with open(OUTPUT_MODEL_FILE, 'rb') as f:
-        model.load_state_dict(load(f))
+        model.load_state_dict(torch.load(f))
         os.remove(OUTPUT_MODEL_FILE)
 
 
 def complete_training(network, node_num):
     fname = f"gradient_last_updates_{node_num}.pt"
-    save(network.state_dict(), f"{OUTPUT_MODEL_PATH}/trained_{node_num}.pt")
+    torch.save(network.state_dict(), f"{OUTPUT_MODEL_PATH}/trained_{node_num}.pt")
 
     with open(fname, 'wb') as f:
-        save(network.state_dict(), f)
+        torch.save(network.state_dict(), f)
 
     with open(f"training_complete_{node_num}", 'w'):
         pass
@@ -161,9 +159,9 @@ def export_data_partitions(partitions, worker_nodes_count):
 
         partition = partitions.use(i)
 
-        save(partition, save_path)
+        torch.save(partition, save_path)
 
 
 def load_data(node_num):
     fname = f"partition_{node_num}.pth"
-    return load(fname)
+    return torch.load(fname)
