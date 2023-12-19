@@ -2,15 +2,15 @@ import os
 import torch
 from torch import nn
 
-from pytorch.constants import SPLIT_NETWORK_PATH, AGGREGATED_NETWORK_PATH
+from pytorch.constants import SPLIT_NETWORK_PATH, AGGREGATED_STATE_DICT_PATH
 from pytorch.utils import load_network, load_optimizer
 
 
 def leader():
-    gradient_paths = [f"{SPLIT_NETWORK_PATH}/{path}/network.pth" for path in os.listdir(SPLIT_NETWORK_PATH)]
+    gradient_paths = [f"{SPLIT_NETWORK_PATH}/{path}/gradient.pth" for path in os.listdir(SPLIT_NETWORK_PATH)]
     gradients = [torch.load(path) for path in gradient_paths]
 
-    network = load_network()
+    network = load_network(AGGREGATED_STATE_DICT_PATH)
     optimizer = load_optimizer(network)
 
     aggregated_gradients = aggregate_gradients(network, gradients)
@@ -20,7 +20,7 @@ def leader():
     optimizer.step()
     optimizer.zero_grad()
 
-    torch.save(network.state_dict(), AGGREGATED_NETWORK_PATH)
+    torch.save(network.state_dict(), AGGREGATED_STATE_DICT_PATH)
 
 
 def aggregate_gradients(network: nn.Module, gradients):

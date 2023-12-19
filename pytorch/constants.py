@@ -1,9 +1,8 @@
 DATA_PATH = "io/data/"
-NETWORK_PATH = "io/state_dicts/network.pth"
-OPTIMIZER_PATH = "io/state_dicts/optimizer.pth"
+STATE_DICT_PATH = "io/network_params/state_dict.pth"
+OPTIMIZER_PATH = "io/network_params/optimizer.pth"
 
 SPLIT_DATA_PATH = "io/split_data"
-SPLIT_NETWORK_PATH = "io/split_state_dicts"
-SPLIT_OPTIMIZER_PATH = "io/split_state_dicts"
+SPLIT_NETWORK_PATH = "io/split_network_params"
 
-AGGREGATED_NETWORK_PATH = "io/aggregated_state_dicts/network.pth"
+AGGREGATED_STATE_DICT_PATH = "io/aggregated_network_params/state_dict.pth"
