@@ -17,7 +17,7 @@ def aggregate_gradients(network, optimizer, last_update=False):
 
     listdir = os.listdir()
 
-    gradient_update_files = [file for file in listdir if file_contains in file]
+    gradient_update_files = filter(lambda x: file_contains in x, listdir)
     gradient_updates = [torch.load(file) for file in gradient_update_files]
 
     if len(gradient_updates) == 0:
@@ -38,14 +38,14 @@ def aggregate_gradients(network, optimizer, last_update=False):
 
 
 def avg_aggr_gradients(network, gradient_updates):
-    aggregated_gradients = gradient_updates[0]
-    for gradient in gradient_updates[1:]:
+    avg_grad = gradient_updates[0]
+    for grad in gradient_updates[1:]:
         for name, param in network.named_parameters():
-            aggregated_gradients[name] = torch.add(aggregated_gradients[name], gradient[name])
+            avg_grad[name] = torch.add(avg_grad[name], grad[name])
 
     for name, param in network.named_parameters():
-        aggregated_gradients[name] /= len(gradient_updates)
-        param.grad = aggregated_gradients[name]
+        avg_grad[name] /= len(gradient_updates)
+        param.grad = avg_grad[name]
 
 
 def parse_worker_args_test():
