@@ -87,29 +87,24 @@ def parse_node_num():
     return args.node_num
 
 
-def export_gradients(model, node_num):
-    gradients = {name: p.grad.data for name, p in model.named_parameters()}
+def export_gradients(network, node_num):
+    gradients = {name: p.grad.data for name, p in network.named_parameters()}
     fname = f"gradient_updates_{node_num}.pt"
-    with open(fname, 'wb') as f:
-        torch.save(gradients, f)
+    torch.save(gradients, fname)
     return fname
 
 
-def wait_for_gradient_updates(model):
+def wait_for_gradient_updates(network):
     while not os.path.exists(OUTPUT_MODEL_FILE):
         time.sleep(1)
 
-    with open(OUTPUT_MODEL_FILE, 'rb') as f:
-        model.load_state_dict(torch.load(f))
-        os.remove(OUTPUT_MODEL_FILE)
+    network.load_state_dict(torch.load(OUTPUT_MODEL_FILE))
+    os.remove(OUTPUT_MODEL_FILE)
 
 
 def complete_training(network, node_num):
-    fname = f"gradient_last_updates_{node_num}.pt"
     torch.save(network.state_dict(), f"{OUTPUT_MODEL_PATH}/trained_{node_num}.pt")
-
-    with open(fname, 'wb') as f:
-        torch.save(network.state_dict(), f)
+    torch.save(network.state_dict(), f"gradient_last_updates_{node_num}.pt")
 
     with open(f"training_complete_{node_num}", 'w'):
         pass
