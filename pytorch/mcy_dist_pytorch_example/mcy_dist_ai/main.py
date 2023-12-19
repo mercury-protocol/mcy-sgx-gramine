@@ -11,10 +11,13 @@ OUTPUT_MODEL_PATH = "/Users/lajosdeme/Desktop/"
 OUTPUT_MODEL_FILE = "model_state.pt"
 
 
-def aggregate_gradients(network, optimizer):
+def aggregate_gradients(network, optimizer, last_update=False):
+    file_contains = 'gradient_last_updates' if last_update else 'gradient_updates'
+    model_file = 'trained_model.pth' if last_update else 'trained_model1.pth'
+
     listdir = os.listdir()
 
-    gradient_update_files = [file for file in listdir if 'gradient_updates' in file]
+    gradient_update_files = [file for file in listdir if file_contains in file]
     gradient_updates = [torch.load(file) for file in gradient_update_files]
 
     if len(gradient_updates) == 0:
@@ -25,31 +28,10 @@ def aggregate_gradients(network, optimizer):
     optimizer.step()
     optimizer.zero_grad()
 
-    model_path = f"{OUTPUT_MODEL_PATH}/trained_model1.pth"
+    model_path = f"{OUTPUT_MODEL_PATH}/{model_file}"
     torch.save(network.state_dict(), model_path)
-
-    for fname in gradient_update_files:
-        os.remove(fname)
-
-    torch.save(network.state_dict(), OUTPUT_MODEL_FILE)
-
-
-def aggregate_gradients_and_save_model(network, optimizer):
-    listdir = os.listdir()
-
-    gradient_update_files = [file for file in listdir if 'gradient_last_updates' in file]
-    gradient_updates = [torch.load(file) for file in gradient_update_files]
-
-    if len(gradient_updates) == 0:
-        return
-
-    avg_aggr_gradients(network=network, gradient_updates=gradient_updates)
-
-    optimizer.step()
-    optimizer.zero_grad()
-
-    model_path = f"{OUTPUT_MODEL_PATH}/trained_model.pth"
-    torch.save(network.state_dict(), model_path)
+    if not last_update:
+        torch.save(network.state_dict(), OUTPUT_MODEL_FILE)
 
     for fname in gradient_update_files:
         os.remove(fname)

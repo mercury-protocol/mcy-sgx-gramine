@@ -1,7 +1,7 @@
 import os
 import time
 from torch.optim import Adam
-from mcy_dist_ai import parse_worker_nodes_count, aggregate_gradients, aggregate_gradients_and_save_model
+from mcy_dist_ai import parse_worker_nodes_count, aggregate_gradients
 from utils import ImageClassifierNetwork
 
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     # aggregate last updates
     time.sleep(5)
-    aggregate_gradients_and_save_model(network, optimizer)
+    aggregate_gradients(network, optimizer, last_update=True)
 
     
     
