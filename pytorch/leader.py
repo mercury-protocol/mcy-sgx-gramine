@@ -24,14 +24,26 @@ def leader():
 
 
 def aggregate_gradients(network: nn.Module, gradients):
-    aggregated_gradients = gradients[0]
-    len_gradients = len(gradients)
-    for gradient in gradients[1:]:
+    avg_gradients = gradients[0]
+    num = len(gradients)
+    for grad in gradients[1:]:
         for name, _ in network.named_parameters():
-            aggregated_gradients[name] = torch.add(aggregated_gradients[name], gradient[name])
-            aggregated_gradients[name] /= len_gradients
+            avg_gradients[name] = torch.add(avg_gradients[name], grad[name])
+            avg_gradients[name] /= num
 
-    return aggregated_gradients
+    return avg_gradients
+
+
+def _leader():
+    paths = [f"{SPLIT_NETWORK_PATH}/{path}/state_dict.pth" for path in os.listdir(SPLIT_NETWORK_PATH)]
+    state_dicts = [torch.load(path) for path in paths]
+    num = len(state_dicts)
+
+    aggregate = dict()
+    for key in state_dicts[0]:
+        aggregate[key] = sum(sd[key] for sd in state_dicts) / num
+
+    torch.save(aggregate, AGGREGATED_STATE_DICT_PATH)
 
 
 if __name__ == "__main__":

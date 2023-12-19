@@ -1,4 +1,5 @@
 import os
+import torch
 
 from user_script import train, data_loader_factory
 
@@ -24,6 +25,7 @@ def train_network():
 
         train(data_loader, network, optimizer)
 
+        torch.save(network.state_dict(), state_dict_path)
         save_gradients(network, gradient_path)
 
 
