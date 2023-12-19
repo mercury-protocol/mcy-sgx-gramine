@@ -36,6 +36,6 @@ def evaluate_network():
 
 
 if __name__ == "__main__":
-    train_network()
+    # train_network()
     leader()
     evaluate_network()

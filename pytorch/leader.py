@@ -13,9 +13,7 @@ def leader():
     network = load_network(AGGREGATED_STATE_DICT_PATH)
     optimizer = load_optimizer(network)
 
-    aggregated_gradients = aggregate_gradients(network, gradients)
-    for name, param in network.named_parameters():
-        param.grad = aggregated_gradients[name]
+    aggregate_gradients(network, gradients)
 
     optimizer.step()
     optimizer.zero_grad()
@@ -24,14 +22,14 @@ def leader():
 
 
 def aggregate_gradients(network: nn.Module, gradients):
-    avg_gradients = gradients[0]
+    avg_grads = gradients[0]
     num = len(gradients)
     for grad in gradients[1:]:
         for name, _ in network.named_parameters():
-            avg_gradients[name] = torch.add(avg_gradients[name], grad[name])
-            avg_gradients[name] /= num
+            avg_grads[name] = torch.add(avg_grads[name], grad[name])
 
-    return avg_gradients
+    for name, param in network.named_parameters():
+        param.grad = avg_grads[name] / num
 
 
 def _leader():
