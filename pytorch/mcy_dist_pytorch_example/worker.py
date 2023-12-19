@@ -13,10 +13,11 @@ from torch.utils.data import random_split
 
 import shutil
 
+
 # Image Classifier Neural Network
-class ImageClassifier(nn.Module): 
+class Network(nn.Module):
     def __init__(self):
-        super(ImageClassifier, self).__init__()
+        super(Network, self).__init__()
         self.model = nn.Sequential(
             nn.Conv2d(1, 32, (3,3)), 
             nn.ReLU(),
@@ -31,20 +32,17 @@ class ImageClassifier(nn.Module):
     def forward(self, x): 
         return self.model(x)
 
+
 # Instance of the neural network, loss, optimizer 
-clf = ImageClassifier()
-opt = Adam(clf.parameters(), lr=1e-3)
+network = Network()
+optimizer = Adam(network.parameters(), lr=1e-3)
 loss_fn = nn.CrossEntropyLoss() 
 
 # Training flow 
 if __name__ == "__main__": 
     node_num = parse_node_num()
-    # Get data 
-    # mnist_dataset = datasets.MNIST(root="data", download=True, train=True, transform=ToTensor())
-    
+
     # TODO: Split the dataset in the watcher node and send chunk to the worker
-    # partitioned_dataset = partition_dataset(mnist_dataset, world_size)
-    # partition = get_data_partition_for_worker(partitioned_dataset, node_num)
     partitioned_dataset = load_data(node_num=node_num)
 
     dataset = DataLoader(partitioned_dataset, 500)
@@ -52,21 +50,18 @@ if __name__ == "__main__":
     for epoch in range(1):  # train for 10 epochs
         current_batch = 0
         for batch in dataset:             
-            X, y = batch 
-            #X, y = X.to('cuda'), y.to('cuda') 
-            yhat = clf(X) 
+            X, y = batch
+            yhat = network(X)
             loss = loss_fn(yhat, y) 
 
             # Apply backprop 
-            opt.zero_grad()
-            loss.backward() 
-            # opt.step()
-            #if current_batch % 100 == 0:
-            export_gradients(clf, node_num)
-            wait_for_gradient_updates(clf, node_num)
+            optimizer.zero_grad()
+            loss.backward()
+            export_gradients(network, node_num)
+            wait_for_gradient_updates(network)
 
             current_batch += 1
 
         print(f"Epoch: {epoch} loss is {loss.item()}")
 
-    complete_training(clf, node_num)
+    complete_training(network, node_num)
