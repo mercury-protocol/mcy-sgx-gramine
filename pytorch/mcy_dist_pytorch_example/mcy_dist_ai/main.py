@@ -22,9 +22,9 @@ def aggregate_gradients(network, optimizer, last_update=False):
 
     if len(gradient_updates) == 0:
         return
-    
+
     avg_aggr_gradients(network=network, gradient_updates=gradient_updates)
-            
+
     optimizer.step()
     optimizer.zero_grad()
 

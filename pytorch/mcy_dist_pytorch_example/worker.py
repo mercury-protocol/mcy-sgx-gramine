@@ -20,7 +20,7 @@ if __name__ == "__main__":
     dataset = DataLoader(partitioned_dataset, 500)
 
     for epoch in range(1):  # train for n epochs
-        for batch in dataset:             
+        for batch in dataset:
             X, y = batch
             yhat = network(X)
             loss = loss_fn(yhat, y) 
