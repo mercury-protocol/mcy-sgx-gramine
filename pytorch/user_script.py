@@ -13,7 +13,6 @@ N_EPOCHS = 2
 BATCH_SIZE_TRAIN = 64
 LEARNING_RATE = 0.01
 MOMENTUM = 0.5
-LOG_INTERVAL = 10
 
 RANDOM_SEED = 1
 
@@ -60,21 +59,10 @@ data_loader_factory = DataLoaderFactory(
 
 
 # ------------------- train the model ----------------
-train_losses = []
-train_counter = []
-
-
-def train(data_loader, network, optimizer):
-    network.train()
-    for epoch in range(N_EPOCHS):
-        for batch_idx, (data, target) in enumerate(data_loader):
-            optimizer.zero_grad()
-            output = network(data)
-            loss = F.nll_loss(output, target)
-            loss.backward()
-            optimizer.step()
-
-            if batch_idx % LOG_INTERVAL == 0:
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    epoch, batch_idx * len(data), len(data_loader.dataset),
-                    100. * batch_idx / len(data_loader), loss.item()))
+def train_batch(data, target, network, optimizer):
+    optimizer.zero_grad()
+    output = network(data)
+    loss = F.nll_loss(output, target)
+    loss.backward()
+    optimizer.step()
+    return loss  # for local logging purposes only
