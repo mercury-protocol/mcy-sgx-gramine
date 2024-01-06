@@ -1,24 +1,55 @@
+import asyncio
 import os
 import torch
 from torch import nn
 
-from pytorch.constants import SPLIT_NETWORK_PATH, AGGREGATED_STATE_DICT_PATH
+from pytorch.constants import SPLIT_NETWORK_PATH, AGGREGATED_NETWORK_PATH, AGGREGATED_STATE_DICT_PATH
 from pytorch.utils import load_network, load_optimizer
 
 
-def leader():
-    gradient_paths = [f"{SPLIT_NETWORK_PATH}/{path}/gradient.pth" for path in os.listdir(SPLIT_NETWORK_PATH)]
-    gradients = [torch.load(path) for path in gradient_paths]
+async def aggregate_network():
+    print(f"Leader started.")
+    while True:
+        gradient_paths = list()
+        aggregation_completed_paths = list()
+        for dirname in os.listdir(SPLIT_NETWORK_PATH):
+            grad_pth = f"{SPLIT_NETWORK_PATH}/{dirname}/gradient.pth"
+            aggr_compl_pth = f"{AGGREGATED_NETWORK_PATH}/{dirname}/aggregation_completed"
+            if os.path.exists(aggr_compl_pth):
+                continue
+            gradient_paths.append(grad_pth)
+            aggregation_completed_paths.append(aggr_compl_pth)
 
-    network = load_network(AGGREGATED_STATE_DICT_PATH)
-    optimizer = load_optimizer(network)
+        # wait for all workers to finish their training cycles
+        while not all([os.path.exists(path) for path in gradient_paths]):
+            await asyncio.sleep(1)
 
-    aggregate_gradients(network, gradients)
+        gradients = [torch.load(path) for path in gradient_paths]
 
-    optimizer.step()
-    optimizer.zero_grad()
+        network = load_network(AGGREGATED_STATE_DICT_PATH)
+        optimizer = load_optimizer(network)
 
-    torch.save(network.state_dict(), AGGREGATED_STATE_DICT_PATH)
+        aggregate_gradients(network, gradients)
+
+        optimizer.step()
+        optimizer.zero_grad()
+
+        torch.save(network.state_dict(), AGGREGATED_STATE_DICT_PATH)
+        for dirname in os.listdir(AGGREGATED_NETWORK_PATH):
+            torch.save(network.state_dict(), f"{AGGREGATED_NETWORK_PATH}/{dirname}/state_dict.pth")
+
+        for dirname in os.listdir(SPLIT_NETWORK_PATH):
+            grad_pth = f"{SPLIT_NETWORK_PATH}/{dirname}/gradient.pth"
+            tr_compl_pth = f"{SPLIT_NETWORK_PATH}/{dirname}/training_completed"
+            aggr_compl_pth = f"{AGGREGATED_NETWORK_PATH}/{dirname}/aggregation_completed"
+            os.remove(grad_pth)
+            if os.path.exists(tr_compl_pth):
+                with open(aggr_compl_pth, "wb"):
+                    pass
+
+        if all([os.path.exists(path) for path in aggregation_completed_paths]):
+            print("All aggregations have been finished, leader stops")
+            return
 
 
 def aggregate_gradients(network: nn.Module, gradients):
@@ -30,19 +61,3 @@ def aggregate_gradients(network: nn.Module, gradients):
 
     for name, param in network.named_parameters():
         param.grad = avg_grads[name] / num
-
-
-def _leader():
-    paths = [f"{SPLIT_NETWORK_PATH}/{path}/state_dict.pth" for path in os.listdir(SPLIT_NETWORK_PATH)]
-    state_dicts = [torch.load(path) for path in paths]
-    num = len(state_dicts)
-
-    aggregate = dict()
-    for key in state_dicts[0]:
-        aggregate[key] = sum(sd[key] for sd in state_dicts) / num
-
-    torch.save(aggregate, AGGREGATED_STATE_DICT_PATH)
-
-
-if __name__ == "__main__":
-    leader()
