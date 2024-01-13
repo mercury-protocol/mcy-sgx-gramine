@@ -4,7 +4,7 @@ import torch
 
 from user_script import train_batch, data_loader_factory, N_EPOCHS
 
-from pytorch.constants import SPLIT_DATA_PATH, SPLIT_NETWORK_PATH, AGGREGATED_NETWORK_PATH
+from pytorch.constants import SPLIT_DATA_PATH, SPLIT_NETWORK_PATH, AGGREGATED_NETWORK_PATH, WAITING_PERIOD
 from pytorch.utils import load_network, load_optimizer, save_gradients
 
 
@@ -22,7 +22,7 @@ async def train_network(dirname):
     gradient_path = f"{SPLIT_NETWORK_PATH}/{dirname}/gradient.pth"
 
     data_loader = data_loader_factory.create(data_path)
-    network = load_network(path=state_dict_path)
+    network = load_network(path=aggregated_state_dict_path)
     optimizer = load_optimizer(network, path=optimizer_path)
 
     for epoch in range(N_EPOCHS):
@@ -33,13 +33,13 @@ async def train_network(dirname):
 
             # wait other workers to finish and leader to aggregate
             while not os.path.exists(aggregated_state_dict_path):
-                await asyncio.sleep(1)
+                await asyncio.sleep(WAITING_PERIOD)
 
             network.load_state_dict(torch.load(aggregated_state_dict_path))
             os.remove(aggregated_state_dict_path)
 
             if batch_idx % LOG_INTERVAL == 0:
-                print(f"Node: {dirname} Epoch: {epoch} Batch: {batch_idx} Loss: {loss.item():.6f}")
+                print(f"Worker: {dirname} Epoch: {epoch} Batch: {batch_idx} Loss: {loss.item():.6f}")
 
     # create a file to signal that training is complete
     with open(f"{SPLIT_NETWORK_PATH}/{dirname}/training_completed", "wb"):

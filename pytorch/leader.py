@@ -3,7 +3,7 @@ import os
 import torch
 from torch import nn
 
-from pytorch.constants import SPLIT_NETWORK_PATH, AGGREGATED_NETWORK_PATH, AGGREGATED_STATE_DICT_PATH
+from pytorch.constants import SPLIT_NETWORK_PATH, AGGREGATED_NETWORK_PATH, AGGREGATED_STATE_DICT_PATH, WAITING_PERIOD
 from pytorch.utils import load_network, load_optimizer
 
 
@@ -15,14 +15,12 @@ async def aggregate_network():
         for dirname in os.listdir(SPLIT_NETWORK_PATH):
             grad_pth = f"{SPLIT_NETWORK_PATH}/{dirname}/gradient.pth"
             aggr_compl_pth = f"{AGGREGATED_NETWORK_PATH}/{dirname}/aggregation_completed"
-            if os.path.exists(aggr_compl_pth):
-                continue
             gradient_paths.append(grad_pth)
             aggregation_completed_paths.append(aggr_compl_pth)
 
         # wait for all workers to finish their training cycles
         while not all([os.path.exists(path) for path in gradient_paths]):
-            await asyncio.sleep(1)
+            await asyncio.sleep(WAITING_PERIOD)
 
         gradients = [torch.load(path) for path in gradient_paths]
 
@@ -61,3 +59,7 @@ def aggregate_gradients(network: nn.Module, gradients):
 
     for name, param in network.named_parameters():
         param.grad = avg_grads[name] / num
+
+
+if __name__ == "__main__":
+    asyncio.run(aggregate_network())

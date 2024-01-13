@@ -7,3 +7,5 @@ SPLIT_NETWORK_PATH = "io/split_network_params"
 
 AGGREGATED_NETWORK_PATH = "io/aggregated_network_params"
 AGGREGATED_STATE_DICT_PATH = "io/aggregated_state_dict/state_dict.pth"
+
+WAITING_PERIOD = 0.01
