@@ -5,10 +5,17 @@ from torch import nn
 
 from user_script import train_batch, data_loader_factory, N_EPOCHS
 
-from pytorch.constants import AGGREGATED_STATE_DICT_PATH, SPLIT_DATA_PATH, WAITING_PERIOD
-from pytorch.utils import (
-    load_network, load_optimizer, get_file_path, FileEnum, safe_delete_file
+from pytorch.constants import (
+    AGGREGATED_STATE_DICT_PATH,
+    SPLIT_DATA_PATH,
+    OPTIMIZER_FILE,
+    GRADIENT_FILE,
+    TRAINING_COMPLETE_FILE,
+    BATCH_TRAINING_COMPLETE_FILE,
+    BATCH_AGGREGATION_COMPLETE,
+    WAITING_PERIOD
 )
+from pytorch.utils import load_network, load_optimizer, get_file_path, safe_delete_file
 
 
 LOG_INTERVAL = 10
@@ -18,11 +25,11 @@ class Worker:
     def __init__(self, node: str):
         self.node = node
         self.data_path = SPLIT_DATA_PATH / node
-        self.optimizer_path = get_file_path(node, FileEnum.OPTIMIZER)
-        self.gradient_path = get_file_path(node, FileEnum.GRADIENT)
-        self.training_complete_path = get_file_path(node, FileEnum.TRAINING_COMPLETE)
-        self.batch_training_complete_path = get_file_path(node, FileEnum.BATCH_TRAINING_COMPLETE)
-        self.batch_aggregation_complete_path = get_file_path(node, FileEnum.BATCH_AGGREGATION_COMPLETE)
+        self.optimizer_path = get_file_path(node, OPTIMIZER_FILE)
+        self.gradient_path = get_file_path(node, GRADIENT_FILE)
+        self.training_complete_path = get_file_path(node, TRAINING_COMPLETE_FILE)
+        self.batch_training_complete_path = get_file_path(node, BATCH_TRAINING_COMPLETE_FILE)
+        self.batch_aggregation_complete_path = get_file_path(node, BATCH_AGGREGATION_COMPLETE)
         self.data_loader = data_loader_factory.create(self.data_path)
         self.total_batches = len(self.data_loader)
 

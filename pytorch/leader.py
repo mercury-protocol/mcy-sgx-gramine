@@ -3,8 +3,15 @@ import os
 import torch
 from torch import nn
 
-from pytorch.constants import AGGREGATED_STATE_DICT_PATH, WAITING_PERIOD
-from pytorch.utils import load_network, load_optimizer, list_worker_nodes, get_file_path, FileEnum, safe_delete_file
+from pytorch.constants import (
+    AGGREGATED_STATE_DICT_PATH,
+    TRAINING_COMPLETE_FILE,
+    BATCH_TRAINING_COMPLETE_FILE,
+    BATCH_AGGREGATION_COMPLETE,
+    GRADIENT_FILE,
+    WAITING_PERIOD
+)
+from pytorch.utils import load_network, load_optimizer, list_worker_nodes, get_file_path, safe_delete_file
 
 
 class Leader:
@@ -15,16 +22,16 @@ class Leader:
         self.gradient_paths = list()
         for node in list_worker_nodes():
             self.training_complete_paths.append(
-                get_file_path(node, FileEnum.TRAINING_COMPLETE)
+                get_file_path(node, TRAINING_COMPLETE_FILE)
             )
             self.batch_training_complete_paths.append(
-                get_file_path(node, FileEnum.BATCH_TRAINING_COMPLETE)
+                get_file_path(node, BATCH_TRAINING_COMPLETE_FILE)
             )
             self.batch_aggregation_complete_paths.append(
-                get_file_path(node, FileEnum.BATCH_AGGREGATION_COMPLETE)
+                get_file_path(node, BATCH_AGGREGATION_COMPLETE)
             )
             self.gradient_paths.append(
-                get_file_path(node, FileEnum.GRADIENT)
+                get_file_path(node, GRADIENT_FILE)
             )
 
     def are_trainings_complete(self) -> bool:
@@ -45,6 +52,7 @@ class Leader:
         gradients = [torch.load(path) for path in self.gradient_paths]
         avg_grads = gradients[0]
         num = len(gradients)
+
         for grad in gradients[1:]:
             for name, _ in network.named_parameters():
                 avg_grads[name] = torch.add(avg_grads[name], grad[name])

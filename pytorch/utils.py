@@ -1,7 +1,6 @@
 import os
 import torch
 
-from enum import Enum
 from pathlib import Path
 from torch import nn
 
@@ -27,19 +26,10 @@ def list_worker_nodes() -> list[str]:
     return os.listdir(WORKER_DIR)
 
 
-class FileEnum(Enum):
-    STATE_DICT = "state_dict.pth"
-    OPTIMIZER = "optimizer.pth"
-    GRADIENT = "gradient.pth"
-    BATCH_TRAINING_COMPLETE = "batch_training_complete"
-    TRAINING_COMPLETE = "training_complete"
-    BATCH_AGGREGATION_COMPLETE = "batch_aggregation_complete"
+def get_file_path(node: str, filename: str) -> Path:
+    return WORKER_DIR / node / filename
 
 
-def get_file_path(node: str, filename: FileEnum) -> Path:
-    return WORKER_DIR / str(node) / filename.value
-
-
-def safe_delete_file(path):
+def safe_delete_file(path: str | Path):
     if os.path.exists(path):
         os.remove(path)
