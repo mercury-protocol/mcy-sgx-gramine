@@ -1,7 +1,7 @@
 import asyncio
 import os
 
-from pytorch.constants import SPLIT_DATA_PATH, AGGREGATED_STATE_DICT_PATH
+from pytorch.constants import WORKER_DIR, AGGREGATED_STATE_DICT_PATH
 from pytorch.helpers.eval import make_predictions
 from pytorch.helpers.test_network import test, test_data_loader
 from pytorch.utils import load_network
@@ -12,8 +12,8 @@ from pytorch.leader import aggregate_network
 async def full_train():
     leader = asyncio.create_task(aggregate_network())
     workers = list()
-    for dirname in os.listdir(SPLIT_DATA_PATH):
-        workers.append(asyncio.create_task(train_network(dirname)))
+    for node in os.listdir(WORKER_DIR):
+        workers.append(asyncio.create_task(train_network(node)))
 
     await asyncio.gather(leader, *workers)
 

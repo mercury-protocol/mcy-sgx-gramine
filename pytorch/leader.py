@@ -3,23 +3,29 @@ import os
 import torch
 from torch import nn
 
-from pytorch.constants import SPLIT_NETWORK_PATH, AGGREGATED_NETWORK_PATH, AGGREGATED_STATE_DICT_PATH, WAITING_PERIOD
-from pytorch.utils import load_network, load_optimizer
+from pytorch.constants import WORKER_DIR, AGGREGATED_STATE_DICT_PATH, WAITING_PERIOD
+from pytorch.utils import load_network, load_optimizer, get_file_path, DirEnum, FileEnum, safe_delete_file
 
 
 async def aggregate_network():
     print(f"Leader started.")
-    while True:
-        gradient_paths = list()
-        aggregation_completed_paths = list()
-        for dirname in os.listdir(SPLIT_NETWORK_PATH):
-            grad_pth = f"{SPLIT_NETWORK_PATH}/{dirname}/gradient.pth"
-            aggr_compl_pth = f"{AGGREGATED_NETWORK_PATH}/{dirname}/aggregation_completed"
-            gradient_paths.append(grad_pth)
-            aggregation_completed_paths.append(aggr_compl_pth)
+    gradient_paths = list()
+    batch_aggregation_complete_paths = list()
+    batch_training_complete_paths = list()
+    training_complete_paths = list()
+    for node in os.listdir(WORKER_DIR):
+        gradient_paths.append(get_file_path(
+            DirEnum.WORKER, node, FileEnum.GRADIENT))
+        batch_aggregation_complete_paths.append(get_file_path(
+            DirEnum.WORKER, node, FileEnum.BATCH_AGGREGATION_COMPLETE))
+        batch_training_complete_paths.append(get_file_path(
+            DirEnum.WORKER, node, FileEnum.BATCH_TRAINING_COMPLETE))
+        training_complete_paths.append(get_file_path(
+            DirEnum.WORKER, node, FileEnum.TRAINING_COMPLETE))
 
+    while True:
         # wait for all workers to finish their training cycles
-        while not all([os.path.exists(path) for path in gradient_paths]):
+        while not all(os.path.exists(path) for path in batch_training_complete_paths):
             await asyncio.sleep(WAITING_PERIOD)
 
         gradients = [torch.load(path) for path in gradient_paths]
@@ -33,19 +39,14 @@ async def aggregate_network():
         optimizer.zero_grad()
 
         torch.save(network.state_dict(), AGGREGATED_STATE_DICT_PATH)
-        for dirname in os.listdir(AGGREGATED_NETWORK_PATH):
-            torch.save(network.state_dict(), f"{AGGREGATED_NETWORK_PATH}/{dirname}/state_dict.pth")
 
-        for dirname in os.listdir(SPLIT_NETWORK_PATH):
-            grad_pth = f"{SPLIT_NETWORK_PATH}/{dirname}/gradient.pth"
-            tr_compl_pth = f"{SPLIT_NETWORK_PATH}/{dirname}/training_completed"
-            aggr_compl_pth = f"{AGGREGATED_NETWORK_PATH}/{dirname}/aggregation_completed"
-            os.remove(grad_pth)
-            if os.path.exists(tr_compl_pth):
-                with open(aggr_compl_pth, "wb"):
-                    pass
+        for pth in batch_training_complete_paths:
+            safe_delete_file(pth)
+        for pth in batch_aggregation_complete_paths:
+            with open(pth, "wb"):
+                pass
 
-        if all([os.path.exists(path) for path in aggregation_completed_paths]):
+        if all(os.path.exists(pth) for pth in training_complete_paths):
             print("All aggregations have been finished, leader stops")
             return
 
