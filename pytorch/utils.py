@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import Path
 from torch import nn
 
-from constants import IO_DIR, SPLIT_DATA_PATH
+from constants import WORKER_DIR
 from user_script import network_factory, optimizer_factory
 
 
@@ -23,15 +23,8 @@ def load_optimizer(network: nn.Module, path=""):
     return optimizer
 
 
-def save_gradients(network: nn.Module, path):
-    gradients = {name: param.grad.data for name, param in network.named_parameters()}
-    torch.save(gradients, path)
-
-
-class DirEnum(Enum):
-    LEADER = "leader"
-    WORKER = "worker"
-    WATCHER = "watcher"
+def list_worker_nodes() -> list[str]:
+    return os.listdir(WORKER_DIR)
 
 
 class FileEnum(Enum):
@@ -41,15 +34,10 @@ class FileEnum(Enum):
     BATCH_TRAINING_COMPLETE = "batch_training_complete"
     TRAINING_COMPLETE = "training_complete"
     BATCH_AGGREGATION_COMPLETE = "batch_aggregation_complete"
-    AGGREGATION_COMPLETE = "aggregation_complete"
 
 
-def get_file_path(directory: DirEnum, node: str, filename: FileEnum) -> Path:
-    return IO_DIR / directory.value / str(node) / filename.value
-
-
-def get_data_path(node: str) -> Path:
-    return SPLIT_DATA_PATH / str(node)
+def get_file_path(node: str, filename: FileEnum) -> Path:
+    return WORKER_DIR / str(node) / filename.value
 
 
 def safe_delete_file(path):
