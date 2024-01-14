@@ -8,6 +8,9 @@ from pytorch.worker import Worker
 from pytorch.leader import Leader
 
 
+MAKE_PREDICTIONS = False
+
+
 async def full_train():
     leader = asyncio.create_task(Leader().aggregate_network())
     workers = list()
@@ -20,7 +23,8 @@ async def full_train():
 def evaluate_network(state_dict_path=AGGREGATED_STATE_DICT_PATH):
     network = load_network(state_dict_path)
     test(network)
-    make_predictions(network, test_data_loader)
+    if MAKE_PREDICTIONS:
+        make_predictions(network, test_data_loader)
 
 
 if __name__ == "__main__":
