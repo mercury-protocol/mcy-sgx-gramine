@@ -11,13 +11,13 @@ from pytorch.leader import Leader
 MAKE_PREDICTIONS = False
 
 
-async def full_train():
-    leader = asyncio.create_task(Leader().aggregate_network())
-    workers = list()
-    for node in list_worker_nodes():
-        workers.append(asyncio.create_task(Worker(node).train_network()))
-
-    await asyncio.gather(leader, *workers)
+async def train_network():
+    leader_task = asyncio.create_task(Leader().aggregate_network())
+    worker_tasks = [
+        asyncio.create_task(Worker(node).train_network())
+        for node in list_worker_nodes()
+    ]
+    await asyncio.gather(leader_task, *worker_tasks)
 
 
 def evaluate_network(state_dict_path=AGGREGATED_STATE_DICT_PATH):
@@ -28,5 +28,5 @@ def evaluate_network(state_dict_path=AGGREGATED_STATE_DICT_PATH):
 
 
 if __name__ == "__main__":
-    asyncio.run(full_train())
+    asyncio.run(train_network())
     evaluate_network()
