@@ -6,6 +6,7 @@ from pytorch.helpers.test_network import test, test_data_loader
 from pytorch.utils import load_network, list_worker_nodes
 from pytorch.worker import Worker
 from pytorch.leader import Leader
+from remote.utils import MeasureTime
 
 
 MAKE_PREDICTIONS = False
@@ -28,5 +29,6 @@ def evaluate_network(state_dict_path=AGGREGATED_STATE_DICT_PATH):
 
 
 if __name__ == "__main__":
-    asyncio.run(train_network())
+    with MeasureTime("train_network()"):
+        asyncio.run(train_network())
     evaluate_network()
