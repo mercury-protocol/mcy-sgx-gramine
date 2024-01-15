@@ -8,10 +8,12 @@ from constants import WORKER_DIR
 from user_script import network_factory, optimizer_factory
 
 
-def load_network(path=""):
+def load_network(path="", delete_file=False):
     network = network_factory.create()
     if os.path.exists(path):
         network.load_state_dict(torch.load(path))
+        if delete_file:
+            os.remove(path)
     return network
 
 
@@ -28,8 +30,3 @@ def list_worker_nodes() -> list[str]:
 
 def get_file_path(node: str, filename: str) -> Path:
     return WORKER_DIR / node / filename
-
-
-def safe_delete_file(path: str | Path):
-    if os.path.exists(path):
-        os.remove(path)

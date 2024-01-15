@@ -6,50 +6,47 @@ from torch import nn
 from pytorch.constants import (
     AGGREGATED_STATE_DICT_PATH,
     TRAINING_COMPLETE_FILE,
-    BATCH_TRAINING_COMPLETE_FILE,
-    BATCH_AGGREGATION_COMPLETE,
+    STATE_DICT_FILE,
     GRADIENT_FILE,
     WAITING_PERIOD
 )
-from pytorch.utils import load_network, load_optimizer, list_worker_nodes, get_file_path, safe_delete_file
+from pytorch.utils import load_network, load_optimizer, list_worker_nodes, get_file_path
 
 
 class Leader:
     def __init__(self):
-        self.training_complete_paths = list()
-        self.batch_training_complete_paths = list()
-        self.batch_aggregation_complete_paths = list()
-        self.gradient_paths = list()
+        self.worker_training_complete_paths = list()
+        self.worker_aggregated_state_dict_paths = list()
+        self.worker_gradient_paths = list()
         for node in list_worker_nodes():
-            self.training_complete_paths.append(
+            self.worker_training_complete_paths.append(
                 get_file_path(node, TRAINING_COMPLETE_FILE)
             )
-            self.batch_training_complete_paths.append(
-                get_file_path(node, BATCH_TRAINING_COMPLETE_FILE)
+            self.worker_aggregated_state_dict_paths.append(
+                get_file_path(node, STATE_DICT_FILE)
             )
-            self.batch_aggregation_complete_paths.append(
-                get_file_path(node, BATCH_AGGREGATION_COMPLETE)
-            )
-            self.gradient_paths.append(
+            self.worker_gradient_paths.append(
                 get_file_path(node, GRADIENT_FILE)
             )
 
-    def are_trainings_complete(self) -> bool:
-        return all(os.path.exists(path) for path in self.training_complete_paths)
+    def are_worker_trainings_complete(self) -> bool:
+        return all(os.path.exists(path) for path in self.worker_training_complete_paths)
 
-    async def wait_batch_trainings_complete(self):
-        while not all(os.path.exists(path) for path in self.batch_training_complete_paths):
+    async def wait_worker_gradients(self):
+        while not all(os.path.exists(path) for path in self.worker_gradient_paths):
             await asyncio.sleep(WAITING_PERIOD)
 
-    def signal_batch_aggregations_complete(self):
-        for path in self.batch_training_complete_paths:
-            safe_delete_file(path)
-        for path in self.batch_aggregation_complete_paths:
-            with open(path, "wb"):
-                pass
+    def delete_worker_gradients(self):
+        for path in self.worker_gradient_paths:
+            if os.path.exists(path):
+                os.remove(path)
+
+    def send_aggregated_network_to_workers(self, network_state_dict):
+        for path in self.worker_aggregated_state_dict_paths:
+            torch.save(network_state_dict, path)
 
     def aggregate_gradients(self, network: nn.Module):
-        gradients = [torch.load(path) for path in self.gradient_paths]
+        gradients = [torch.load(path) for path in self.worker_gradient_paths]
         avg_grads = gradients[0]
         num = len(gradients)
 
@@ -63,7 +60,7 @@ class Leader:
     async def aggregate_network(self):
         print(f"Leader started.")
         while True:
-            await self.wait_batch_trainings_complete()
+            await self.wait_worker_gradients()
 
             network = load_network(AGGREGATED_STATE_DICT_PATH)
             optimizer = load_optimizer(network)
@@ -72,9 +69,12 @@ class Leader:
             optimizer.step()
             optimizer.zero_grad()
 
-            torch.save(network.state_dict(), AGGREGATED_STATE_DICT_PATH)
-            self.signal_batch_aggregations_complete()
+            network_state_dict = network.state_dict()
+            torch.save(network_state_dict, AGGREGATED_STATE_DICT_PATH)
 
-            if self.are_trainings_complete():
+            self.delete_worker_gradients()
+            self.send_aggregated_network_to_workers(network_state_dict)
+
+            if self.are_worker_trainings_complete():
                 print("All aggregations have been finished, leader stops")
                 return
