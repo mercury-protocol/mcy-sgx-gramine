@@ -65,6 +65,7 @@ class Leader:
         while not task.done():
             with open(self.monitor_path, "wb"):
                 pass
+            print("Leader monitor: Leader is running.")
             await asyncio.sleep(MONITOR_PERIOD)
 
         print("Leader monitor finished.")

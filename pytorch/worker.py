@@ -60,6 +60,7 @@ class Worker:
         while not task.done():
             with open(self.monitor_path, "wb"):
                 pass
+            print(f"Worker {self.node} monitor: Worker {self.node} is running.")
             await asyncio.sleep(MONITOR_PERIOD)
 
         print(f"Worker {self.node} monitor finished.")
