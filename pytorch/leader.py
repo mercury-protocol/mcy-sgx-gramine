@@ -11,7 +11,9 @@ from pytorch.constants import (
     TRAINING_COMPLETE_FILE,
     BATCH_AGGREGATION_COMPLETE_FILE,
     GRADIENT_FILE,
-    WAITING_PERIOD
+    WAITING_PERIOD,
+    MONITOR_FILE,
+    MONITOR_PERIOD
 )
 from pytorch.utils import load_network, load_optimizer, list_worker_nodes
 
@@ -25,6 +27,7 @@ class Leader:
         self.training_complete_paths = list()
         self.gradient_paths = list()
         self.batch_aggregation_complete_path = LEADER_DIR / BATCH_AGGREGATION_COMPLETE_FILE
+        self.monitor_path = LEADER_DIR / MONITOR_FILE
         for node in list_worker_nodes():
             self.training_complete_paths.append(get_path(node, TRAINING_COMPLETE_FILE))
             self.gradient_paths.append(get_path(node, GRADIENT_FILE))
@@ -57,6 +60,15 @@ class Leader:
         for name, param in network.named_parameters():
             param.grad = avg_grads[name] / num
 
+    async def monitor(self, task: asyncio.Task):
+        print("Leader monitor started.")
+        while not task.done():
+            with open(self.monitor_path, "wb"):
+                pass
+            await asyncio.sleep(MONITOR_PERIOD)
+
+        print("Leader monitor finished.")
+
     async def aggregate_network(self):
         print("Leader started.")
         while True:
@@ -78,3 +90,8 @@ class Leader:
             if self.are_trainings_complete():
                 print("Leader finished.")
                 return
+
+    async def run(self):
+        aggregate_network_task = asyncio.create_task(self.aggregate_network())
+        monitor_task = asyncio.create_task(self.monitor(aggregate_network_task))
+        await asyncio.gather(aggregate_network_task, monitor_task)

@@ -14,7 +14,9 @@ from pytorch.constants import (
     GRADIENT_FILE,
     TRAINING_COMPLETE_FILE,
     STATE_DICT_FILE,
-    WAITING_PERIOD
+    WAITING_PERIOD,
+    MONITOR_PERIOD,
+    MONITOR_FILE
 )
 from pytorch.utils import load_network, load_optimizer
 
@@ -29,6 +31,7 @@ def get_path(node: str, file: str) -> Path:
 class Worker:
     def __init__(self, node: str):
         self.node = node
+        self.monitor_path = get_path(node, MONITOR_FILE)
         self.data_path = SPLIT_DATA_PATH / node
         self.optimizer_path = get_path(node, OPTIMIZER_FILE)
         self.gradient_path = get_path(node, GRADIENT_FILE)
@@ -52,6 +55,16 @@ class Worker:
         gradient = {name: param.grad.data for name, param in network.named_parameters()}
         torch.save(gradient, self.gradient_path)
 
+    async def monitor(self, task: asyncio.Task):
+        print(f"Worker {self.node} monitor started.")
+        while not task.done():
+            with open(self.monitor_path, "wb"):
+                pass
+            await asyncio.sleep(MONITOR_PERIOD)
+
+        print(f"Worker {self.node} monitor finished.")
+        return
+
     async def train_network(self):
         print(f"Worker {self.node} started.")
 
@@ -70,3 +83,8 @@ class Worker:
                     print(f"Worker: {self.node} Epoch: {epoch} Batch: {batch_idx} Loss: {loss.item():.6f}")
 
         print(f"Worker {self.node} finished.")
+
+    async def run(self):
+        train_network_task = asyncio.create_task(self.train_network())
+        monitor_task = asyncio.create_task(self.monitor(train_network_task))
+        await asyncio.gather(train_network_task, monitor_task)
