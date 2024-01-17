@@ -1,52 +1,52 @@
 import asyncio
 import os
 import torch
+
+from pathlib import Path
 from torch import nn
 
 from pytorch.constants import (
+    LEADER_DIR,
     AGGREGATED_STATE_DICT_PATH,
     TRAINING_COMPLETE_FILE,
-    STATE_DICT_FILE,
+    BATCH_AGGREGATION_COMPLETE_FILE,
     GRADIENT_FILE,
     WAITING_PERIOD
 )
-from pytorch.utils import load_network, load_optimizer, list_worker_nodes, get_file_path
+from pytorch.utils import load_network, load_optimizer, list_worker_nodes
+
+
+def get_path(worker_node: str, file: str) -> Path:
+    return LEADER_DIR / worker_node / file
 
 
 class Leader:
     def __init__(self):
-        self.worker_training_complete_paths = list()
-        self.worker_aggregated_state_dict_paths = list()
-        self.worker_gradient_paths = list()
+        self.training_complete_paths = list()
+        self.gradient_paths = list()
+        self.batch_aggregation_complete_path = LEADER_DIR / BATCH_AGGREGATION_COMPLETE_FILE
         for node in list_worker_nodes():
-            self.worker_training_complete_paths.append(
-                get_file_path(node, TRAINING_COMPLETE_FILE)
-            )
-            self.worker_aggregated_state_dict_paths.append(
-                get_file_path(node, STATE_DICT_FILE)
-            )
-            self.worker_gradient_paths.append(
-                get_file_path(node, GRADIENT_FILE)
-            )
+            self.training_complete_paths.append(get_path(node, TRAINING_COMPLETE_FILE))
+            self.gradient_paths.append(get_path(node, GRADIENT_FILE))
 
-    def are_worker_trainings_complete(self) -> bool:
-        return all(os.path.exists(path) for path in self.worker_training_complete_paths)
+    def are_trainings_complete(self) -> bool:
+        return all(os.path.exists(path) for path in self.training_complete_paths)
 
-    async def wait_worker_gradients(self):
-        while not all(os.path.exists(path) for path in self.worker_gradient_paths):
+    async def wait_gradients(self):
+        while not all(os.path.exists(path) for path in self.gradient_paths):
             await asyncio.sleep(WAITING_PERIOD)
 
-    def delete_worker_gradients(self):
-        for path in self.worker_gradient_paths:
+    def delete_gradients(self):
+        for path in self.gradient_paths:
             if os.path.exists(path):
                 os.remove(path)
 
-    def send_aggregated_network_to_workers(self, network_state_dict):
-        for path in self.worker_aggregated_state_dict_paths:
-            torch.save(network_state_dict, path)
+    def signal_batch_aggregation_complete(self):
+        with open(self.batch_aggregation_complete_path, "wb"):
+            pass
 
     def aggregate_gradients(self, network: nn.Module):
-        gradients = [torch.load(path) for path in self.worker_gradient_paths]
+        gradients = [torch.load(path) for path in self.gradient_paths]
         avg_grads = gradients[0]
         num = len(gradients)
 
@@ -58,9 +58,9 @@ class Leader:
             param.grad = avg_grads[name] / num
 
     async def aggregate_network(self):
-        print(f"Leader started.")
+        print("Leader started.")
         while True:
-            await self.wait_worker_gradients()
+            await self.wait_gradients()
 
             network = load_network(AGGREGATED_STATE_DICT_PATH)
             optimizer = load_optimizer(network)
@@ -72,9 +72,9 @@ class Leader:
             network_state_dict = network.state_dict()
             torch.save(network_state_dict, AGGREGATED_STATE_DICT_PATH)
 
-            self.delete_worker_gradients()
-            self.send_aggregated_network_to_workers(network_state_dict)
+            self.delete_gradients()
+            self.signal_batch_aggregation_complete()
 
-            if self.are_worker_trainings_complete():
-                print("All aggregations have been finished, leader stops")
+            if self.are_trainings_complete():
+                print("Leader finished.")
                 return

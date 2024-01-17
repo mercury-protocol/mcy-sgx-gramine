@@ -1,7 +1,6 @@
 import os
 import torch
 
-from pathlib import Path
 from torch import nn
 
 from constants import WORKER_DIR
@@ -26,7 +25,3 @@ def load_optimizer(network: nn.Module, path=""):
 
 def list_worker_nodes() -> list[str]:
     return os.listdir(WORKER_DIR)
-
-
-def get_file_path(node: str, filename: str) -> Path:
-    return WORKER_DIR / node / filename

@@ -5,6 +5,7 @@ STATE_DICT_FILE = "state_dict.pth"
 OPTIMIZER_FILE = "optimizer.pth"
 GRADIENT_FILE = "gradient.pth"
 TRAINING_COMPLETE_FILE = "training_complete"
+BATCH_AGGREGATION_COMPLETE_FILE = "batch_aggregation_complete"
 
 IO_DIR = Path("io")
 LEADER_DIR = IO_DIR / "leader"
