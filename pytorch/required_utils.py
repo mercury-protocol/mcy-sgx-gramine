@@ -1,6 +1,4 @@
 from abc import ABC
-# TODO: update readme about required data loader factory
-# TODO: dataset factory creation could be a little bit simpler?
 
 
 class AbstractFactory(ABC):

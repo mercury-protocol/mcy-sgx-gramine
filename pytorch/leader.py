@@ -18,10 +18,6 @@ from pytorch.constants import (
 from pytorch.utils import load_network, load_optimizer, list_worker_nodes
 
 
-def get_path(worker_node: str, file: str) -> Path:
-    return LEADER_DIR / worker_node / file
-
-
 class Leader:
     def __init__(self):
         self.training_complete_paths = list()
@@ -29,8 +25,12 @@ class Leader:
         self.batch_aggregation_complete_path = LEADER_DIR / BATCH_AGGREGATION_COMPLETE_FILE
         self.monitor_path = LEADER_DIR / MONITOR_FILE
         for node in list_worker_nodes():
-            self.training_complete_paths.append(get_path(node, TRAINING_COMPLETE_FILE))
-            self.gradient_paths.append(get_path(node, GRADIENT_FILE))
+            self.training_complete_paths.append(self.get_path(node, TRAINING_COMPLETE_FILE))
+            self.gradient_paths.append(self.get_path(node, GRADIENT_FILE))
+
+    @staticmethod
+    def get_path(worker_node: str, file: str) -> Path:
+        return LEADER_DIR / worker_node / file
 
     def are_trainings_complete(self) -> bool:
         return all(os.path.exists(path) for path in self.training_complete_paths)

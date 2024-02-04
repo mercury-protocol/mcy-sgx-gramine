@@ -3,7 +3,7 @@ import torch
 
 from torch import nn
 
-from constants import WORKER_DIR
+from constants import SPLIT_DATA_PATH
 from user_script import network_factory, optimizer_factory
 
 
@@ -24,4 +24,4 @@ def load_optimizer(network: nn.Module, path=""):
 
 
 def list_worker_nodes() -> list[str]:
-    return os.listdir(WORKER_DIR)
+    return os.listdir(SPLIT_DATA_PATH)
