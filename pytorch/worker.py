@@ -10,7 +10,6 @@ from user_script import train_batch, data_loader_factory, N_EPOCHS
 from pytorch.constants import (
     WORKER_DIR,
     DATA_DIR,
-    OPTIMIZER_FILE,
     GRADIENT_FILE,
     TRAINING_COMPLETE_FILE,
     STATE_DICT_FILE,
@@ -29,7 +28,6 @@ class Worker:
         self.node = node
         self.monitor_path = self.get_path(MONITOR_FILE)
         self.data_path = self.get_path(DATA_DIR)
-        self.optimizer_path = self.get_path(OPTIMIZER_FILE)
         self.gradient_path = self.get_path(GRADIENT_FILE)
         self.training_complete_path = self.get_path(TRAINING_COMPLETE_FILE)
         self.state_dict_path = self.get_path(STATE_DICT_FILE)
@@ -77,7 +75,7 @@ class Worker:
         for epoch in range(N_EPOCHS):
             for batch_idx, (data, target) in enumerate(data_loader):
                 network = load_network(path=self.state_dict_path, delete_file=True)
-                optimizer = load_optimizer(network, path=self.optimizer_path)
+                optimizer = load_optimizer(network)
                 loss = train_batch(data, target, network, optimizer)
 
                 if self.is_training_complete(epoch, batch_idx, total_batches):

@@ -3,7 +3,6 @@ from pathlib import Path
 
 DATA_DIR = "data"
 STATE_DICT_FILE = "state_dict.pth"
-OPTIMIZER_FILE = "optimizer.pth"
 GRADIENT_FILE = "gradient.pth"
 TRAINING_COMPLETE_FILE = "training_complete"
 BATCH_AGGREGATION_COMPLETE_FILE = "batch_aggregation_complete"

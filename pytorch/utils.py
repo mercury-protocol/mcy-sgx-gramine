@@ -16,10 +16,8 @@ def load_network(path="", delete_file=False):
     return network
 
 
-def load_optimizer(network: nn.Module, path=""):
+def load_optimizer(network: nn.Module):
     optimizer = optimizer_factory.create(network.parameters())
-    if os.path.exists(path):
-        optimizer.load_state_dict(torch.load(path))
     return optimizer
 
 
