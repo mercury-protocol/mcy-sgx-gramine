@@ -70,3 +70,17 @@ def load_trained_model(path: str, shared_secret: str):
         trained_model = pickle.loads(decrypt(shared_secret, encrypted_trained_model))
 
     return trained_model
+
+
+class MeasureTime:
+    def __init__(self, process_name: str):
+        self.process_name = process_name
+
+    def __enter__(self):
+        self.start_time = time.time()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.end_time = time.time()
+        elapsed_time = self.end_time - self.start_time
+        print(f"{self.process_name} took {elapsed_time:.4f} seconds")

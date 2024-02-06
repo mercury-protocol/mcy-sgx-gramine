@@ -9,3 +9,5 @@ __pycache__
 /app/input/
 /app/output/
 /.env
+
+/pytorch/io/
