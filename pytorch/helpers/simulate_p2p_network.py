@@ -14,6 +14,7 @@ from pytorch.constants import (
     SPLIT_DATA_PATH,
     DATA_DIR
 )
+from pytorch.leader import Leader
 from pytorch.utils import list_worker_nodes
 
 
@@ -22,10 +23,6 @@ def is_training_complete(node: str) -> bool:
 
 
 class LeaderPeer:
-    def __init__(self):
-        for node in list_worker_nodes():
-            os.makedirs(LEADER_DIR / node, exist_ok=True)
-
     @staticmethod
     async def wait_network_aggregation():
         while not os.path.exists(LEADER_DIR / BATCH_AGGREGATION_COMPLETE_FILE):
@@ -70,13 +67,13 @@ class WorkerPeer:
     def signal_training_complete_to_leader(self):
         shutil.copy(
             WORKER_DIR / self.node / TRAINING_COMPLETE_FILE,
-            LEADER_DIR / self.node / TRAINING_COMPLETE_FILE
+            Leader.get_path(self.node, TRAINING_COMPLETE_FILE)
         )
 
     def send_gradient_to_leader(self):
         shutil.move(
             WORKER_DIR / self.node / GRADIENT_FILE,
-            LEADER_DIR / self.node / GRADIENT_FILE
+            Leader.get_path(self.node, GRADIENT_FILE)
         )
 
     async def run(self):

@@ -30,7 +30,12 @@ class Leader:
 
     @staticmethod
     def get_path(worker_node: str, file: str) -> Path:
-        return LEADER_DIR / worker_node / file
+        if "." in file:
+            name, extension = file.split(".")
+            file = f"{name}_{worker_node}.{extension}"
+        else:
+            file = f"{file}_{worker_node}"
+        return LEADER_DIR / file
 
     def are_trainings_complete(self) -> bool:
         return all(os.path.exists(path) for path in self.training_complete_paths)
