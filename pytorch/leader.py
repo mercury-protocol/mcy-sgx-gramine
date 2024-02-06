@@ -72,21 +72,21 @@ class Leader:
 
     async def aggregate_network(self):
         print("Leader started.")
+        network = load_network()
+
         while True:
             await self.wait_gradients()
-
-            network = load_network(AGGREGATED_STATE_DICT_PATH)
-            optimizer = load_optimizer(network)
-
             self.aggregate_gradients(network)
+
+            optimizer = load_optimizer(network)
             optimizer.step()
             optimizer.zero_grad()
 
             network_state_dict = network.state_dict()
             torch.save(network_state_dict, AGGREGATED_STATE_DICT_PATH)
 
-            self.delete_gradients()
             self.signal_batch_aggregation_complete()
+            self.delete_gradients()
 
             if self.are_trainings_complete():
                 print("Leader finished.")
