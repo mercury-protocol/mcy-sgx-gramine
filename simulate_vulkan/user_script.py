@@ -4,8 +4,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torchvision
 
-from pytorch.data_manipulation.datasets import SplitMNISTDataSet  # this will be implemented by the user
-from pytorch.required_utils import DataSetFactory, DataLoaderFactory, NetworkFactory, OptimizerFactory
+from simulate_vulkan.data_manipulation.datasets import SplitMNISTDataSet  # this will be implemented by the user
+from mcy_dist_ai.required_utils import DataSetFactory, DataLoaderFactory, NetworkFactory, OptimizerFactory
 
 
 # ------------------- config ----------------

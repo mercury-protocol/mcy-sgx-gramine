@@ -1,0 +1,21 @@
+FROM python:3.8
+
+ARG ROLE
+ENV ROLE=$ROLE
+
+RUN mkdir /io
+RUN mkdir /io/data
+RUN mkdir /io/worker
+RUN mkdir /io/leader
+
+COPY pytorch /pytorch
+COPY mcy_dist_ai /mcy_dist_ai
+COPY simulate_vulkan /simulate_vulkan
+COPY requirements.txt requirements.txt
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+ENV PYTHONPATH "${PYTHONPATH}:/"
+
+WORKDIR /pytorch
+CMD ["python", "main.py"]

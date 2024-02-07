@@ -43,8 +43,8 @@ class SplitMNISTDataSet(Dataset):
 
 
 if __name__ == "__main__":
-    from pytorch.data_manipulation.constants import SPLIT_DATA_PATH, BATCH_SIZE_TRAIN, NORMALIZE_MEAN, NORMALIZE_STD
-    from pytorch.helpers.eval import check_data
+    from simulate_vulkan.data_manipulation.constants import SPLIT_DATA_PATH, BATCH_SIZE_TRAIN, NORMALIZE_MEAN, NORMALIZE_STD
+    from simulate_vulkan.helpers.eval import check_data
 
     custom_dataset = SplitMNISTDataSet(
         SPLIT_DATA_PATH + "/part1",

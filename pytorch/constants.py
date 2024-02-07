@@ -1,4 +1,10 @@
+import os
 from pathlib import Path
+
+
+ROLE = os.getenv("ROLE")
+WORKER_ROLE = "WORKER"
+LEADER_ROLE = "LEADER"
 
 
 DATA_DIR = "data"
@@ -8,7 +14,7 @@ TRAINING_COMPLETE_FILE = "training_complete"
 BATCH_AGGREGATION_COMPLETE_FILE = "batch_aggregation_complete"
 MONITOR_FILE = "monitor"
 
-IO_DIR = Path("io")
+IO_DIR = Path("../io")
 LEADER_DIR = IO_DIR / "leader"
 WORKER_DIR = IO_DIR / "worker"
 WATCHER_DIR = IO_DIR / "watcher"

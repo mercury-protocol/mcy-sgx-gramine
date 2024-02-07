@@ -1,14 +1,20 @@
+import importlib
 import os
 import torch
 
+from time import sleep
 from torch import nn
+from typing import List
 
-from constants import SPLIT_DATA_PATH
-from user_script import network_factory, optimizer_factory
+from constants import SPLIT_DATA_PATH, WAITING_PERIOD
+
+while not os.path.exists("user_script.py"):  # TODO: import from /io
+    sleep(WAITING_PERIOD)
+user_script = importlib.import_module("user_script")
 
 
 def load_network(path="", delete_file=False):
-    network = network_factory.create()
+    network = user_script.network_factory.create()
     if os.path.exists(path):
         network.load_state_dict(torch.load(path))
         if delete_file:
@@ -17,9 +23,9 @@ def load_network(path="", delete_file=False):
 
 
 def load_optimizer(network: nn.Module):
-    optimizer = optimizer_factory.create(network.parameters())
+    optimizer = user_script.optimizer_factory.create(network.parameters())
     return optimizer
 
 
-def list_worker_nodes() -> list[str]:
-    return os.listdir(SPLIT_DATA_PATH)
+def list_worker_nodes() -> List[str]:
+    return os.listdir(SPLIT_DATA_PATH)  # TODO: pass worker nodes to leader container
