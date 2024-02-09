@@ -15,6 +15,7 @@ from pytorch.constants import (
     MONITOR_PERIOD,
     MONITOR_FILE
 )
+from pytorch.logger import logger
 from pytorch.utils import load_network, load_optimizer, user_script
 
 
@@ -54,18 +55,18 @@ class Worker:
         torch.save(gradient, self.gradient_path)
 
     async def monitor(self, task: asyncio.Task):
-        print("Worker monitor started.")
+        logger.info("Worker monitor started.")
         while not task.done():
             with open(self.monitor_path, "wb"):
                 pass
-            print("Worker monitor: Worker is running.")
+            logger.info("Worker monitor: Worker is running.")
             await asyncio.sleep(MONITOR_PERIOD)
 
-        print("Worker monitor finished.")
+        logger.info("Worker monitor finished.")
         return
 
     async def train_network(self):
-        print("Worker started.")
+        logger.info("Worker started.")
         await self.wait_data()
         data_loader = user_script.data_loader_factory.create(self.data_path)
         total_batches = len(data_loader)
@@ -82,9 +83,9 @@ class Worker:
                 await self.wait_network_aggregation()
 
                 if batch_idx % LOG_INTERVAL == 0:
-                    print(f"Worker: Epoch: {epoch} Batch: {batch_idx} Loss: {loss.item():.6f}")
+                    logger.info(f"Worker: Epoch: {epoch} Batch: {batch_idx} Loss: {loss.item():.6f}")
 
-        print("Worker finished.")
+        logger.info("Worker finished.")
 
     async def run(self):
         train_network_task = asyncio.create_task(self.train_network())

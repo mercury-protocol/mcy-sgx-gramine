@@ -6,11 +6,16 @@ from time import sleep
 from torch import nn
 from typing import List
 
-from constants import SPLIT_DATA_PATH, WAITING_PERIOD
+from constants import WAITING_PERIOD, WORKER_NODES_NUM, IO_DIR, USER_SCRIPT_FILE
 
-while not os.path.exists("user_script.py"):  # TODO: import from /io
+
+script_path = os.path.abspath(IO_DIR / USER_SCRIPT_FILE)
+while not os.path.exists(script_path):
     sleep(WAITING_PERIOD)
-user_script = importlib.import_module("user_script")
+
+spec = importlib.util.spec_from_file_location("user_script", script_path)
+user_script = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(user_script)
 
 
 def load_network(path="", delete_file=False):
@@ -28,4 +33,4 @@ def load_optimizer(network: nn.Module):
 
 
 def list_worker_nodes() -> List[str]:
-    return os.listdir(SPLIT_DATA_PATH)  # TODO: pass worker nodes to leader container
+    return [str(i) for i in range(WORKER_NODES_NUM)]

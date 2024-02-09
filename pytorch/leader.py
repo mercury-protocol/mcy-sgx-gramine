@@ -15,6 +15,7 @@ from pytorch.constants import (
     MONITOR_FILE,
     MONITOR_PERIOD
 )
+from pytorch.logger import logger
 from pytorch.utils import load_network, load_optimizer, list_worker_nodes
 
 
@@ -66,17 +67,17 @@ class Leader:
             param.grad = avg_grads[name] / num
 
     async def monitor(self, task: asyncio.Task):
-        print("Leader monitor started.")
+        logger.info("Leader monitor started.")
         while not task.done():
             with open(self.monitor_path, "wb"):
                 pass
-            print("Leader monitor: Leader is running.")
+            logger.info("Leader monitor: Leader is running.")
             await asyncio.sleep(MONITOR_PERIOD)
 
-        print("Leader monitor finished.")
+        logger.info("Leader monitor finished.")
 
     async def aggregate_network(self):
-        print("Leader started.")
+        logger.info("Leader started.")
         network = load_network()
 
         while True:
@@ -94,7 +95,7 @@ class Leader:
             self.delete_gradients()
 
             if self.are_trainings_complete():
-                print("Leader finished.")
+                logger.info("Leader finished.")
                 return
 
     async def run(self):
