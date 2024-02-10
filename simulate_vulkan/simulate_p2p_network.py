@@ -13,10 +13,9 @@ from pytorch.constants import (
     TRAINING_COMPLETE_FILE,
     WAITING_PERIOD
 )
-from pytorch.leader import Leader
-from pytorch.utils import list_worker_nodes
 
 from simulate_vulkan.constants import LOCAL_SPLIT_DATA_PATH, LOCAL_USER_SCRIPT_PATH
+from simulate_vulkan.utils import list_worker_nodes, leader_get_path
 
 
 def is_training_complete(node: str) -> bool:
@@ -46,6 +45,7 @@ class LeaderPeer:
 
     async def run(self):
         print("Watch leader started.")
+        self.send_user_script_to_leader()
         while True:
             await self.wait_network_aggregation()
 
@@ -61,6 +61,12 @@ class WorkerPeer:
     def __init__(self, node: str):
         self.node = node
 
+    def send_user_script_to_worker(self):
+        shutil.copy(
+            LOCAL_USER_SCRIPT_PATH,
+            WORKER_DIR / self.node / USER_SCRIPT_FILE
+        )
+
     def send_data_to_worker(self):
         shutil.copytree(
             LOCAL_SPLIT_DATA_PATH / self.node,
@@ -75,17 +81,18 @@ class WorkerPeer:
     def signal_training_complete_to_leader(self):
         shutil.copy(
             WORKER_DIR / self.node / TRAINING_COMPLETE_FILE,
-            Leader.get_path(self.node, TRAINING_COMPLETE_FILE)
+            leader_get_path(self.node, TRAINING_COMPLETE_FILE)
         )
 
     def send_gradient_to_leader(self):
         shutil.move(
             WORKER_DIR / self.node / GRADIENT_FILE,
-            Leader.get_path(self.node, GRADIENT_FILE)
+            leader_get_path(self.node, GRADIENT_FILE)
         )
 
     async def run(self):
         print(f"Watch worker {self.node} started")
+        self.send_user_script_to_worker()
         self.send_data_to_worker()
 
         while True:

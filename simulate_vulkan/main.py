@@ -2,13 +2,21 @@ import asyncio
 import os
 from time import time
 
-from pytorch.constants import AGGREGATED_STATE_DICT_PATH, LEADER_DIR, WORKER_DIR, MONITOR_FILE, LEADER_ROLE, WORKER_ROLE
-from pytorch.utils import load_network, list_worker_nodes
+from pytorch.constants import (
+    AGGREGATED_STATE_DICT_PATH,
+    LEADER_DIR,
+    WORKER_DIR,
+    MONITOR_FILE,
+    LEADER_ROLE,
+    WORKER_ROLE
+)
 
 from remote.utils import MeasureTime
+from simulate_vulkan.constants import WORKER_NODES_NUM
 from simulate_vulkan.docker_adapter import create_container
 from simulate_vulkan.helpers.eval import evaluate_network
 from simulate_vulkan.simulate_p2p_network import simulate_p2p_network
+from simulate_vulkan.utils import load_network, list_worker_nodes
 
 
 def check_output_file_ages():
@@ -25,9 +33,9 @@ def check_output_file_ages():
 
 
 def main():
-    create_container(LEADER_ROLE, worker_nodes_num=2)
-    create_container(WORKER_ROLE, node=0)
-    create_container(WORKER_ROLE, node=1)
+    create_container(LEADER_ROLE, worker_nodes_num=WORKER_NODES_NUM)
+    for node in list_worker_nodes():
+        create_container(WORKER_ROLE, node=int(node))
     asyncio.run(simulate_p2p_network())
 
 
