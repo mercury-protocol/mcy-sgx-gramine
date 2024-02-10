@@ -6,16 +6,18 @@ from time import sleep
 from torch import nn
 from typing import List
 
-from constants import WAITING_PERIOD, WORKER_NODES_NUM, IO_DIR, USER_SCRIPT_FILE
+from pytorch.constants import WAITING_PERIOD, WORKER_NODES_NUM, USER_SCRIPT_PATH
+from pytorch.logger import logger
 
 
-script_path = os.path.abspath(IO_DIR / USER_SCRIPT_FILE)
+script_path = os.path.abspath(USER_SCRIPT_PATH)
 while not os.path.exists(script_path):
     sleep(WAITING_PERIOD)
 
 spec = importlib.util.spec_from_file_location("user_script", script_path)
 user_script = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(user_script)
+logger.info("user_script.py imported.")
 
 
 def load_network(path="", delete_file=False):

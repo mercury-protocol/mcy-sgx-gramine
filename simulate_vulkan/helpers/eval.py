@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 import torchvision
 
-from pytorch.constants import DATA_PATH
+from simulate_vulkan.constants import DATA_PATH
 
 
 BATCH_SIZE_TEST = 1000

@@ -7,7 +7,7 @@ from torch import nn
 
 from pytorch.constants import (
     WORKER_DIR,
-    DATA_DIR,
+    DATA_PATH,
     GRADIENT_FILE,
     TRAINING_COMPLETE_FILE,
     STATE_DICT_FILE,
@@ -25,7 +25,6 @@ LOG_INTERVAL = 50
 class Worker:
     def __init__(self):
         self.monitor_path = self.get_path(MONITOR_FILE)
-        self.data_path = self.get_path(DATA_DIR)
         self.gradient_path = self.get_path(GRADIENT_FILE)
         self.training_complete_path = self.get_path(TRAINING_COMPLETE_FILE)
         self.state_dict_path = self.get_path(STATE_DICT_FILE)
@@ -34,9 +33,11 @@ class Worker:
     def get_path(file_or_directory: str) -> Path:
         return WORKER_DIR / file_or_directory
 
-    async def wait_data(self):
-        while not os.path.exists(self.data_path):
+    @staticmethod
+    async def wait_data():
+        while not os.path.exists(DATA_PATH):
             await asyncio.sleep(WAITING_PERIOD)
+        logger.info("Worker: data has arrived.")
 
     @staticmethod
     def is_training_complete(epoch: int, batch_idx: int, total_batches: int) -> bool:
@@ -68,7 +69,7 @@ class Worker:
     async def train_network(self):
         logger.info("Worker started.")
         await self.wait_data()
-        data_loader = user_script.data_loader_factory.create(self.data_path)
+        data_loader = user_script.data_loader_factory.create(DATA_PATH)
         total_batches = len(data_loader)
 
         for epoch in range(user_script.N_EPOCHS):
