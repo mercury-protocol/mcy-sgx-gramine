@@ -7,15 +7,16 @@ from pytorch.constants import (
     LEADER_DIR,
     BATCH_AGGREGATION_COMPLETE_FILE,
     WORKER_DIR,
+    USER_SCRIPT_FILE,
     STATE_DICT_FILE,
     GRADIENT_FILE,
     TRAINING_COMPLETE_FILE,
-    WAITING_PERIOD,
-    SPLIT_DATA_PATH,
-    DATA_DIR
+    WAITING_PERIOD
 )
 from pytorch.leader import Leader
 from pytorch.utils import list_worker_nodes
+
+from simulate_vulkan.constants import LOCAL_SPLIT_DATA_PATH, LOCAL_USER_SCRIPT_PATH
 
 
 def is_training_complete(node: str) -> bool:
@@ -23,6 +24,13 @@ def is_training_complete(node: str) -> bool:
 
 
 class LeaderPeer:
+    @staticmethod
+    def send_user_script_to_leader():
+        shutil.copy(
+            LOCAL_USER_SCRIPT_PATH,
+            LEADER_DIR / USER_SCRIPT_FILE
+        )
+
     @staticmethod
     async def wait_network_aggregation():
         while not os.path.exists(LEADER_DIR / BATCH_AGGREGATION_COMPLETE_FILE):
@@ -55,8 +63,8 @@ class WorkerPeer:
 
     def send_data_to_worker(self):
         shutil.copytree(
-            SPLIT_DATA_PATH / self.node,
-            WORKER_DIR / self.node / DATA_DIR,
+            LOCAL_SPLIT_DATA_PATH / self.node,
+            WORKER_DIR / self.node / "data",
             dirs_exist_ok=True
         )
 

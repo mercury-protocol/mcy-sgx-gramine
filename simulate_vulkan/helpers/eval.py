@@ -4,14 +4,14 @@ import torch
 import torch.nn.functional as F
 import torchvision
 
-from simulate_vulkan.constants import DATA_PATH
+from simulate_vulkan.constants import LOCAL_DATA_PATH
 
 
 BATCH_SIZE_TEST = 1000
 
 
 test_data_loader = torch.utils.data.DataLoader(
-    torchvision.datasets.MNIST(DATA_PATH, train=False, download=True,
+    torchvision.datasets.MNIST(LOCAL_DATA_PATH, train=False, download=True,
                                transform=torchvision.transforms.Compose([
                                    torchvision.transforms.ToTensor(),
                                    torchvision.transforms.Normalize((0.1307,), (0.3081,))

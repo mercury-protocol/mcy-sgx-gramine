@@ -4,7 +4,7 @@ import os
 from pytorch.constants import LEADER_ROLE, WORKER_ROLE, USER_SCRIPT_FILE, LEADER_DIR, WORKER_DIR
 from pytorch.exceptions import InvalidRole
 
-from simulate_vulkan.constants import SPLIT_DATA_PATH
+from simulate_vulkan.constants import LOCAL_SPLIT_DATA_PATH, LOCAL_USER_SCRIPT_PATH
 
 
 _client = docker.from_env()
@@ -70,13 +70,12 @@ def create_container(role: str, node: int | None = None, worker_nodes_num: int =
 if __name__ == "__main__":
     import shutil
 
-    leader = create_container("leader", worker_nodes_num=2)
-    shutil.copy(USER_SCRIPT_FILE, LEADER_DIR / USER_SCRIPT_FILE)
+    leader = create_container(LEADER_ROLE, worker_nodes_num=2)
+    worker_0 = create_container(WORKER_ROLE, node=0)
+    worker_1 = create_container(WORKER_ROLE, node=1)
 
-    worker_0 = create_container("worker", node=0)
-    shutil.copytree(SPLIT_DATA_PATH / "0", WORKER_DIR / "0" / "data")
-    shutil.copy(USER_SCRIPT_FILE, WORKER_DIR / "0" / USER_SCRIPT_FILE)
-
-    worker_1 = create_container("worker", node=1)
-    shutil.copytree(SPLIT_DATA_PATH / "1", WORKER_DIR / "1" / "data")
-    shutil.copy(USER_SCRIPT_FILE, WORKER_DIR / "1" / USER_SCRIPT_FILE)
+    shutil.copy(LOCAL_USER_SCRIPT_PATH, LEADER_DIR / USER_SCRIPT_FILE)
+    shutil.copytree(LOCAL_SPLIT_DATA_PATH / "0", WORKER_DIR / "0" / "data")
+    shutil.copy(LOCAL_USER_SCRIPT_PATH, WORKER_DIR / "0" / USER_SCRIPT_FILE)
+    shutil.copytree(LOCAL_SPLIT_DATA_PATH / "1", WORKER_DIR / "1" / "data")
+    shutil.copy(LOCAL_USER_SCRIPT_PATH, WORKER_DIR / "1" / USER_SCRIPT_FILE)
