@@ -6,14 +6,13 @@ ENV ROLE=$ROLE
 ENV WORKER_NODES_NUM=$WORKER_NODES_NUM
 
 RUN mkdir /io
-RUN mkdir /io/data
 RUN mkdir /io/worker
 RUN mkdir /io/leader
 
 COPY pytorch /pytorch
 COPY mcy_dist_ai /mcy_dist_ai
-COPY simulate_vulkan /simulate_vulkan
 COPY requirements.txt requirements.txt
+COPY simulate_vulkan /simulate_vulkan
 
 RUN pip install --no-cache-dir -r requirements.txt
 

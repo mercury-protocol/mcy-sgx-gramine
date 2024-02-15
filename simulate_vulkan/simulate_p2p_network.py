@@ -1,6 +1,7 @@
 import asyncio
 import os
 import shutil
+from docker.models.containers import Container
 
 from pytorch.constants import (
     AGGREGATED_STATE_DICT_PATH,
@@ -15,6 +16,7 @@ from pytorch.constants import (
 )
 
 from simulate_vulkan.constants import LOCAL_SPLIT_DATA_PATH, LOCAL_USER_SCRIPT_PATH
+from simulate_vulkan.docker_adapter import delete_file_in_container
 from simulate_vulkan.utils import list_worker_nodes, leader_get_path
 
 
@@ -23,6 +25,9 @@ def is_training_complete(node: str) -> bool:
 
 
 class LeaderPeer:
+    def __init__(self, container: Container):
+        self.container = container
+
     @staticmethod
     def send_user_script_to_leader():
         shutil.copy(
@@ -30,11 +35,10 @@ class LeaderPeer:
             LEADER_DIR / USER_SCRIPT_FILE
         )
 
-    @staticmethod
-    async def wait_network_aggregation():
+    async def wait_network_aggregation(self):
         while not os.path.exists(LEADER_DIR / BATCH_AGGREGATION_COMPLETE_FILE):
             await asyncio.sleep(WAITING_PERIOD)
-        os.remove(LEADER_DIR / BATCH_AGGREGATION_COMPLETE_FILE)
+        delete_file_in_container(self.container, LEADER_DIR / BATCH_AGGREGATION_COMPLETE_FILE)
 
     @staticmethod
     def send_state_dict_to_worker(node: str):
@@ -58,7 +62,8 @@ class LeaderPeer:
 
 
 class WorkerPeer:
-    def __init__(self, node: str):
+    def __init__(self, container: Container, node: str):
+        self.container = container
         self.node = node
 
     def send_user_script_to_worker(self):
@@ -85,10 +90,11 @@ class WorkerPeer:
         )
 
     def send_gradient_to_leader(self):
-        shutil.move(
+        shutil.copy(
             WORKER_DIR / self.node / GRADIENT_FILE,
             leader_get_path(self.node, GRADIENT_FILE)
         )
+        delete_file_in_container(self.container, WORKER_DIR / GRADIENT_FILE)
 
     async def run(self):
         print(f"Watch worker {self.node} started")
@@ -108,10 +114,10 @@ class WorkerPeer:
                 return
 
 
-async def simulate_p2p_network():
-    watch_leader_task = asyncio.create_task(LeaderPeer().run())
+async def simulate_p2p_network(container_mapping: dict):
+    watch_leader_task = asyncio.create_task(LeaderPeer(container_mapping["leader"]).run())
     watch_worker_tasks = [
-        asyncio.create_task(WorkerPeer(node).run())
+        asyncio.create_task(WorkerPeer(container_mapping[f"worker_{node}"], node).run())
         for node in list_worker_nodes()
     ]
     await asyncio.gather(watch_leader_task, *watch_worker_tasks)

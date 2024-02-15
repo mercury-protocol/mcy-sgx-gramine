@@ -33,10 +33,15 @@ def check_output_file_ages():
 
 
 def main():
-    create_container(LEADER_ROLE, worker_nodes_num=WORKER_NODES_NUM)
+    container_mapping = dict()
+
+    container = create_container(LEADER_ROLE, worker_nodes_num=WORKER_NODES_NUM)
+    container_mapping["leader"] = container
     for node in list_worker_nodes():
-        create_container(WORKER_ROLE, node=int(node))
-    asyncio.run(simulate_p2p_network())
+        container = create_container(WORKER_ROLE, node=int(node))
+        container_mapping[f"worker_{node}"] = container
+
+    asyncio.run(simulate_p2p_network(container_mapping))
 
 
 if __name__ == "__main__":
