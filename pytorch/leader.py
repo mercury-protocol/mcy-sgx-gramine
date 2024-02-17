@@ -8,26 +8,29 @@ from torch import nn
 from pytorch.constants import (
     LEADER_DIR,
     AGGREGATED_STATE_DICT_PATH,
-    TRAINING_COMPLETE_FILE,
-    BATCH_AGGREGATION_COMPLETE_FILE,
+    WORKER_FINISHED_FILE,
+    STATE_DICT_READY_FILE,
     GRADIENT_FILE,
+    GRADIENT_READY_FILE,
     WAITING_PERIOD,
     MONITOR_FILE,
-    MONITOR_PERIOD
+    MONITORING_PERIOD
 )
 from pytorch.logger import logger
-from pytorch.utils import load_network, load_optimizer, list_worker_nodes
+from pytorch.utils import torch_safe_load, load_network, load_optimizer, list_worker_nodes
 
 
 class Leader:
     def __init__(self):
-        self.training_complete_paths = list()
+        self.worker_finished_paths = list()
         self.gradient_paths = list()
-        self.batch_aggregation_complete_path = LEADER_DIR / BATCH_AGGREGATION_COMPLETE_FILE
+        self.gradient_ready_paths = list()
+        self.state_dict_ready_path = LEADER_DIR / STATE_DICT_READY_FILE
         self.monitor_path = LEADER_DIR / MONITOR_FILE
         for node in list_worker_nodes():
-            self.training_complete_paths.append(self.get_path(node, TRAINING_COMPLETE_FILE))
+            self.worker_finished_paths.append(self.get_path(node, WORKER_FINISHED_FILE))
             self.gradient_paths.append(self.get_path(node, GRADIENT_FILE))
+            self.gradient_ready_paths.append(self.get_path(node, GRADIENT_READY_FILE))
 
     @staticmethod
     def get_path(worker_node: str, file: str) -> Path:
@@ -38,24 +41,30 @@ class Leader:
             file = f"{file}_{worker_node}"
         return LEADER_DIR / file
 
-    def are_trainings_complete(self) -> bool:
-        return all(os.path.exists(path) for path in self.training_complete_paths)
+    def have_workers_finished(self) -> bool:
+        return all(os.path.exists(path) for path in self.worker_finished_paths)
 
     async def wait_gradients(self):
-        while not all(os.path.exists(path) for path in self.gradient_paths):
+        while not all(os.path.exists(path) for path in self.gradient_ready_paths):
             await asyncio.sleep(WAITING_PERIOD)
+        if not all(os.path.exists(path) for path in self.gradient_paths):
+            raise FileNotFoundError("Not all gradient files exist!")
+        [os.remove(path) for path in self.gradient_ready_paths]
+        logger.debug("gradients waited")
 
     def delete_gradients(self):
         for path in self.gradient_paths:
             if os.path.exists(path):
                 os.remove(path)
+        logger.debug("gradients deleted")
 
-    def signal_batch_aggregation_complete(self):
-        with open(self.batch_aggregation_complete_path, "wb"):
+    def save_state_dict(self, network: nn.Module):
+        torch.save(network.state_dict(), AGGREGATED_STATE_DICT_PATH)
+        with open(self.state_dict_ready_path, "wb"):
             pass
 
     def aggregate_gradients(self, network: nn.Module):
-        gradients = [torch.load(path) for path in self.gradient_paths]
+        gradients = [torch_safe_load(path) for path in self.gradient_paths]
         avg_grads = gradients[0]
         num = len(gradients)
 
@@ -66,13 +75,14 @@ class Leader:
         for name, param in network.named_parameters():
             param.grad = avg_grads[name] / num
 
+        logger.debug("gradients aggregated")
+
     async def monitor(self, task: asyncio.Task):
         logger.info("Leader monitor started.")
         while not task.done():
             with open(self.monitor_path, "wb"):
                 pass
-            logger.info("Leader monitor: Leader is running.")
-            await asyncio.sleep(MONITOR_PERIOD)
+            await asyncio.sleep(MONITORING_PERIOD)
 
         logger.info("Leader monitor finished.")
 
@@ -88,13 +98,11 @@ class Leader:
             optimizer.step()
             optimizer.zero_grad()
 
-            network_state_dict = network.state_dict()
-            torch.save(network_state_dict, AGGREGATED_STATE_DICT_PATH)
+            self.save_state_dict(network)
 
-            self.signal_batch_aggregation_complete()
             self.delete_gradients()
 
-            if self.are_trainings_complete():
+            if self.have_workers_finished():
                 logger.info("Leader finished.")
                 return
 

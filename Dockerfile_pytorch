@@ -12,7 +12,6 @@ RUN mkdir /io/leader
 COPY pytorch /pytorch
 COPY mcy_dist_ai /mcy_dist_ai
 COPY requirements.txt requirements.txt
-COPY simulate_vulkan /simulate_vulkan
 
 RUN pip install --no-cache-dir -r requirements.txt
 

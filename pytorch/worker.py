@@ -9,10 +9,12 @@ from pytorch.constants import (
     WORKER_DIR,
     DATA_PATH,
     GRADIENT_FILE,
-    TRAINING_COMPLETE_FILE,
+    GRADIENT_READY_FILE,
+    WORKER_FINISHED_FILE,
     STATE_DICT_FILE,
+    STATE_DICT_READY_FILE,
     WAITING_PERIOD,
-    MONITOR_PERIOD,
+    MONITORING_PERIOD,
     MONITOR_FILE
 )
 from pytorch.logger import logger
@@ -26,8 +28,10 @@ class Worker:
     def __init__(self):
         self.monitor_path = self.get_path(MONITOR_FILE)
         self.gradient_path = self.get_path(GRADIENT_FILE)
-        self.training_complete_path = self.get_path(TRAINING_COMPLETE_FILE)
+        self.gradient_ready_path = self.get_path(GRADIENT_READY_FILE)
+        self.worker_finished_path = self.get_path(WORKER_FINISHED_FILE)
         self.state_dict_path = self.get_path(STATE_DICT_FILE)
+        self.state_dict_ready_path = self.get_path(STATE_DICT_READY_FILE)
 
     @staticmethod
     def get_path(file_or_directory: str) -> Path:
@@ -37,31 +41,37 @@ class Worker:
     async def wait_data():
         while not os.path.exists(DATA_PATH):
             await asyncio.sleep(WAITING_PERIOD)
-        logger.info("Worker: data has arrived.")
+        logger.info("Data has arrived.")
 
     @staticmethod
-    def is_training_complete(epoch: int, batch_idx: int, total_batches: int) -> bool:
+    def is_last_iteration(epoch: int, batch_idx: int, total_batches: int) -> bool:
         return epoch == user_script.N_EPOCHS - 1 and batch_idx == total_batches - 1
 
-    def signal_training_complete(self):
-        with open(self.training_complete_path, "wb"):
+    def signal_worker_finished(self):
+        with open(self.worker_finished_path, "wb"):
             pass
 
-    async def wait_network_aggregation(self):
-        while not os.path.exists(self.state_dict_path):
+    async def wait_state_dict(self):
+        while not os.path.exists(self.state_dict_ready_path):
             await asyncio.sleep(WAITING_PERIOD)
+        if not os.path.exists(self.state_dict_path):
+            raise FileNotFoundError(f"{self.state_dict_path} does not exist!")
+        os.remove(self.state_dict_ready_path)
+        logger.debug("state dict waited")
 
     def save_gradient(self, network: nn.Module):
         gradient = {name: param.grad.data for name, param in network.named_parameters()}
         torch.save(gradient, self.gradient_path)
+
+        with open(self.gradient_ready_path, "wb"):
+            pass
 
     async def monitor(self, task: asyncio.Task):
         logger.info("Worker monitor started.")
         while not task.done():
             with open(self.monitor_path, "wb"):
                 pass
-            logger.info("Worker monitor: Worker is running.")
-            await asyncio.sleep(MONITOR_PERIOD)
+            await asyncio.sleep(MONITORING_PERIOD)
 
         logger.info("Worker monitor finished.")
         return
@@ -78,10 +88,11 @@ class Worker:
                 optimizer = load_optimizer(network)
                 loss = user_script.train_batch(data, target, network, optimizer)
 
-                if self.is_training_complete(epoch, batch_idx, total_batches):
-                    self.signal_training_complete()
+                if self.is_last_iteration(epoch, batch_idx, total_batches):
+                    self.signal_worker_finished()
                 self.save_gradient(network)
-                await self.wait_network_aggregation()
+
+                await self.wait_state_dict()
 
                 if batch_idx % LOG_INTERVAL == 0:
                     logger.info(f"Worker: Epoch: {epoch} Batch: {batch_idx} Loss: {loss.item():.6f}")

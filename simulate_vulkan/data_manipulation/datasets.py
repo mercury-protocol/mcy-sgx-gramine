@@ -1,45 +1,8 @@
-import numpy as np
 import torch
 import torchvision
 from torch.utils.data import Dataset
 
-
-class SplitMNISTDataSet(Dataset):
-    def __init__(self, root, transform=None):
-        self.images = self.read_idx3_file(f"{root}/train-images-idx3-ubyte")
-        self.labels = self.read_idx1_file(f"{root}/train-labels-idx1-ubyte")
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, idx):
-        image = np.copy(self.images[idx])
-        label = int(self.labels[idx])
-        if self.transform:
-            image = self.transform(image)
-        return image, label
-
-    @staticmethod
-    def read_idx3_file(file_path):
-        with open(file_path, 'rb') as f:
-            # Skip the magic number and read metadata
-            f.read(16)
-            # Read image data
-            image_data = np.frombuffer(f.read(), dtype=np.uint8)
-        # Reshape the image data to a 3D array (num_images, num_rows, num_cols)
-        num_images = len(image_data) // (28 * 28)
-        image_data = image_data.reshape(num_images, 28, 28)
-        return image_data
-
-    @staticmethod
-    def read_idx1_file(file_path):
-        with open(file_path, 'rb') as f:
-            # Skip the magic number and read metadata
-            f.read(8)
-            # Read label data
-            label_data = np.frombuffer(f.read(), dtype=np.uint8)
-        return label_data
+from simulate_vulkan.user_script import SplitMNISTDataSet
 
 
 if __name__ == "__main__":
