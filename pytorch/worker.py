@@ -15,13 +15,11 @@ from pytorch.constants import (
     STATE_DICT_READY_FILE,
     WAITING_PERIOD,
     MONITORING_PERIOD,
-    MONITOR_FILE
+    MONITOR_FILE,
+    LOG_INTERVAL
 )
 from pytorch.logger import logger
 from pytorch.utils import load_network, load_optimizer, user_script
-
-
-LOG_INTERVAL = 50
 
 
 class Worker:
@@ -67,13 +65,13 @@ class Worker:
             pass
 
     async def monitor(self, task: asyncio.Task):
-        logger.info("Worker monitor started.")
+        logger.info("Monitor started.")
         while not task.done():
             with open(self.monitor_path, "wb"):
                 pass
             await asyncio.sleep(MONITORING_PERIOD)
 
-        logger.info("Worker monitor finished.")
+        logger.info("Monitor finished.")
         return
 
     async def train_network(self):
@@ -95,7 +93,7 @@ class Worker:
                 await self.wait_state_dict()
 
                 if batch_idx % LOG_INTERVAL == 0:
-                    logger.info(f"Worker: Epoch: {epoch} Batch: {batch_idx} Loss: {loss.item():.6f}")
+                    logger.info(f"Epoch: {epoch} Batch: {batch_idx} Loss: {loss.item():.6f}")
 
         logger.info("Worker finished.")
 

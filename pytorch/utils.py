@@ -2,9 +2,10 @@ import importlib
 import os
 import torch
 
+from pathlib import Path
 from time import sleep
 from torch import nn
-from typing import List
+from typing import Any, List, Union
 
 from pytorch.constants import WAITING_PERIOD, WORKER_NODES_NUM, USER_SCRIPT_PATH
 from pytorch.logger import logger
@@ -22,7 +23,7 @@ logger.info("user_script.py imported.")
 logger.info(f'user_script has network_factory: {hasattr(user_script, "network_factory")}')
 
 
-def torch_safe_load(path):
+def torch_safe_load(path: Union[Path, str]) -> Any:
     for _ in range(10):
         try:
             return torch.load(path)
@@ -33,7 +34,7 @@ def torch_safe_load(path):
     raise Exception("Couldn't load file safely with torch.")
 
 
-def load_network(path="", delete_file=False):
+def load_network(path: Union[Path, str] = "", delete_file: bool = False) -> nn.Module:
     network = user_script.network_factory.create()
     if os.path.exists(path):
         network.load_state_dict(torch_safe_load(path))
@@ -44,7 +45,7 @@ def load_network(path="", delete_file=False):
     return network
 
 
-def load_optimizer(network: nn.Module):
+def load_optimizer(network: nn.Module) -> Any:
     optimizer = user_script.optimizer_factory.create(network.parameters())
     return optimizer
 

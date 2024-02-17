@@ -14,7 +14,8 @@ from pytorch.constants import (
     GRADIENT_READY_FILE,
     WAITING_PERIOD,
     MONITOR_FILE,
-    MONITORING_PERIOD
+    MONITORING_PERIOD,
+    LOG_INTERVAL
 )
 from pytorch.logger import logger
 from pytorch.utils import torch_safe_load, load_network, load_optimizer, list_worker_nodes
@@ -78,18 +79,19 @@ class Leader:
         logger.debug("gradients aggregated")
 
     async def monitor(self, task: asyncio.Task):
-        logger.info("Leader monitor started.")
+        logger.info("Monitor started.")
         while not task.done():
             with open(self.monitor_path, "wb"):
                 pass
             await asyncio.sleep(MONITORING_PERIOD)
 
-        logger.info("Leader monitor finished.")
+        logger.info("Monitor finished.")
 
     async def aggregate_network(self):
         logger.info("Leader started.")
         network = load_network()
 
+        aggr_idx = 1
         while True:
             await self.wait_gradients()
             self.aggregate_gradients(network)
@@ -101,6 +103,10 @@ class Leader:
             self.save_state_dict(network)
 
             self.delete_gradients()
+
+            if aggr_idx % LOG_INTERVAL == 0:
+                logger.info(f"{aggr_idx}th aggregation completed.")
+                aggr_idx += 1
 
             if self.have_workers_finished():
                 logger.info("Leader finished.")
