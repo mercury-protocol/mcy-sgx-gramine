@@ -1,6 +1,8 @@
 # TODO: create makefile
 import docker
+import io
 import os
+import tarfile
 
 from docker.models.containers import Container
 
@@ -13,8 +15,24 @@ from simulate_vulkan.constants import LOCAL_SPLIT_DATA_PATH, LOCAL_USER_SCRIPT_P
 _client = docker.from_env()
 
 
+def copy_file_to_container(container: Container, src, dst):
+    tarstream = io.BytesIO()
+    with tarfile.open(fileobj=tarstream, mode="w") as tar:
+        tar.add(src, arcname=os.path.basename(dst))
+    container.put_archive(path=os.path.dirname(dst), data=tarstream.getvalue())
+
+
+def create_empty_file_in_container(container: Container, file_path):
+    container.exec_run(f"touch {file_path}")
+
+
 def delete_file_in_container(container: Container, file_path):
     container.exec_run(f"rm -f {file_path}")
+
+
+def list_running_containers_from_image(image_name):
+    running_containers = _client.containers.list()
+    return [container for container in running_containers if container.image.tags[0] == image_name]
 
 
 def get_image_full_name(role: str):

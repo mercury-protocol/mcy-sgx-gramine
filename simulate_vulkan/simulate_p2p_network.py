@@ -17,7 +17,9 @@ from pytorch.constants import (
 )
 
 from simulate_vulkan.constants import LOCAL_SPLIT_DATA_PATH, LOCAL_USER_SCRIPT_PATH
-from simulate_vulkan.docker_adapter import delete_file_in_container
+from simulate_vulkan.docker_adapter import (
+    copy_file_to_container, create_empty_file_in_container, delete_file_in_container, list_running_containers_from_image
+)
 from simulate_vulkan.utils import list_worker_nodes, leader_get_path
 
 
@@ -28,10 +30,11 @@ def has_worker_finished(node: str) -> bool:
 class WatchLeader:
     def __init__(self, container: Container):
         self.container = container
+        self.worker_containers = list_running_containers_from_image("worker:latest")
 
-    @staticmethod
-    def send_user_script_to_leader():
-        shutil.copy(
+    def send_user_script_to_leader(self):
+        copy_file_to_container(
+            self.container,
             LOCAL_USER_SCRIPT_PATH,
             LEADER_DIR / USER_SCRIPT_FILE
         )
@@ -44,13 +47,13 @@ class WatchLeader:
         delete_file_in_container(self.container, LEADER_DIR / STATE_DICT_READY_FILE)
 
     @staticmethod
-    def send_state_dict_to_worker(node: str):
-        shutil.copy(
+    def send_state_dict_to_worker(worker_container):
+        copy_file_to_container(
+            worker_container,
             AGGREGATED_STATE_DICT_PATH,
-            WORKER_DIR / node / STATE_DICT_FILE
+            WORKER_DIR / STATE_DICT_FILE
         )
-        with open(WORKER_DIR / node / STATE_DICT_READY_FILE, "wb"):
-            pass
+        create_empty_file_in_container(worker_container, WORKER_DIR / STATE_DICT_READY_FILE)
 
     async def run(self):
         print("Watch leader started.")
@@ -58,8 +61,8 @@ class WatchLeader:
         while True:
             await self.wait_state_dict()
 
-            for node in list_worker_nodes():
-                self.send_state_dict_to_worker(node)
+            for container in self.worker_containers:
+                self.send_state_dict_to_worker(container)
 
             if all(has_worker_finished(node) for node in list_worker_nodes()):
                 print("Watch leader finished.")
@@ -70,11 +73,13 @@ class WatchWorker:
     def __init__(self, container: Container, node: str):
         self.container = container
         self.node = node
+        self.leader_container = list_running_containers_from_image("leader:latest")[0]
 
     def send_user_script_to_worker(self):
-        shutil.copy(
+        copy_file_to_container(
+            self.container,
             LOCAL_USER_SCRIPT_PATH,
-            WORKER_DIR / self.node / USER_SCRIPT_FILE
+            WORKER_DIR / USER_SCRIPT_FILE
         )
 
     def send_data_to_worker(self):
@@ -91,17 +96,20 @@ class WatchWorker:
             raise Exception(f"Gradient file in worker {self.node} does not exist!")
 
     def send_worker_finished_to_leader(self):
-        shutil.copy(
+        copy_file_to_container(
+            self.leader_container,
             WORKER_DIR / self.node / WORKER_FINISHED_FILE,
             leader_get_path(self.node, WORKER_FINISHED_FILE)
         )
 
     def send_gradient_to_leader(self):
-        shutil.copy(
+        copy_file_to_container(
+            self.leader_container,
             WORKER_DIR / self.node / GRADIENT_FILE,
             leader_get_path(self.node, GRADIENT_FILE)
         )
-        shutil.copy(
+        copy_file_to_container(
+            self.leader_container,
             WORKER_DIR / self.node / GRADIENT_READY_FILE,
             leader_get_path(self.node, GRADIENT_READY_FILE)
         )
