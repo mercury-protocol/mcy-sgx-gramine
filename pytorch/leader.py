@@ -91,7 +91,7 @@ class Leader:
         logger.info("Leader started.")
         network = load_network()
 
-        aggr_idx = 1
+        aggr_idx = 0
         while True:
             await self.wait_gradients()
             self.aggregate_gradients(network)
@@ -106,7 +106,7 @@ class Leader:
 
             if aggr_idx % LOG_INTERVAL == 0:
                 logger.info(f"{aggr_idx}th aggregation completed.")
-                aggr_idx += 1
+            aggr_idx += 1
 
             if self.have_workers_finished():
                 logger.info("Leader finished.")
