@@ -12,3 +12,15 @@ services:
     volumes:
       - ./app/input:/input
       - ./app/output:/output
+  pytorch-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile_pytorch
+      args:
+        ROLE: "WORKER"
+  pytorch-leader:
+    build:
+      context: .
+      dockerfile: Dockerfile_pytorch
+      args:
+        ROLE: "LEADER"

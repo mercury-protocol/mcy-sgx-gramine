@@ -5,88 +5,97 @@ import torch
 from pathlib import Path
 from torch import nn
 
-from user_script import train_batch, data_loader_factory, N_EPOCHS
-
 from pytorch.constants import (
     WORKER_DIR,
-    DATA_DIR,
+    DATA_PATH,
     GRADIENT_FILE,
-    TRAINING_COMPLETE_FILE,
+    GRADIENT_READY_FILE,
+    WORKER_FINISHED_FILE,
     STATE_DICT_FILE,
+    STATE_DICT_READY_FILE,
     WAITING_PERIOD,
-    MONITOR_PERIOD,
-    MONITOR_FILE
+    MONITORING_PERIOD,
+    MONITOR_FILE,
+    LOG_INTERVAL
 )
-from pytorch.utils import load_network, load_optimizer
-
-
-LOG_INTERVAL = 50
+from pytorch.logger import logger
+from pytorch.utils import load_network, load_optimizer, user_script
 
 
 class Worker:
-    def __init__(self, node: str):
-        self.node = node
+    def __init__(self):
         self.monitor_path = self.get_path(MONITOR_FILE)
-        self.data_path = self.get_path(DATA_DIR)
         self.gradient_path = self.get_path(GRADIENT_FILE)
-        self.training_complete_path = self.get_path(TRAINING_COMPLETE_FILE)
+        self.gradient_ready_path = self.get_path(GRADIENT_READY_FILE)
+        self.worker_finished_path = self.get_path(WORKER_FINISHED_FILE)
         self.state_dict_path = self.get_path(STATE_DICT_FILE)
-
-    def get_path(self, file_or_directory: str) -> Path:
-        return WORKER_DIR / self.node / file_or_directory
-
-    async def wait_data(self):
-        while not os.path.exists(self.data_path):
-            await asyncio.sleep(WAITING_PERIOD)
+        self.state_dict_ready_path = self.get_path(STATE_DICT_READY_FILE)
 
     @staticmethod
-    def is_training_complete(epoch: int, batch_idx: int, total_batches: int) -> bool:
-        return epoch == N_EPOCHS - 1 and batch_idx == total_batches - 1
+    def get_path(file_or_directory: str) -> Path:
+        return WORKER_DIR / file_or_directory
 
-    def signal_training_complete(self):
-        with open(self.training_complete_path, "wb"):
+    @staticmethod
+    async def wait_data():
+        while not os.path.exists(DATA_PATH):
+            await asyncio.sleep(WAITING_PERIOD)
+        logger.info("Data has arrived.")
+
+    @staticmethod
+    def is_last_iteration(epoch: int, batch_idx: int, total_batches: int) -> bool:
+        return epoch == user_script.N_EPOCHS - 1 and batch_idx == total_batches - 1
+
+    def signal_worker_finished(self):
+        with open(self.worker_finished_path, "wb"):
             pass
 
-    async def wait_network_aggregation(self):
-        while not os.path.exists(self.state_dict_path):
+    async def wait_state_dict(self):
+        while not os.path.exists(self.state_dict_ready_path):
             await asyncio.sleep(WAITING_PERIOD)
+        if not os.path.exists(self.state_dict_path):
+            raise FileNotFoundError(f"{self.state_dict_path} does not exist!")
+        os.remove(self.state_dict_ready_path)
+        logger.debug("state dict waited")
 
     def save_gradient(self, network: nn.Module):
         gradient = {name: param.grad.data for name, param in network.named_parameters()}
         torch.save(gradient, self.gradient_path)
 
+        with open(self.gradient_ready_path, "wb"):
+            pass
+
     async def monitor(self, task: asyncio.Task):
-        print(f"Worker {self.node} monitor started.")
+        logger.info("Monitor started.")
         while not task.done():
             with open(self.monitor_path, "wb"):
                 pass
-            print(f"Worker {self.node} monitor: Worker {self.node} is running.")
-            await asyncio.sleep(MONITOR_PERIOD)
+            await asyncio.sleep(MONITORING_PERIOD)
 
-        print(f"Worker {self.node} monitor finished.")
+        logger.info("Monitor finished.")
         return
 
     async def train_network(self):
-        print(f"Worker {self.node} started.")
+        logger.info("Worker started.")
         await self.wait_data()
-        data_loader = data_loader_factory.create(self.data_path)
+        data_loader = user_script.data_loader_factory.create(DATA_PATH)
         total_batches = len(data_loader)
 
-        for epoch in range(N_EPOCHS):
+        for epoch in range(user_script.N_EPOCHS):
             for batch_idx, (data, target) in enumerate(data_loader):
                 network = load_network(path=self.state_dict_path, delete_file=True)
                 optimizer = load_optimizer(network)
-                loss = train_batch(data, target, network, optimizer)
+                loss = user_script.train_batch(data, target, network, optimizer)
 
-                if self.is_training_complete(epoch, batch_idx, total_batches):
-                    self.signal_training_complete()
+                if self.is_last_iteration(epoch, batch_idx, total_batches):
+                    self.signal_worker_finished()
                 self.save_gradient(network)
-                await self.wait_network_aggregation()
+
+                await self.wait_state_dict()
 
                 if batch_idx % LOG_INTERVAL == 0:
-                    print(f"Worker: {self.node} Epoch: {epoch} Batch: {batch_idx} Loss: {loss.item():.6f}")
+                    logger.info(f"Epoch: {epoch} Batch: {batch_idx} Loss: {loss.item():.6f}")
 
-        print(f"Worker {self.node} finished.")
+        logger.info("Worker finished.")
 
     async def run(self):
         train_network_task = asyncio.create_task(self.train_network())

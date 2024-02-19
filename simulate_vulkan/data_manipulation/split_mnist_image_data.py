@@ -101,7 +101,7 @@ def split_and_save_data(
 
 
 if __name__ == "__main__":
-    from pytorch.data_manipulation.constants import MNIST_IMAGES_PATH, SPLIT_DATA_PATH
+    from simulate_vulkan.data_manipulation.constants import MNIST_IMAGES_PATH, SPLIT_DATA_PATH
 
     INPUT_DATA_PATH = MNIST_IMAGES_PATH
     OUTPUT_DATA_PATH = SPLIT_DATA_PATH

@@ -10,4 +10,5 @@ __pycache__
 /app/output/
 /.env
 
-/pytorch/io/
+/io/
+/simulate_vulkan/io/
