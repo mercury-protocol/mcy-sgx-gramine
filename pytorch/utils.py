@@ -51,4 +51,4 @@ def load_optimizer(network: nn.Module) -> Any:
 
 
 def list_worker_nodes() -> List[str]:
-    return [str(i) for i in range(WORKER_NODES_NUM)]
+    return [str(i + 1) for i in range(WORKER_NODES_NUM)]
