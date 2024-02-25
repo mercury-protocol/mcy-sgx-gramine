@@ -1,8 +1,7 @@
 from random import Random
 
-""" Dataset partitioning helper """
-class Partition(object):
 
+class Partition:
     def __init__(self, data, index):
         self.data = data
         self.index = index
@@ -15,8 +14,7 @@ class Partition(object):
         return self.data[data_idx]
 
 
-class DataPartitioner(object):
-
+class DataPartitioner:
     def __init__(self, data, sizes=[0.7, 0.2, 0.1], seed=1234):
         self.data = data
         self.partitions = []

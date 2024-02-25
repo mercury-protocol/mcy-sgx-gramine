@@ -11,24 +11,22 @@ from pytorch.constants import (
     GRADIENT_FILE,
     GRADIENT_READY_FILE,
     WORKER_FINISHED_FILE,
-    STATE_DICT_FILE,
-    STATE_DICT_READY_FILE,
+    STATE_DICT_PATH,
+    STATE_DICT_READY_PATH,
     WAITING_PERIOD,
     MONITORING_PERIOD,
-    MONITOR_FILE,
+    MONITOR_PATH,
     LOG_INTERVAL
 )
 from pytorch.logger import logger
 from pytorch.utils import load_network, load_optimizer, user_script, checkpoint, load_last_checkpoint
 
+
 class Worker:
     def __init__(self):
-        self.monitor_path = self.get_path(MONITOR_FILE)
         self.gradient_path = self.get_path(GRADIENT_FILE)
         self.gradient_ready_path = self.get_path(GRADIENT_READY_FILE)
         self.worker_finished_path = self.get_path(WORKER_FINISHED_FILE)
-        self.state_dict_path = self.get_path(STATE_DICT_FILE)
-        self.state_dict_ready_path = self.get_path(STATE_DICT_READY_FILE)
 
     @staticmethod
     def get_path(file_or_directory: str) -> Path:
@@ -48,12 +46,13 @@ class Worker:
         with open(self.worker_finished_path, "wb"):
             pass
 
-    async def wait_state_dict(self):
-        while not os.path.exists(self.state_dict_ready_path):
+    @staticmethod
+    async def wait_state_dict():
+        while not os.path.exists(STATE_DICT_READY_PATH):
             await asyncio.sleep(WAITING_PERIOD)
-        if not os.path.exists(self.state_dict_path):
-            raise FileNotFoundError(f"{self.state_dict_path} does not exist!")
-        os.remove(self.state_dict_ready_path)
+        if not os.path.exists(STATE_DICT_PATH):
+            raise FileNotFoundError(f"{STATE_DICT_PATH} does not exist!")
+        os.remove(STATE_DICT_READY_PATH)
         logger.debug("state dict waited")
 
     def save_gradient(self, network: nn.Module):
@@ -63,10 +62,11 @@ class Worker:
         with open(self.gradient_ready_path, "wb"):
             pass
 
-    async def monitor(self, task: asyncio.Task):
+    @staticmethod
+    async def monitor(task: asyncio.Task):
         logger.info("Monitor started.")
         while not task.done():
-            with open(self.monitor_path, "wb"):
+            with open(MONITOR_PATH, "wb"):
                 pass
             await asyncio.sleep(MONITORING_PERIOD)
 
@@ -79,29 +79,28 @@ class Worker:
 
         data_loader = user_script.data_loader_factory.create(DATA_PATH)
         total_batches = len(data_loader)
-        network = load_network(path=self.state_dict_path, delete_file=True)
-        optimizer = load_optimizer(network)
 
-        if os.path.exists(self.state_dict_ready_path):
-            os.remove(self.state_dict_ready_path)
+        # TODO: this is probably needed because recovery - investigate why
+        if os.path.exists(STATE_DICT_READY_PATH):
+            os.remove(STATE_DICT_READY_PATH)
 
         start_epoch, start_batch = load_last_checkpoint()
-
         for epoch in range(start_epoch, user_script.N_EPOCHS):
             for batch_idx, (data, target) in enumerate(data_loader):
                 if epoch == start_epoch and batch_idx < start_batch:
                     continue
 
-                network = load_network(path=self.state_dict_path, delete_file=True)
+                network = load_network(path=STATE_DICT_PATH, delete_file=True)
+                optimizer = load_optimizer(network)
                 loss = user_script.train_batch(data, target, network, optimizer)
-
-                self.save_gradient(network)
-
-                checkpoint(epoch=epoch, batch=batch_idx)
 
                 if self.is_last_iteration(epoch, batch_idx, total_batches):
                     self.signal_worker_finished()
-                else:
+
+                self.save_gradient(network)
+                checkpoint(epoch=epoch, batch_idx=batch_idx)
+
+                if not self.is_last_iteration(epoch, batch_idx, total_batches):
                     await self.wait_state_dict()
 
                 if batch_idx % LOG_INTERVAL == 0:

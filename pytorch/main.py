@@ -1,15 +1,19 @@
 import asyncio
 
-import pytorch.constants as constants 
+from pytorch.constants import ROLE, LEADER_ROLE, WORKER_ROLE
 from pytorch.exceptions import InvalidRole
 from pytorch.worker import Worker
 from pytorch.leader import Leader
-from mcy_dist_ai.data_partitioner import Partition, DataPartitioner # this has to be imported even if we don't use it here. otherwise python throws error
-    
+
+# TODO: fix unused import
+# this has to be imported even if we don't use it here, otherwise python throws error
+from mcy_dist_ai.data_partitioner import Partition, DataPartitioner
+
+
 def main():
-    if constants.ROLE == constants.LEADER_ROLE:
+    if ROLE == LEADER_ROLE:
         node = Leader()
-    elif constants.ROLE == constants.WORKER_ROLE:
+    elif ROLE == WORKER_ROLE:
         node = Worker()
     else:
         raise InvalidRole

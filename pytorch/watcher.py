@@ -1,27 +1,25 @@
-import os
 import argparse
 import sys
-from torchvision import datasets
-from torchvision.transforms import ToTensor
-from torch import save, load
+import torch
 
-from random import Random
+from mcy_dist_ai.data_partitioner import DataPartitioner
+from pytorch.constants import WATCHER_DATA_PATH
+from pytorch.logger import logger
 
-from mcy_dist_ai.data_partitioner import Partition, DataPartitioner 
-from pytorch.constants import WATCHER_DATA_FILE
 
 def parse_worker_nodes_count():
     parser = argparse.ArgumentParser()
     parser.add_argument("--worker_count", type=int, help="Worker nodes count")
     args = parser.parse_args()
     if args.worker_count is None:
-        print("Missing worker nodes count")
+        logger.error("Missing worker nodes count")
         sys.exit(1)
     return args.worker_count
 
+
 def download_dataset():
-    loaded_data = load(WATCHER_DATA_FILE)
-    return loaded_data
+    return torch.load(WATCHER_DATA_PATH)
+
 
 # TODO: Calculate data chunk sizes according to node compute power and pass that in here
 def partition_dataset(dataset, worker_nodes_count):
@@ -31,12 +29,11 @@ def partition_dataset(dataset, worker_nodes_count):
 
 
 def export_data_partitions(partitions, worker_nodes_count):
-    for i in range(worker_nodes_count):
-         fname = f"partition_{i+1}.pth"
+    for n in range(worker_nodes_count):
+        fname = f"partition_{n + 1}.pth"
+        partition = partitions.use(n)
+        torch.save(partition, fname)
 
-         partition = partitions.use(i)
-         
-         save(partition, fname)
 
 if __name__ == "__main__":
     world_size = parse_worker_nodes_count()

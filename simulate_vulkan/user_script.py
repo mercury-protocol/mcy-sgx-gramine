@@ -1,13 +1,8 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-import torchvision
-import os
-import sys
-from torch import load
-from torch.utils.data import DataLoader
+
 from torch.optim import Adam
+from torch.utils.data import DataLoader
 
 from mcy_dist_ai.required_utils import DataSetFactory, DataLoaderFactory, NetworkFactory, OptimizerFactory
 
@@ -26,9 +21,11 @@ torch.manual_seed(RANDOM_SEED)
 loss_fn = nn.CrossEntropyLoss() 
 
 
-# ------------------- custom user dataset ----------------
-import numpy as np
-from torch.utils.data import Dataset
+class PartitionedDataSetFactory(DataSetFactory):
+    def create(self, data_path):
+        partitioned_dataset = torch.load(data_path)
+        return partitioned_dataset
+
 
 # ------------------- build the network ----------------
 class ImageClassifier(nn.Module): 
@@ -53,11 +50,6 @@ class ImageClassifier(nn.Module):
 network_factory = NetworkFactory(ImageClassifier)
 optimizer_factory = OptimizerFactory(Adam, lr=LEARNING_RATE)
 
-class PartitionedDataSetFactory(DataSetFactory):
-    def create(self, data_path):
-        partitioned_dataset = load(data_path)
-        return partitioned_dataset
-    
 data_set_factory = PartitionedDataSetFactory(None)
 
 data_loader_factory = DataLoaderFactory(
@@ -74,4 +66,3 @@ def train_batch(data, target, network, optimizer):
     optimizer.zero_grad()
     loss.backward() 
     return loss  # for local logging purposes only
-

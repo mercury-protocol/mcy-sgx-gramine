@@ -7,13 +7,13 @@ from torch import nn
 
 from pytorch.constants import (
     BASE_DIR,
-    AGGREGATED_STATE_DICT_PATH,
+    STATE_DICT_PATH,
     WORKER_FINISHED_FILE,
-    STATE_DICT_READY_FILE,
+    STATE_DICT_READY_PATH,
     GRADIENT_FILE,
     GRADIENT_READY_FILE,
     WAITING_PERIOD,
-    MONITOR_FILE,
+    MONITOR_PATH,
     MONITORING_PERIOD,
     LOG_INTERVAL,
     TRAINED_MODEL_PATH
@@ -27,8 +27,6 @@ class Leader:
         self.worker_finished_paths = list()
         self.gradient_paths = list()
         self.gradient_ready_paths = list()
-        self.state_dict_ready_path = BASE_DIR / STATE_DICT_READY_FILE
-        self.monitor_path = BASE_DIR / MONITOR_FILE
         for node in list_worker_nodes():
             self.worker_finished_paths.append(self.get_path(node, WORKER_FINISHED_FILE))
             self.gradient_paths.append(self.get_path(node, GRADIENT_FILE))
@@ -60,12 +58,14 @@ class Leader:
                 os.remove(path)
         logger.debug("gradients deleted")
 
-    def save_state_dict(self, network: nn.Module):
-        torch.save(network.state_dict(), AGGREGATED_STATE_DICT_PATH)
-        with open(self.state_dict_ready_path, "wb"):
+    @staticmethod
+    def save_state_dict(network: nn.Module):
+        torch.save(network.state_dict(), STATE_DICT_PATH)
+        with open(STATE_DICT_READY_PATH, "wb"):
             pass
 
-    def save_trained_model(self, network: nn.Module):
+    @staticmethod
+    def save_trained_model(network: nn.Module):
         torch.save(network.state_dict(), TRAINED_MODEL_PATH)
 
     def aggregate_gradients(self, network: nn.Module):
@@ -78,15 +78,15 @@ class Leader:
                 avg_grads[name] = torch.add(avg_grads[name], grad[name])
 
         for name, param in network.named_parameters():
-            avg_grads[name] /= num
-            param.grad = avg_grads[name]
+            param.grad = avg_grads[name] / num
 
         logger.debug("gradients aggregated")
 
-    async def monitor(self, task: asyncio.Task):
+    @staticmethod
+    async def monitor(task: asyncio.Task):
         logger.info("Monitor started.")
         while not task.done():
-            with open(self.monitor_path, "wb"):
+            with open(MONITOR_PATH, "wb"):
                 pass
             await asyncio.sleep(MONITORING_PERIOD)
 
