@@ -6,7 +6,7 @@ from pathlib import Path
 from torch import nn
 
 from pytorch.constants import (
-    WORKER_DIR,
+    BASE_DIR,
     DATA_PATH,
     GRADIENT_FILE,
     GRADIENT_READY_FILE,
@@ -19,8 +19,7 @@ from pytorch.constants import (
     LOG_INTERVAL
 )
 from pytorch.logger import logger
-from pytorch.utils import load_network, load_optimizer, user_script
-
+from pytorch.utils import load_network, load_optimizer, user_script, checkpoint, load_last_checkpoint
 
 class Worker:
     def __init__(self):
@@ -33,7 +32,7 @@ class Worker:
 
     @staticmethod
     def get_path(file_or_directory: str) -> Path:
-        return WORKER_DIR / file_or_directory
+        return BASE_DIR / file_or_directory
 
     @staticmethod
     async def wait_data():
@@ -77,20 +76,33 @@ class Worker:
     async def train_network(self):
         logger.info("Worker started.")
         await self.wait_data()
+
         data_loader = user_script.data_loader_factory.create(DATA_PATH)
         total_batches = len(data_loader)
+        network = load_network(path=self.state_dict_path, delete_file=True)
+        optimizer = load_optimizer(network)
 
-        for epoch in range(user_script.N_EPOCHS):
+        if os.path.exists(self.state_dict_ready_path):
+            os.remove(self.state_dict_ready_path)
+
+        start_epoch, start_batch = load_last_checkpoint()
+
+        for epoch in range(start_epoch, user_script.N_EPOCHS):
             for batch_idx, (data, target) in enumerate(data_loader):
+                if epoch == start_epoch and batch_idx < start_batch:
+                    continue
+
                 network = load_network(path=self.state_dict_path, delete_file=True)
-                optimizer = load_optimizer(network)
                 loss = user_script.train_batch(data, target, network, optimizer)
+
+                self.save_gradient(network)
+
+                checkpoint(epoch=epoch, batch=batch_idx)
 
                 if self.is_last_iteration(epoch, batch_idx, total_batches):
                     self.signal_worker_finished()
-                self.save_gradient(network)
-
-                await self.wait_state_dict()
+                else:
+                    await self.wait_state_dict()
 
                 if batch_idx % LOG_INTERVAL == 0:
                     logger.info(f"Epoch: {epoch} Batch: {batch_idx} Loss: {loss.item():.6f}")

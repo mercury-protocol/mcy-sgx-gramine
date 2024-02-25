@@ -6,7 +6,7 @@ from pathlib import Path
 from torch import nn
 
 from pytorch.constants import (
-    LEADER_DIR,
+    BASE_DIR,
     AGGREGATED_STATE_DICT_PATH,
     WORKER_FINISHED_FILE,
     STATE_DICT_READY_FILE,
@@ -15,7 +15,8 @@ from pytorch.constants import (
     WAITING_PERIOD,
     MONITOR_FILE,
     MONITORING_PERIOD,
-    LOG_INTERVAL
+    LOG_INTERVAL,
+    TRAINED_MODEL_PATH
 )
 from pytorch.logger import logger
 from pytorch.utils import torch_safe_load, load_network, load_optimizer, list_worker_nodes
@@ -26,8 +27,8 @@ class Leader:
         self.worker_finished_paths = list()
         self.gradient_paths = list()
         self.gradient_ready_paths = list()
-        self.state_dict_ready_path = LEADER_DIR / STATE_DICT_READY_FILE
-        self.monitor_path = LEADER_DIR / MONITOR_FILE
+        self.state_dict_ready_path = BASE_DIR / STATE_DICT_READY_FILE
+        self.monitor_path = BASE_DIR / MONITOR_FILE
         for node in list_worker_nodes():
             self.worker_finished_paths.append(self.get_path(node, WORKER_FINISHED_FILE))
             self.gradient_paths.append(self.get_path(node, GRADIENT_FILE))
@@ -40,7 +41,7 @@ class Leader:
             file = f"{name}_{worker_node}.{extension}"
         else:
             file = f"{file}_{worker_node}"
-        return LEADER_DIR / file
+        return BASE_DIR / file
 
     def have_workers_finished(self) -> bool:
         return all(os.path.exists(path) for path in self.worker_finished_paths)
@@ -64,6 +65,9 @@ class Leader:
         with open(self.state_dict_ready_path, "wb"):
             pass
 
+    def save_trained_model(self, network: nn.Module):
+        torch.save(network.state_dict(), TRAINED_MODEL_PATH)
+
     def aggregate_gradients(self, network: nn.Module):
         gradients = [torch_safe_load(path) for path in self.gradient_paths]
         avg_grads = gradients[0]
@@ -74,7 +78,8 @@ class Leader:
                 avg_grads[name] = torch.add(avg_grads[name], grad[name])
 
         for name, param in network.named_parameters():
-            param.grad = avg_grads[name] / num
+            avg_grads[name] /= num
+            param.grad = avg_grads[name]
 
         logger.debug("gradients aggregated")
 
@@ -90,13 +95,13 @@ class Leader:
     async def aggregate_network(self):
         logger.info("Leader started.")
         network = load_network()
+        optimizer = load_optimizer(network)
 
         aggr_idx = 0
         while True:
             await self.wait_gradients()
             self.aggregate_gradients(network)
 
-            optimizer = load_optimizer(network)
             optimizer.step()
             optimizer.zero_grad()
 
@@ -109,6 +114,7 @@ class Leader:
             aggr_idx += 1
 
             if self.have_workers_finished():
+                self.save_trained_model(network)
                 logger.info("Leader finished.")
                 return
 

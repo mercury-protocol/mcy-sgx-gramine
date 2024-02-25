@@ -1,17 +1,37 @@
 import importlib
 import os
 import torch
+import argparse
+import sys
+import struct
 
 from pathlib import Path
 from time import sleep
 from torch import nn
 from typing import Any, List, Union
 
-from pytorch.constants import WAITING_PERIOD, WORKER_NODES_NUM, USER_SCRIPT_PATH
+import pytorch.constants as constants
+from pytorch.constants import WAITING_PERIOD, WORKER_ROLE, LEADER_ROLE, STATE_DICT_READY_FILE
 from pytorch.logger import logger
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--role", type=str, help="Node role - leader or worker")
+parser.add_argument("--worker_count", type=int, help="Worker nodes count")
+args = parser.parse_args()
+if args.role is None:
+    print("Role argument is missing")
+    sys.exit(1)
+elif args.role != WORKER_ROLE and args.role != LEADER_ROLE:
+    print(f"role must be {WORKER_ROLE} or {LEADER_ROLE}")
+    sys.exit(1)
 
-script_path = os.path.abspath(USER_SCRIPT_PATH)
+if args.role == LEADER_ROLE and args.worker_count is None:
+    print("Worker nodes count argument is required for leader")
+    sys.exit(1)
+
+constants.setup(role=args.role, worker_nodes_num=args.worker_count)
+
+script_path = os.path.abspath(constants.USER_SCRIPT_PATH)
 while not os.path.exists(script_path):
     sleep(WAITING_PERIOD)
 
@@ -41,7 +61,7 @@ def load_network(path: Union[Path, str] = "", delete_file: bool = False) -> nn.M
         if delete_file:
             os.remove(path)
 
-    logger.debug("network loaded")
+    logger.info("network loaded")
     return network
 
 
@@ -51,4 +71,41 @@ def load_optimizer(network: nn.Module) -> Any:
 
 
 def list_worker_nodes() -> List[str]:
-    return [str(i + 1) for i in range(WORKER_NODES_NUM)]
+    return [str(i + 1) for i in range(constants.WORKER_NODES_NUM)]
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--role", type=str, help="Node role - leader or worker")
+    parser.add_argument("--worker_count", type=int, help="Worker nodes count")
+    args = parser.parse_args()
+    if args.role is None:
+        print("Role argument is missing")
+        sys.exit(1)
+    elif args.role != WORKER_ROLE or args.role != LEADER_ROLE:
+        print(f"role must be {WORKER_ROLE} or {LEADER_ROLE}")
+        sys.exit(1)
+
+    if args.role == LEADER_ROLE and args.worker_count is None:
+        print("Worker nodes count argument is required for leader")
+        sys.exit(1)
+    
+    constants.setup(role=args.role, worker_nodes_num=args.worker_count)
+    return args
+
+def checkpoint(epoch, batch):
+    fname = f"checkpoint.bin"
+    checkpoint_data = struct.pack('!ii', epoch, batch)
+    with open(fname, 'wb') as f:
+        f.write(checkpoint_data)
+
+def load_last_checkpoint():
+     fname = f"checkpoint.bin"
+     if os.path.exists(fname) == False:
+          print("checkpoint file does not exist")
+          return 0, 0
+     
+     with open(fname, 'rb') as f:
+          checkpoint_data = f.read()
+     epoch, batch = struct.unpack('!ii', checkpoint_data)
+
+     return epoch, batch
