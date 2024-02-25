@@ -8,7 +8,7 @@ from pprint import pprint
 
 
 UNTRAINED_CHECKPOINT = 'distilbert-base-uncased'
-TRAINED_CHECKPOINT = 'distilbert-base-uncased-lora-text-classification/checkpoint-2500'
+TRAINED_CHECKPOINT = 'distilbert-base-uncased-lora-text-classification/checkpoint-250'
 
 
 model_checkpoint = TRAINED_CHECKPOINT
@@ -60,9 +60,19 @@ def evaluate_model(model, checkpoint=TRAINED_CHECKPOINT):
         print(text + " - " + id2label[predictions.tolist()[0]])
 
 
+def experiment(model):
+    state_dict = model.state_dict()
+    model.load_state_dict(state_dict)
+
+    loaded_model = load_model(checkpoint=UNTRAINED_CHECKPOINT)
+    loaded_model.load_state_dict(state_dict)
+    evaluate_model(loaded_model)
+
+
 def main():
     model = load_model()
     evaluate_model(model)
+    # experiment(model)
 
 
 if __name__ == "__main__":
