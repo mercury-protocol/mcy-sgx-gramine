@@ -1,3 +1,5 @@
+import math
+
 from datasets import load_dataset
 from tqdm import tqdm
 
@@ -127,24 +129,23 @@ num_epochs = 1
 
 
 training_args = TrainingArguments(
-    output_dir=model_checkpoint + "-lora-text-classification",
+    output_dir=model_checkpoint + "-step",
     learning_rate=lr,
-    per_device_train_batch_size=batch_size,
-    per_device_eval_batch_size=batch_size,
-    num_train_epochs=num_epochs,
+    # per_device_train_batch_size=batch_size,
+    # per_device_eval_batch_size=batch_size,
+    # num_train_epochs=num_epochs,
     weight_decay=0.01,
-    evaluation_strategy="epoch",
-    save_strategy="epoch",
-    load_best_model_at_end=True,
+    # evaluation_strategy="epoch",
+    # save_strategy="epoch",
+    # load_best_model_at_end=True,
+    max_steps=num_epochs * math.ceil(len(tokenized_dataset["train"]) / batch_size)  # TODO: sure to div with batch?
 )
-
 
 # create trainer object
 trainer = IterativeSFTTrainer(
     model=model,
     args=training_args,
-    # train_dataset=tokenized_dataset["train"],
-    # eval_dataset=tokenized_dataset["validation"],
+    eval_dataset=tokenized_dataset["validation"],
     tokenizer=tokenizer,
     data_collator=data_collator,  # this will dynamically pad examples in each batch to be equal length
     compute_metrics=compute_metrics,
@@ -152,11 +153,23 @@ trainer = IterativeSFTTrainer(
 
 # train model
 for epoch in tqdm(range(num_epochs)):
-    for batch in tqdm(tokenized_dataset["train"]):  # TODO: use dataloader and batch size will be adjustable
+    for i in tqdm(range(0, len(tokenized_dataset["train"]), batch_size)):
         inputs = {
-            "input_ids": torch.tensor(batch["input_ids"]),
-            "attention_mask": torch.tensor(batch["attention_mask"]),
+            "input_ids": [
+                torch.tensor(ii) for ii in tokenized_dataset["train"]["input_ids"][i:i + batch_size]
+            ],
+            "attention_mask": [
+                torch.tensor(am) for am in tokenized_dataset["train"]["attention_mask"][i:i + batch_size]
+            ],
+            "labels": [
+                torch.tensor(lbl) for lbl in tokenized_dataset["train"]["label"][i:i + batch_size]
+            ]
         }
+
+        # inputs = {
+        #     "texts": [txt for txt in tokenized_dataset["train"]["text"][i:i + batch_size]],
+        # }
+
         trainer.step(**inputs)
 
 
