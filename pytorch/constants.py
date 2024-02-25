@@ -5,8 +5,9 @@ from pathlib import Path
 ROLE = None
 WORKER_NODES_NUM = None
 
-WORKER_ROLE = "WORKER"
 LEADER_ROLE = "LEADER"
+WORKER_ROLE = "WORKER"
+WORKER_LLM_ROLE = "WORKER-LLM"
 
 GRADIENT_FILE = "gradient.pth"
 GRADIENT_READY_FILE = "gradient_ready.pth"

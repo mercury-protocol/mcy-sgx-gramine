@@ -13,8 +13,9 @@ from typing import Any, List, Union
 from pytorch.constants import (
     WAITING_PERIOD,
     WORKER_NODES_NUM,
-    WORKER_ROLE,
     LEADER_ROLE,
+    WORKER_ROLE,
+    WORKER_LLM_ROLE,
     USER_SCRIPT_PATH,
     CHECKPOINT_PATH,
     set_role_and_worker_node_num
@@ -23,14 +24,14 @@ from pytorch.logger import logger
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--role", type=str, help="Node role - leader or worker")
+parser.add_argument("--role", type=str, help="Node role - leader, worker or worker-llm")
 parser.add_argument("--worker_count", type=int, help="Worker nodes count")
 args = parser.parse_args()
 if args.role is None:
     logger.error("Role argument is missing")
     sys.exit(1)
-elif args.role.upper() != WORKER_ROLE and args.role != LEADER_ROLE:
-    logger.error(f"role must be {WORKER_ROLE} or {LEADER_ROLE}")
+elif args.role.upper() not in (LEADER_ROLE, WORKER_ROLE, WORKER_LLM_ROLE):
+    logger.error(f"role must be {LEADER_ROLE}, {WORKER_ROLE} or {WORKER_LLM_ROLE}")
     sys.exit(1)
 
 if args.role == LEADER_ROLE and args.worker_count is None:

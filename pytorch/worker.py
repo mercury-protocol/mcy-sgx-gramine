@@ -6,6 +6,8 @@ from pathlib import Path
 from torch import nn
 
 from pytorch.constants import (
+    ROLE,
+    WORKER_LLM_ROLE,
     BASE_DIR,
     DATA_PATH,
     GRADIENT_FILE,
@@ -108,7 +110,18 @@ class Worker:
 
         logger.info("Worker finished.")
 
+    @staticmethod
+    async def fine_tune_llm():
+        # TODO: make this implementation compatible with the original code flow:
+        # - distributed training
+        # - use Mercury user script format
+        # - no separate role for llm training
+        logger.info("Worker started - Fine tune LLM")
+        user_script.main()
+
     async def run(self):
-        train_network_task = asyncio.create_task(self.train_network())
-        monitor_task = asyncio.create_task(self.monitor(train_network_task))
-        await asyncio.gather(train_network_task, monitor_task)
+        training_task = asyncio.create_task(
+            self.fine_tune_llm() if ROLE == WORKER_LLM_ROLE else self.train_network()
+        )
+        monitor_task = asyncio.create_task(self.monitor(training_task))
+        await asyncio.gather(training_task, monitor_task)
