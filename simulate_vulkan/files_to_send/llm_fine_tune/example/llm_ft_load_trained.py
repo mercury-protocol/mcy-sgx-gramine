@@ -11,7 +11,6 @@ UNTRAINED_CHECKPOINT = 'distilbert-base-uncased'
 TRAINED_CHECKPOINT = 'distilbert-base-uncased-lora-text-classification/checkpoint-250'
 
 
-model_checkpoint = TRAINED_CHECKPOINT
 id2label = {0: "Negative", 1: "Positive"}
 label2id = {"Negative": 0, "Positive": 1}
 

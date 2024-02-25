@@ -1,5 +1,3 @@
-import math
-
 from datasets import load_dataset
 from tqdm import tqdm
 
@@ -24,15 +22,8 @@ print()
 print("dataset")
 pprint(dataset)
 
-# display % of training data with label=1
-percent_training_data = np.array(dataset['train']['label']).sum()/len(dataset['train']['label'])
-print()
-print(f"Percent training data: {percent_training_data}")
-
 # -------------------- MODEL --------------------
 model_checkpoint = 'distilbert-base-uncased'
-# you can alternatively use roberta-base but this model is bigger thus training will take longer
-# model_checkpoint = 'roberta-base'
 
 # define label maps
 id2label = {0: "Negative", 1: "Positive"}
@@ -138,7 +129,7 @@ training_args = TrainingArguments(
     # evaluation_strategy="epoch",
     # save_strategy="epoch",
     # load_best_model_at_end=True,
-    max_steps=num_epochs * math.ceil(len(tokenized_dataset["train"]) / batch_size)  # TODO: sure to div with batch?
+    max_steps=num_epochs * len(tokenized_dataset["train"]["input_ids"])
 )
 
 # create trainer object
@@ -153,7 +144,7 @@ trainer = IterativeSFTTrainer(
 
 # train model
 for epoch in tqdm(range(num_epochs)):
-    for i in tqdm(range(0, len(tokenized_dataset["train"]), batch_size)):
+    for i in tqdm(range(0, len(tokenized_dataset["train"]["input_ids"]), batch_size)):
         inputs = {
             "input_ids": [
                 torch.tensor(ii) for ii in tokenized_dataset["train"]["input_ids"][i:i + batch_size]
@@ -171,6 +162,10 @@ for epoch in tqdm(range(num_epochs)):
         # }
 
         trainer.step(**inputs)
+
+        # TODO:
+        # save grad
+        # load aggregated model
 
 
 # -------------------- EVALUATION --------------------
