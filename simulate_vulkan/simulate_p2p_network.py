@@ -4,7 +4,7 @@ import shutil
 from docker.models.containers import Container
 
 from pytorch.constants import (
-    AGGREGATED_STATE_DICT_PATH,
+    STATE_DICT_PATH,
     LEADER_DIR,
     STATE_DICT_READY_FILE,
     WORKER_DIR,
@@ -39,14 +39,14 @@ class WatchLeader:
     async def wait_state_dict(self):
         while not os.path.exists(LEADER_DIR / STATE_DICT_READY_FILE):
             await asyncio.sleep(WAITING_PERIOD)
-        if not os.path.exists(AGGREGATED_STATE_DICT_PATH):
-            raise Exception(f"{AGGREGATED_STATE_DICT_PATH} does not exist!")
+        if not os.path.exists(STATE_DICT_PATH):
+            raise Exception(f"{STATE_DICT_PATH} does not exist!")
         delete_file_in_container(self.container, LEADER_DIR / STATE_DICT_READY_FILE)
 
     @staticmethod
     def send_state_dict_to_worker(node: str):
         shutil.copy(
-            AGGREGATED_STATE_DICT_PATH,
+            STATE_DICT_PATH,
             WORKER_DIR / node / STATE_DICT_FILE
         )
         with open(WORKER_DIR / node / STATE_DICT_READY_FILE, "wb"):

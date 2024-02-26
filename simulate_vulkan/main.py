@@ -3,7 +3,7 @@ import os
 from time import time
 
 from pytorch.constants import (
-    AGGREGATED_STATE_DICT_PATH,
+    STATE_DICT_PATH,
     LEADER_DIR,
     WORKER_DIR,
     MONITOR_FILE,
@@ -21,7 +21,7 @@ from simulate_vulkan.utils import load_network, list_worker_nodes
 
 def check_output_file_ages():
     now = time()
-    aggregated_network_age = now - os.path.getmtime(AGGREGATED_STATE_DICT_PATH)
+    aggregated_network_age = now - os.path.getmtime(STATE_DICT_PATH)
     leader_monitor_age = now - os.path.getmtime(LEADER_DIR / MONITOR_FILE)
     worker_monitor_ages = [
         now - os.path.getmtime(WORKER_DIR / node / MONITOR_FILE)
@@ -49,6 +49,6 @@ if __name__ == "__main__":
         main()
 
     check_output_file_ages()
-    network = load_network(AGGREGATED_STATE_DICT_PATH)
+    network = load_network(STATE_DICT_PATH)
     evaluate_network(network)
     # make_predictions(network, test_data_loader)
