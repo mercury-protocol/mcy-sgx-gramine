@@ -10,9 +10,10 @@ from time import sleep
 from torch import nn
 from typing import Any, List, Union
 
+import pytorch.constants as constants
+
 from pytorch.constants import (
     WAITING_PERIOD,
-    WORKER_NODES_NUM,
     LEADER_ROLE,
     WORKER_ROLE,
     WORKER_LLM_ROLE,
@@ -80,11 +81,12 @@ def load_optimizer(network: nn.Module) -> Any:
 
 
 def list_worker_nodes() -> List[str]:
-    return [str(i + 1) for i in range(WORKER_NODES_NUM)]
+    return [str(i + 1) for i in range(constants.WORKER_NODES_NUM)]
 
 
 def checkpoint(epoch: int, batch_idx: int):
-    checkpoint_data = struct.pack('!ii', epoch, batch_idx)
+    checkpointed_idx = batch_idx + 1 # we signal the next coming batch -> where work should be continued from
+    checkpoint_data = struct.pack('!ii', epoch, checkpointed_idx)
     with open(CHECKPOINT_PATH, 'wb') as f:
         f.write(checkpoint_data)
 
