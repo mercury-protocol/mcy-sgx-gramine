@@ -1,0 +1,56 @@
+{% set LOG_LEVEL = "error" %}
+
+libos.entrypoint = "{{ ENTRYPOINT }}"
+
+loader.uid = 1000  # run as root to be able to access gramine os files with python
+loader.entrypoint = "file:{{ gramine.libos }}"
+loader.log_level = "{{ LOG_LEVEL }}"
+loader.env.LD_LIBRARY_PATH = "/lib:/usr/lib:{{ ARCH_LIBDIR }}:/usr/{{ ARCH_LIBDIR }}"
+loader.env.OMP_NUM_THREADS = "8"
+loader.pal_internal_mem_size = "128M"
+
+loader.argv = ["sgxapp", "sgx_main.py"]
+
+fs.mounts = [
+  { uri = "file:{{ gramine.runtimedir() }}", path = "/lib" },
+  { uri = "file:{{ ARCH_LIBDIR }}", path = "{{ ARCH_LIBDIR }}" },
+  { uri = "file:/usr", path = "/usr" },
+  { uri = "file:/etc", path = "/etc" },
+  { type = "tmpfs", path = "/tmp" },
+  { path = "/local_secret_key", uri = "file:local_secret_key", type = "encrypted", key_name = "_sgx_mrenclave" },
+]
+
+sgx.nonpie_binary = true
+sgx.enclave_size = "2G"
+sgx.max_threads = 32
+sgx.edmm_enable = {{ 'true' if env.get('EDMM', '0') == '1' else 'false' }}
+sgx.remote_attestation = "epid"
+sgx.ra_client_linkable = false
+sgx.ra_client_spid = "{{ RA_CLIENT_SPID }}"
+
+sgx.trusted_files = [
+  "file:{{ gramine.libos }}",
+  "file:{{ ENTRYPOINT }}",
+  "file:{{ gramine.runtimedir() }}/",
+  "file:{{ ARCH_LIBDIR }}/",
+  "file:/usr/{{ ARCH_LIBDIR }}/",
+{% for path in python.get_sys_path(ENTRYPOINT) %}
+  "file:{{ path }}{{ '/' if path.is_dir() else '' }}",
+{% endfor %}
+  "file:sgx_constants.py",
+  "file:sgx_main.py",
+  "file:sgx_startup.py",
+  "file:sgx_train_model.py",
+  "file:sgx_utils.py",
+]
+
+# TODO: allowed files should not be used
+sgx.allowed_files = [
+  "file:input/data_public_key",
+  "file:input/model_public_key",
+  "file:input/encrypted_data.csv",
+  "file:input/encrypted_model.py",
+  "file:output/gr.quote",
+  "file:output/local_public_key",
+  "file:output/encrypted_trained_model.pkl",
+]

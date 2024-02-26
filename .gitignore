@@ -1,0 +1,14 @@
+.vscode
+.idea
+__pycache__
+.pytest_cache
+/app/sgxapp.sig
+/app/sgxapp.manifest
+/app/sgxapp.manifest.sgx
+/app/local_secret_key
+/app/input/
+/app/output/
+/.env
+
+/io/
+/simulate_vulkan/io/
