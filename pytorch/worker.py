@@ -95,14 +95,15 @@ class Worker:
                 network = load_network(path=STATE_DICT_PATH, delete_file=True)
                 optimizer = load_optimizer(network)
                 loss = user_script.train_batch(data, target, network, optimizer)
-
-                if self.is_last_iteration(epoch, batch_idx, total_batches):
-                    self.signal_worker_finished()
-
+                
                 self.save_gradient(network)
                 checkpoint(epoch=epoch, batch_idx=batch_idx)
 
-                if not self.is_last_iteration(epoch, batch_idx, total_batches):
+                # TODO: If moved above save_gradient, leader fails to send confirmation to watcher
+                # probably a bug in Vulkan
+                if self.is_last_iteration(epoch, batch_idx, total_batches):
+                    self.signal_worker_finished()
+                else:
                     await self.wait_state_dict()
 
                 if batch_idx % LOG_INTERVAL == 0:
