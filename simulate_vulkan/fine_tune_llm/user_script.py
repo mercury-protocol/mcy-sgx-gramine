@@ -1,6 +1,8 @@
 import evaluate
 import numpy as np
 
+import torch
+
 from datasets import load_dataset
 from peft import get_peft_model, LoraConfig
 from transformers import (
@@ -8,9 +10,25 @@ from transformers import (
     AutoModelForSequenceClassification,
     DataCollatorWithPadding,
     TrainingArguments,
+    TrainerCallback,
     Trainer
 )
 
+STATE_DICT_READY_PATH = "state_dict_ready.pth"
+GRADIENT_PATH = "gradient.pth"
+
+class VulkanCallback(TrainerCallback):
+    def __init__(self, model):
+        self.model = model
+
+    # TODO: add the rest of the stuff from mcy_dist_ai
+         
+    def save_gradients(self):
+        gradient = {name: param.data for name, param in self.model.named_parameters() if param.requires_grad}
+        torch.save(gradient, GRADIENT_PATH)
+
+    def on_step_end(self, args, state, control, **kwargs):
+        self.save_gradients()
 
 def main():
     # -------------------- DATA --------------------
@@ -110,6 +128,10 @@ def main():
         data_collator=data_collator,  # this will dynamically pad examples in each batch to be equal length
         compute_metrics=compute_metrics,
     )
+
+    callback = VulkanCallback(model=model)
+
+    trainer.add_callback(callback)
 
     # train model
     trainer.train()
