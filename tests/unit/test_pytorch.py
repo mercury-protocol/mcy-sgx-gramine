@@ -1,9 +1,11 @@
-from unittest.mock import patch
-
 from tests.utils import pytorch_context
 
 
-@pytorch_context(role="WORKER", worker_count=1, user_script="image_classifier.py")
+@pytorch_context(
+    role="WORKER", worker_count=1,
+    example_dir="image_classifier",
+    clear_tmp_dir_end=False
+)
 def test_one_worker():
-    import pytorch.utils
-    print("END")
+    from pytorch.main import main
+    main()

@@ -18,7 +18,8 @@ from pytorch.constants import (
     WAITING_PERIOD,
     MONITORING_PERIOD,
     MONITOR_PATH,
-    LOG_INTERVAL
+    LOG_INTERVAL,
+    WORKER_NODES_NUM
 )
 from pytorch.logger import logger
 from pytorch.utils import load_network, load_optimizer, user_script, checkpoint, load_last_checkpoint
@@ -50,6 +51,9 @@ class Worker:
 
     @staticmethod
     async def wait_state_dict():
+        if WORKER_NODES_NUM == 1:
+            # if there's only 1 worker, leader is not needed
+            return
         while not os.path.exists(STATE_DICT_READY_PATH):
             await asyncio.sleep(WAITING_PERIOD)
         if not os.path.exists(STATE_DICT_PATH):

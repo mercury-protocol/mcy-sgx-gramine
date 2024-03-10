@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torchvision
 
 from torch.optim import Adam
 from torch.utils.data import DataLoader
@@ -50,7 +51,14 @@ class ImageClassifier(nn.Module):
 network_factory = NetworkFactory(ImageClassifier)
 optimizer_factory = OptimizerFactory(Adam, lr=LEARNING_RATE)
 
-data_set_factory = PartitionedDataSetFactory(None)
+data_set_factory = DataSetFactory(
+    torchvision.datasets.MNIST,
+    transform=torchvision.transforms.Compose([
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize((0.1307,), (0.3081,))
+    ])
+
+)
 
 data_loader_factory = DataLoaderFactory(
     data_set_factory,

@@ -1,9 +1,10 @@
 import os
 import shutil
+import sys
 from functools import wraps
 from unittest.mock import patch
 
-from tests.constants import TEST_DIR, USER_SCRIPTS_DIR
+from tests.constants import TEST_DIR, EXAMPLES_DIR
 
 
 class TempDir:
@@ -27,12 +28,15 @@ class TempDir:
 
 
 def pytorch_context(role="WORKER", worker_count=1,
-                    user_script="image_classifier.py",
+                    example_dir="image_classifier",
                     clear_tmp_dir_start=True, clear_tmp_dir_end=True):
+
+    example_dir = f"{EXAMPLES_DIR}/{example_dir}"
+
     def decorator(func):
         @wraps(func)
         @patch("sys.argv", [
-            "utils.py",
+            "main.py",
             "--role", role,
             "--worker_count", str(worker_count)
         ])
@@ -40,7 +44,12 @@ def pytorch_context(role="WORKER", worker_count=1,
             with TempDir(clear_tmp_dir_start=clear_tmp_dir_start, clear_tmp_dir_end=clear_tmp_dir_end) as tmp_dir:
                 # to patch pytorch.constants.BASE_DIR
                 with patch("os.getcwd", return_value=tmp_dir):
-                    shutil.copy(f"{USER_SCRIPTS_DIR}/{user_script}", f"{tmp_dir}/user_script.py")
+                    shutil.copy(f"{example_dir}/user_script.py", f"{tmp_dir}/user_script.py")
+                    if os.path.exists(f"{example_dir}/data"):
+                        shutil.copytree(f"{example_dir}/data", f"{tmp_dir}/data")
+                    else:
+                        sys.exit(f"No data folder in {example_dir}.")
+
                     return func(*args, **kwargs)
         return wrapper
     return decorator

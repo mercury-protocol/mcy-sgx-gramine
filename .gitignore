@@ -13,3 +13,4 @@ __pycache__
 /io/
 /simulate_vulkan/io/
 /tests/temp/
+/tests/examples/image_classifier/data/

@@ -1,13 +1,32 @@
 import os
+import sys
+from argparse import ArgumentParser
 from pathlib import Path
 
+from pytorch.logger import logger
 
-ROLE = None
-WORKER_NODES_NUM = None
 
 LEADER_ROLE = "LEADER"
 WORKER_ROLE = "WORKER"
 WORKER_LLM_ROLE = "WORKER-LLM"
+
+parser = ArgumentParser()
+parser.add_argument("--role", type=str, help="Node role - leader, worker or worker-llm")
+parser.add_argument("--worker_count", type=int, help="Worker nodes count")
+args = parser.parse_args()
+if args.role is None:
+    logger.error("Role argument is missing")
+    sys.exit(1)
+if args.role.upper() not in (LEADER_ROLE, WORKER_ROLE, WORKER_LLM_ROLE):
+    logger.error(f"role must be {LEADER_ROLE}, {WORKER_ROLE} or {WORKER_LLM_ROLE}")
+    sys.exit(1)
+if args.role == LEADER_ROLE and args.worker_count is None:
+    logger.error("Worker nodes count argument is required for leader")
+    sys.exit(1)
+
+ROLE = args.role.upper()
+WORKER_NODES_NUM = int(args.worker_count)
+
 
 GRADIENT_FILE = "gradient.pth"
 GRADIENT_READY_FILE = "gradient_ready.pth"
@@ -16,7 +35,7 @@ WORKER_FINISHED_FILE = "worker_finished.pth"
 BASE_DIR = Path(os.getcwd())
 OUTPUT_DIR = Path("/var/tmp/vulkan_trained_models")
 
-DATA_PATH = BASE_DIR / "partition.pth"
+DATA_PATH = BASE_DIR / "data"
 USER_SCRIPT_PATH = BASE_DIR / "user_script.py"
 STATE_DICT_READY_PATH = BASE_DIR / "state_dict_ready.pth"
 STATE_DICT_PATH = BASE_DIR / "state_dict.pth"
@@ -28,9 +47,3 @@ WATCHER_DATA_PATH = BASE_DIR / "data.pt"
 WAITING_PERIOD = 0.01
 MONITORING_PERIOD = 10
 LOG_INTERVAL = 50
-
-
-def set_role_and_worker_node_num(role: str, worker_nodes_num: int):
-    global ROLE, WORKER_NODES_NUM
-    ROLE = role.upper()
-    WORKER_NODES_NUM = worker_nodes_num
