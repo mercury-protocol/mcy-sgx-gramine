@@ -19,7 +19,8 @@ from pytorch.constants import (
     MONITORING_PERIOD,
     MONITOR_PATH,
     LOG_INTERVAL,
-    WORKER_NODES_NUM
+    WORKER_NODES_NUM,
+    TRAINED_MODEL_PATH,
 )
 from pytorch.logger import logger
 from pytorch.utils import load_network, load_optimizer, user_script, checkpoint, load_last_checkpoint
@@ -48,6 +49,10 @@ class Worker:
     def signal_worker_finished(self):
         with open(self.worker_finished_path, "wb"):
             pass
+
+    @staticmethod
+    def save_trained_model(network: nn.Module):
+        torch.save(network.state_dict(), TRAINED_MODEL_PATH)
 
     @staticmethod
     async def wait_state_dict():
@@ -107,6 +112,7 @@ class Worker:
                 # probably a bug in Vulkan
                 if self.is_last_iteration(epoch, batch_idx, total_batches):
                     self.signal_worker_finished()
+                    self.save_trained_model(network)
                 else:
                     await self.wait_state_dict()
 
