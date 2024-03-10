@@ -1,17 +1,18 @@
 import os
 import shutil
 import sys
+from git import Repo
 from functools import wraps
 from unittest.mock import patch
 
-from tests.constants import TEST_DIR, EXAMPLES_DIR
+from tests.constants import TEMP_DIR, EXAMPLES_DIR, REPO_DIR, CONSTANTS_PATCH
 
 
 class TempDir:
     def __init__(self, clear_tmp_dir_start=True, clear_tmp_dir_end=True):
         self.clear_tmp_dir_start = clear_tmp_dir_start
         self.clear_tmp_dir_end = clear_tmp_dir_end
-        self.tmp_dir = TEST_DIR + "/temp"
+        self.tmp_dir = TEMP_DIR
 
     def __enter__(self):
         if self.clear_tmp_dir_start:
@@ -25,6 +26,18 @@ class TempDir:
     def __exit__(self, *args, **kwargs):
         if self.clear_tmp_dir_end:
             shutil.rmtree(self.tmp_dir)
+
+
+class ApplyPatch:
+    def __init__(self, patch_file=CONSTANTS_PATCH):
+        self.patch_file = patch_file
+        self.repo = Repo(REPO_DIR)
+
+    def __enter__(self):
+        self.repo.git.apply(self.patch_file)
+
+    def __exit__(self, *args, **kwargs):
+        self.repo.git.apply("--reverse", self.patch_file)
 
 
 def pytorch_context(role="WORKER", worker_count=1,
@@ -42,8 +55,8 @@ def pytorch_context(role="WORKER", worker_count=1,
         ])
         def wrapper(*args, **kwargs):
             with TempDir(clear_tmp_dir_start=clear_tmp_dir_start, clear_tmp_dir_end=clear_tmp_dir_end) as tmp_dir:
-                # to patch pytorch.constants.BASE_DIR
-                with patch("os.getcwd", return_value=tmp_dir):
+                with ApplyPatch(patch_file=CONSTANTS_PATCH):
+                    os.makedirs(f"{tmp_dir}/output", exist_ok=True)
                     shutil.copy(f"{example_dir}/user_script.py", f"{tmp_dir}/user_script.py")
                     if os.path.exists(f"{example_dir}/data"):
                         shutil.copytree(f"{example_dir}/data", f"{tmp_dir}/data")
