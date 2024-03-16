@@ -1,69 +1,37 @@
-import os
-import shutil
-import sys
-from git import Repo
-from functools import wraps
-from unittest.mock import patch
+import torch
+import torch.nn.functional as F
+import torchvision
 
-from tests.constants import TEMP_DIR, EXAMPLES_DIR, REPO_DIR, CONSTANTS_PATCH
+from typing import Callable
 
-
-class TempDir:
-    def __init__(self, clear_tmp_dir_start=True, clear_tmp_dir_end=True):
-        self.clear_tmp_dir_start = clear_tmp_dir_start
-        self.clear_tmp_dir_end = clear_tmp_dir_end
-        self.tmp_dir = TEMP_DIR
-
-    def __enter__(self):
-        if self.clear_tmp_dir_start:
-            try:
-                shutil.rmtree(self.tmp_dir)
-            except FileNotFoundError:
-                pass
-        os.makedirs(self.tmp_dir, exist_ok=True)
-        return self.tmp_dir
-
-    def __exit__(self, *args, **kwargs):
-        if self.clear_tmp_dir_end:
-            shutil.rmtree(self.tmp_dir)
+from tests.constants import TEMP_OUTPUT_DIR
 
 
-class ApplyPatch:
-    def __init__(self, patch_file=CONSTANTS_PATCH):
-        self.patch_file = patch_file
-        self.repo = Repo(REPO_DIR)
-
-    def __enter__(self):
-        self.repo.git.apply(self.patch_file)
-
-    def __exit__(self, *args, **kwargs):
-        self.repo.git.apply("--reverse", self.patch_file)
+def load_model(create_model: Callable):
+    model = create_model()
+    model.load_state_dict(torch.load(TEMP_OUTPUT_DIR + "/trained_model.pth"))
+    return model
 
 
-def pytorch_context(role="WORKER", worker_count=1,
-                    example_dir="image_classifier",
-                    clear_tmp_dir_start=True, clear_tmp_dir_end=True):
+def evaluate_model(model, data_path, batch_size=1000):
+    test_data_loader = torch.utils.data.DataLoader(
+        torchvision.datasets.MNIST(data_path, train=False, download=True,
+                                   transform=torchvision.transforms.Compose([
+                                       torchvision.transforms.ToTensor(),
+                                       torchvision.transforms.Normalize((0.1307,), (0.3081,))
+                                   ])),
+        batch_size=batch_size, shuffle=True)
 
-    example_dir = f"{EXAMPLES_DIR}/{example_dir}"
-
-    def decorator(func):
-        @wraps(func)
-        @patch("sys.argv", [
-            "main.py",
-            "--role", role,
-            "--worker_count", str(worker_count)
-        ])
-        def wrapper(*args, **kwargs):
-            with TempDir(clear_tmp_dir_start=clear_tmp_dir_start, clear_tmp_dir_end=clear_tmp_dir_end) as tmp_dir:
-                with ApplyPatch(patch_file=CONSTANTS_PATCH):
-                    os.makedirs(f"{tmp_dir}/output", exist_ok=True)
-                    shutil.copy(f"{example_dir}/user_script.py", f"{tmp_dir}/user_script.py")
-                    if os.path.exists(f"{example_dir}/data"):
-                        shutil.copytree(f"{example_dir}/data", f"{tmp_dir}/data")
-                    else:
-                        sys.exit(f"No data folder in {example_dir}.")
-
-                    return func(*args, **kwargs)
-        return wrapper
-    return decorator
-
+    model.eval()
+    test_loss = 0
+    correct = 0
+    with torch.no_grad():
+        for data, target in test_data_loader:
+            output = model(data)
+            test_loss += F.nll_loss(output, target, size_average=False).item()
+            pred = output.data.max(1, keepdim=True)[1]
+            correct += pred.eq(target.data.view_as(pred)).sum()
+    test_loss /= len(test_data_loader.dataset)
+    print('\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+        test_loss, correct, len(test_data_loader.dataset),
+        100. * correct / len(test_data_loader.dataset)))
