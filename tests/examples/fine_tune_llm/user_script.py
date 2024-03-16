@@ -14,6 +14,9 @@ from transformers import (
     Trainer, TrainerState, TrainerControl
 )
 
+
+MODEL_CHECKPOINT = 'distilbert-base-uncased'
+
 STATE_DICT_READY_PATH = "state_dict_ready.pth"
 GRADIENT_PATH = "gradient.pth"
 
@@ -44,52 +47,42 @@ class VulkanCallback(TrainerCallback):
         print(state.epoch, state.global_step, state.max_steps)
 
 
-def main():
-    # -------------------- DATA --------------------
-    # load dataset
-    dataset = load_dataset('shawhin/imdb-truncated')
+def create_tokenizer():
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT, add_prefix_space=True)
+    tokenizer.truncation_side = "left"
 
-    # -------------------- MODEL --------------------
-    model_checkpoint = 'distilbert-base-uncased'
+    return tokenizer
 
-    # define label maps
-    id2label = {0: "Negative", 1: "Positive"}
-    label2id = {"Negative": 0, "Positive": 1}
 
-    # generate classification model from model_checkpoint
-    model = AutoModelForSequenceClassification.from_pretrained(
-        model_checkpoint, num_labels=2, id2label=id2label, label2id=label2id
-    )
-
-    # -------------------- PREPROCESS DATA --------------------
-    # create tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(model_checkpoint, add_prefix_space=True)
-
-    # add pad token if none exists
-    if tokenizer.pad_token is None:
-        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-        model.resize_token_embeddings(len(tokenizer))
-
-    # create tokenize function
+def create_dataset(tokenizer):
     def tokenize_function(examples):
-        # extract text
-        text = examples["text"]
-
-        # tokenize and truncate text
-        tokenizer.truncation_side = "left"
-        tokenized_inputs = tokenizer(
-            text,
+        return tokenizer(
+            examples["text"],
             return_tensors="np",
             truncation=True,
             max_length=512
         )
 
-        return tokenized_inputs
+    raw_dataset = load_dataset('shawhin/imdb-truncated')
+    tokenized_dataset = raw_dataset.map(tokenize_function, batched=True)
 
-    # tokenize training and validation datasets
-    tokenized_dataset = dataset.map(tokenize_function, batched=True)
+    return tokenized_dataset
 
-    # create data collator
+
+def main():
+    tokenizer = create_tokenizer()
+    model = AutoModelForSequenceClassification.from_pretrained(
+        MODEL_CHECKPOINT, num_labels=2,
+        id2label={0: "Negative", 1: "Positive"},
+        label2id={"Negative": 0, "Positive": 1}
+    )
+
+    if tokenizer.pad_token is None:
+        # TODO: this step couples model and tokenizer, but seems like code execution doesn't enter here
+        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        model.resize_token_embeddings(len(tokenizer))
+
+    dataset = create_dataset(tokenizer)
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     # -------------------- EVALUATION --------------------
@@ -121,7 +114,7 @@ def main():
 
     # define training arguments
     training_args = TrainingArguments(
-        output_dir=model_checkpoint + "-lora-text-classification",
+        output_dir=MODEL_CHECKPOINT + "-lora-text-classification",
         learning_rate=lr,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
@@ -136,8 +129,8 @@ def main():
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=tokenized_dataset["train"],
-        eval_dataset=tokenized_dataset["validation"],
+        train_dataset=dataset["train"],
+        eval_dataset=dataset["validation"],
         tokenizer=tokenizer,
         data_collator=data_collator,  # this will dynamically pad examples in each batch to be equal length
         compute_metrics=compute_metrics,
@@ -153,3 +146,21 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    # {
+    #   'eval_loss': 0.3110983669757843,
+    #   'eval_accuracy': {
+    #     'accuracy': 0.901
+    #   },
+    #   'eval_runtime': 81.4019,
+    #   'eval_samples_per_second': 12.285,
+    #   'eval_steps_per_second': 3.071,
+    #   'epoch': 1.0
+    # }
+    # {
+    #   'train_runtime': 219.7641,
+    #   'train_samples_per_second': 4.55,
+    #   'train_steps_per_second': 1.138,
+    #   'train_loss': 0.41538427734375,
+    #   'epoch': 1.0
+    # }
