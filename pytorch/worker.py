@@ -24,7 +24,7 @@ from pytorch.constants import (
     TRAINED_MODEL_PATH,
 )
 from pytorch.logger import logger
-from pytorch.utils import load_network, load_optimizer, user_script, checkpoint, load_last_checkpoint
+from pytorch.utils import load_model, load_optimizer, user_script, checkpoint, load_last_checkpoint
 
 
 class VulkanCallback(TrainerCallback):
@@ -36,8 +36,8 @@ class VulkanCallback(TrainerCallback):
         torch.save(gradient, BASE_DIR / GRADIENT_FILE)
 
     def on_step_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-        # self.trainer.model = load_network(path=STATE_DICT_PATH, delete_file=True)
-        # optimizer = load_optimizer(network)
+        # self.trainer.model = load_model(path=STATE_DICT_PATH, delete_file=True)
+        # optimizer = load_optimizer(model)
         pass
 
     def on_step_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
@@ -76,8 +76,8 @@ class Worker:
             pass
 
     @staticmethod
-    def save_trained_model(network: nn.Module):
-        torch.save(network.state_dict(), TRAINED_MODEL_PATH)
+    def save_trained_model(model: nn.Module):
+        torch.save(model.state_dict(), TRAINED_MODEL_PATH)
 
     @staticmethod
     async def wait_state_dict():
@@ -91,8 +91,8 @@ class Worker:
         os.remove(STATE_DICT_READY_PATH)
         logger.debug("state dict waited")
 
-    def save_gradient(self, network: nn.Module):
-        gradient = {name: param.grad.data for name, param in network.named_parameters()}
+    def save_gradient(self, model: nn.Module):
+        gradient = {name: param.grad.data for name, param in model.named_parameters()}
         torch.save(gradient, self.gradient_path)
 
         with open(self.gradient_ready_path, "wb"):
@@ -109,7 +109,7 @@ class Worker:
         logger.info("Monitor finished.")
         return
 
-    async def train_network(self):
+    async def train_model(self):
         logger.info("Worker started.")
         await self.wait_data()
 
@@ -126,18 +126,18 @@ class Worker:
                 if epoch == start_epoch and batch_idx < start_batch:
                     continue
 
-                network = load_network(path=STATE_DICT_PATH, delete_file=True)
-                optimizer = load_optimizer(network)
-                loss = user_script.train_batch(data, target, network, optimizer)
+                model = load_model(path=STATE_DICT_PATH, delete_file=True)
+                optimizer = load_optimizer(model)
+                loss = user_script.train_batch(data, target, model, optimizer)
                 
-                self.save_gradient(network)
+                self.save_gradient(model)
                 checkpoint(epoch=epoch, batch_idx=batch_idx)
 
                 # TODO: If moved above save_gradient, leader fails to send confirmation to watcher
                 # probably a bug in Vulkan
                 if self.is_last_iteration(epoch, batch_idx, total_batches):
                     self.signal_worker_finished()
-                    self.save_trained_model(network)
+                    self.save_trained_model(model)
                 else:
                     await self.wait_state_dict()
 
@@ -162,7 +162,7 @@ class Worker:
 
     async def run(self):
         training_task = asyncio.create_task(
-            self.fine_tune_llm() if ROLE == WORKER_LLM_ROLE else self.train_network()
+            self.fine_tune_llm() if ROLE == WORKER_LLM_ROLE else self.train_model()
         )
         monitor_task = asyncio.create_task(self.monitor(training_task))
         await asyncio.gather(training_task, monitor_task)

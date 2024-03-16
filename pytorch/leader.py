@@ -19,7 +19,7 @@ from pytorch.constants import (
     TRAINED_MODEL_PATH
 )
 from pytorch.logger import logger
-from pytorch.utils import torch_safe_load, load_network, load_optimizer, list_worker_nodes
+from pytorch.utils import torch_safe_load, load_model, load_optimizer, list_worker_nodes
 
 
 class Leader:
@@ -59,25 +59,25 @@ class Leader:
         logger.debug("gradients deleted")
 
     @staticmethod
-    def save_state_dict(network: nn.Module):
-        torch.save(network.state_dict(), STATE_DICT_PATH)
+    def save_state_dict(model: nn.Module):
+        torch.save(model.state_dict(), STATE_DICT_PATH)
         with open(STATE_DICT_READY_PATH, "wb"):
             pass
 
     @staticmethod
-    def save_trained_model(network: nn.Module):
-        torch.save(network.state_dict(), TRAINED_MODEL_PATH)
+    def save_trained_model(model: nn.Module):
+        torch.save(model.state_dict(), TRAINED_MODEL_PATH)
 
-    def aggregate_gradients(self, network: nn.Module):
+    def aggregate_gradients(self, model: nn.Module):
         gradients = [torch_safe_load(path) for path in self.gradient_paths]
         avg_grads = gradients[0]
         num = len(gradients)
 
         for grad in gradients[1:]:
-            for name, _ in network.named_parameters():
+            for name, _ in model.named_parameters():
                 avg_grads[name] = torch.add(avg_grads[name], grad[name])
 
-        for name, param in network.named_parameters():
+        for name, param in model.named_parameters():
             param.grad = avg_grads[name] / num
 
         logger.debug("gradients aggregated")
@@ -92,20 +92,20 @@ class Leader:
 
         logger.info("Monitor finished.")
 
-    async def aggregate_network(self):
+    async def aggregate_model(self):
         logger.info("Leader started.")
-        network = load_network()
-        optimizer = load_optimizer(network)
+        model = load_model()
+        optimizer = load_optimizer(model)
 
         aggr_idx = 0
         while True:
             await self.wait_gradients()
-            self.aggregate_gradients(network)
+            self.aggregate_gradients(model)
 
             optimizer.step()
             optimizer.zero_grad()
 
-            self.save_state_dict(network)
+            self.save_state_dict(model)
 
             self.delete_gradients()
 
@@ -114,11 +114,11 @@ class Leader:
             aggr_idx += 1
 
             if self.have_workers_finished():
-                self.save_trained_model(network)
+                self.save_trained_model(model)
                 logger.info("Leader finished.")
                 return
 
     async def run(self):
-        aggregate_network_task = asyncio.create_task(self.aggregate_network())
-        monitor_task = asyncio.create_task(self.monitor(aggregate_network_task))
-        await asyncio.gather(aggregate_network_task, monitor_task)
+        aggregate_model_task = asyncio.create_task(self.aggregate_model())
+        monitor_task = asyncio.create_task(self.monitor(aggregate_model_task))
+        await asyncio.gather(aggregate_model_task, monitor_task)

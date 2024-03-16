@@ -26,7 +26,6 @@ spec = importlib.util.spec_from_file_location("user_script", script_path)
 user_script = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(user_script)
 logger.info("user_script.py imported.")
-logger.info(f'user_script has network_factory: {hasattr(user_script, "network_factory")}')
 
 
 def torch_safe_load(path: Union[Path, str]) -> Any:
@@ -40,19 +39,19 @@ def torch_safe_load(path: Union[Path, str]) -> Any:
     raise Exception("Couldn't load file safely with torch.")
 
 
-def load_network(path: Union[Path, str] = "", delete_file: bool = False) -> nn.Module:
-    network = user_script.network_factory.create()
+def load_model(path: Union[Path, str] = "", delete_file: bool = False) -> nn.Module:
+    model = user_script.network_factory.create()
     if os.path.exists(path):
-        network.load_state_dict(torch_safe_load(path))
+        model.load_state_dict(torch_safe_load(path))
         if delete_file:
             os.remove(path)
 
-    logger.debug("network loaded")
-    return network
+    logger.debug("model loaded")
+    return model
 
 
-def load_optimizer(network: nn.Module) -> Any:
-    optimizer = user_script.optimizer_factory.create(network.parameters())
+def load_optimizer(model: nn.Module) -> Any:
+    optimizer = user_script.optimizer_factory.create(model.parameters())
     return optimizer
 
 
