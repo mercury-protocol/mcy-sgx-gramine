@@ -42,23 +42,33 @@ class ImageClassifier(nn.Module):
 
 
 # ------------------- create required objects ----------------
-network_factory = NetworkFactory(ImageClassifier)
-optimizer_factory = OptimizerFactory(SGD, lr=LEARNING_RATE, momentum=MOMENTUM)
+def create_model():
+    return ImageClassifier()
 
-data_set_factory = DataSetFactory(
-    torchvision.datasets.MNIST,
-    transform=torchvision.transforms.Compose([
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize((0.1307,), (0.3081,))
-    ])
 
-)
+def create_optimizer(model: nn.Module):
+    return SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 
-data_loader_factory = DataLoaderFactory(
-    data_set_factory,
-    DataLoader,
-    batch_size=BATCH_SIZE,
-    shuffle=True)
+
+def create_dataset(path):
+    return torchvision.datasets.MNIST(
+        path,
+        train=True,
+        download=True,
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize((0.1307,), (0.3081,))
+        ])
+    )
+
+
+def create_data_loader(path):
+    dataset = create_dataset(path)
+    return torch.utils.data.DataLoader(
+        dataset,
+        batch_size=BATCH_SIZE,
+        shuffle=True
+    )
 
 
 # ------------------- train the model ----------------
@@ -72,9 +82,9 @@ def train_batch(data, target, model, optimizer):
 
 
 if __name__ == "__main__":
-    data_loader = data_loader_factory.create("data")
-    model = network_factory.create()
-    optimizer = optimizer_factory.create(model.parameters())
+    data_loader = create_data_loader("data")
+    model = create_model()
+    optimizer = create_optimizer(model)
     for epoch in range(N_EPOCHS):
         for batch_idx, (data, target) in enumerate(data_loader):
             train_batch(data, target, model, optimizer)

@@ -113,7 +113,7 @@ class Worker:
         logger.info("Worker started.")
         await self.wait_data()
 
-        data_loader = user_script.data_loader_factory.create(DATA_PATH)
+        data_loader = user_script.create_data_loader(DATA_PATH)
         total_batches = len(data_loader)
 
         # TODO: this is probably needed because recovery - investigate why

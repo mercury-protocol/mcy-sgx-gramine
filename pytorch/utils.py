@@ -40,7 +40,7 @@ def torch_safe_load(path: Union[Path, str]) -> Any:
 
 
 def load_model(path: Union[Path, str] = "", delete_file: bool = False) -> nn.Module:
-    model = user_script.network_factory.create()
+    model = user_script.create_model()
     if os.path.exists(path):
         model.load_state_dict(torch_safe_load(path))
         if delete_file:
@@ -51,7 +51,7 @@ def load_model(path: Union[Path, str] = "", delete_file: bool = False) -> nn.Mod
 
 
 def load_optimizer(model: nn.Module) -> Any:
-    optimizer = user_script.optimizer_factory.create(model.parameters())
+    optimizer = user_script.create_optimizer(model)
     return optimizer
 
 
