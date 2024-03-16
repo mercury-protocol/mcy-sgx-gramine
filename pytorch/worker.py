@@ -4,6 +4,7 @@ import torch
 
 from pathlib import Path
 from torch import nn
+from transformers import TrainerCallback, TrainingArguments, TrainerState, TrainerControl, Trainer
 
 from pytorch.constants import (
     ROLE,
@@ -24,6 +25,30 @@ from pytorch.constants import (
 )
 from pytorch.logger import logger
 from pytorch.utils import load_network, load_optimizer, user_script, checkpoint, load_last_checkpoint
+
+
+class VulkanCallback(TrainerCallback):
+    def __init__(self, trainer: Trainer):
+        self.trainer = trainer
+
+    def save_gradients(self):
+        gradient = {name: param.data for name, param in self.trainer.model.named_parameters() if param.requires_grad}
+        torch.save(gradient, BASE_DIR / GRADIENT_FILE)
+
+    def on_step_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        # self.trainer.model = load_network(path=STATE_DICT_PATH, delete_file=True)
+        # optimizer = load_optimizer(network)
+        pass
+
+    def on_step_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        self.save_gradients()
+        # checkpoint(epoch=state.epoch, batch_idx=batch_idx)
+
+        # if state.global_step == state.max_steps:
+        #     self.signal_worker_finished()
+        # else:
+        #     await self.wait_state_dict()
+        print(state.epoch, state.global_step, state.max_steps)
 
 
 class Worker:
@@ -127,8 +152,13 @@ class Worker:
         # - distributed training
         # - use Mercury user script format
         # - no separate role for llm training
+
         logger.info("Worker started - Fine tune LLM")
-        user_script.main()
+
+        trainer = user_script.trainer
+        callback = VulkanCallback(trainer=trainer)
+        trainer.add_callback(callback)
+        trainer.train()
 
     async def run(self):
         training_task = asyncio.create_task(

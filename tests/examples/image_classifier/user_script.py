@@ -10,7 +10,7 @@ from mcy_dist_ai.required_utils import DataSetFactory, DataLoaderFactory, Networ
 
 # ------------------- config ----------------
 N_EPOCHS = 1
-BATCH_SIZE_TRAIN = 500
+BATCH_SIZE = 500
 LEARNING_RATE = 1e-3
 MOMENTUM = 0.5
 
@@ -63,7 +63,7 @@ data_set_factory = DataSetFactory(
 data_loader_factory = DataLoaderFactory(
     data_set_factory,
     DataLoader,
-    batch_size=BATCH_SIZE_TRAIN,
+    batch_size=BATCH_SIZE,
     shuffle=True)
 
 
