@@ -81,9 +81,6 @@ class Worker:
 
     @staticmethod
     async def wait_state_dict():
-        if WORKER_NODES_NUM == 1:
-            # if there's only 1 worker, leader is not needed
-            return
         while not os.path.exists(STATE_DICT_READY_PATH):
             await asyncio.sleep(WAITING_PERIOD)
         if not os.path.exists(STATE_DICT_PATH):
@@ -115,6 +112,8 @@ class Worker:
 
         data_loader = user_script.create_data_loader(DATA_PATH)
         total_batches = len(data_loader)
+        model = load_model(path=STATE_DICT_PATH, delete_file=True)
+        optimizer = load_optimizer(model)
 
         # TODO: this is probably needed because recovery - investigate why
         if os.path.exists(STATE_DICT_READY_PATH):
@@ -126,8 +125,6 @@ class Worker:
                 if epoch == start_epoch and batch_idx < start_batch:
                     continue
 
-                model = load_model(path=STATE_DICT_PATH, delete_file=True)
-                optimizer = load_optimizer(model)
                 loss = user_script.train_batch(data, target, model, optimizer)
                 
                 self.save_gradient(model)
@@ -138,8 +135,11 @@ class Worker:
                 if self.is_last_iteration(epoch, batch_idx, total_batches):
                     self.signal_worker_finished()
                     self.save_trained_model(model)
-                else:
+                elif WORKER_NODES_NUM != 1:
+                    # if there's only 1 worker, leader is not needed
                     await self.wait_state_dict()
+                    model = load_model(path=STATE_DICT_PATH, delete_file=True)
+                    optimizer = load_optimizer(model)
 
                 if batch_idx % LOG_INTERVAL == 0:
                     logger.info(f"Epoch: {epoch} Batch: {batch_idx} Loss: {loss.item():.6f}")
