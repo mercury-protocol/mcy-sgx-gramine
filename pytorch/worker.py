@@ -22,6 +22,7 @@ from pytorch.constants import (
     LOG_INTERVAL,
     WORKER_NODES_NUM,
     TRAINED_MODEL_PATH,
+    OUTPUT_DIR,
 )
 from pytorch.logger import logger
 from pytorch.utils import load_model, load_optimizer, user_script, checkpoint, load_last_checkpoint
@@ -131,7 +132,7 @@ class Worker:
                 checkpoint(epoch=epoch, batch_idx=batch_idx)
 
                 # TODO: If moved above save_gradient, leader fails to send confirmation to watcher
-                # probably a bug in Vulkan
+                #  - probably a bug in Vulkan
                 if self.is_last_iteration(epoch, batch_idx, total_batches):
                     self.signal_worker_finished()
                     self.save_trained_model(model)
@@ -149,15 +150,17 @@ class Worker:
     @staticmethod
     async def fine_tune_llm():
         # TODO: make this implementation compatible with the original code flow:
-        # - distributed training
-        # - use Mercury user script format
-        # - no separate role for llm training
+        #  - distributed training
+        #  - use Mercury user script format
+        #  - no separate role for llm training
 
         logger.info("Worker started - Fine tune LLM")
 
-        trainer = user_script.trainer
+        trainer = user_script.create_trainer()
         callback = VulkanCallback(trainer=trainer)
         trainer.add_callback(callback)
+        trainer.args.output_dir = OUTPUT_DIR / trainer.args.output_dir
+
         trainer.train()
 
     async def run(self):

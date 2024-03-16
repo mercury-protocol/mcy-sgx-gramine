@@ -1,6 +1,5 @@
 import os
 import shutil
-import sys
 from git import Repo, GitCommandError
 from functools import wraps
 from unittest.mock import patch
@@ -70,8 +69,6 @@ def pytorch_context(role="WORKER", worker_count=1,
                     shutil.copy(f"{example_dir}/user_script.py", f"{tmp_dir}/user_script.py")
                     if os.path.exists(f"{example_dir}/data"):
                         shutil.copytree(f"{example_dir}/data", f"{tmp_dir}/data")
-                    else:
-                        sys.exit(f"No data folder in {example_dir}.")
 
                     return func(*args, **kwargs)
         return wrapper

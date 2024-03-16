@@ -1,6 +1,6 @@
 import asyncio
 
-from pytorch.constants import ROLE, LEADER_ROLE, WORKER_ROLE
+from pytorch.constants import ROLE, LEADER_ROLE, WORKER_ROLE, WORKER_LLM_ROLE
 from pytorch.exceptions import InvalidRole
 from pytorch.worker import Worker
 from pytorch.leader import Leader
@@ -13,7 +13,7 @@ from mcy_dist_ai.data_partitioner import Partition, DataPartitioner
 def main():
     if ROLE == LEADER_ROLE:
         node = Leader()
-    elif ROLE == WORKER_ROLE:
+    elif ROLE in (WORKER_ROLE, WORKER_LLM_ROLE):
         node = Worker()
     else:
         raise InvalidRole

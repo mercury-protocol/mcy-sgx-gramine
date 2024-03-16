@@ -82,6 +82,8 @@ def train_batch(data, target, model, optimizer):
 
 
 if __name__ == "__main__":
+    # Test set: Avg. loss: 0.1994, Accuracy: 9408/10000 (94%)
+
     data_loader = create_data_loader("data")
     model = create_model()
     optimizer = create_optimizer(model)
@@ -89,5 +91,5 @@ if __name__ == "__main__":
         for batch_idx, (data, target) in enumerate(data_loader):
             train_batch(data, target, model, optimizer)
 
-    from tests.tools import evaluate_model
+    from tests.utils import evaluate_model
     evaluate_model(model, "data")

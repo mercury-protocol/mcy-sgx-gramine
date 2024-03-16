@@ -104,9 +104,6 @@ def create_trainer():
 
 
 if __name__ == "__main__":
-    trainer = create_trainer()
-    trainer.train()
-
     # {
     #   'eval_loss': 0.3110983669757843,
     #   'eval_accuracy': {
@@ -124,3 +121,6 @@ if __name__ == "__main__":
     #   'train_loss': 0.41538427734375,
     #   'epoch': 1.0
     # }
+
+    trainer = create_trainer()
+    trainer.train()
