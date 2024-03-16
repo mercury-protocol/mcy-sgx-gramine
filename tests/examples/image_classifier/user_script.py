@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torchvision
 
-from torch.optim import Adam
+import torch.nn.functional as F
+from torch.optim import SGD
 from torch.utils.data import DataLoader
 
 from mcy_dist_ai.required_utils import DataSetFactory, DataLoaderFactory, NetworkFactory, OptimizerFactory
@@ -10,8 +11,8 @@ from mcy_dist_ai.required_utils import DataSetFactory, DataLoaderFactory, Networ
 
 # ------------------- config ----------------
 N_EPOCHS = 1
-BATCH_SIZE = 500
-LEARNING_RATE = 1e-3
+BATCH_SIZE = 64
+LEARNING_RATE = 0.01
 MOMENTUM = 0.5
 
 RANDOM_SEED = 1
@@ -19,37 +20,30 @@ RANDOM_SEED = 1
 torch.backends.cudnn.enabled = False
 torch.manual_seed(RANDOM_SEED)
 
-loss_fn = nn.CrossEntropyLoss() 
-
-
-class PartitionedDataSetFactory(DataSetFactory):
-    def create(self, data_path):
-        partitioned_dataset = torch.load(data_path)
-        return partitioned_dataset
-
 
 # ------------------- build the network ----------------
-class ImageClassifier(nn.Module): 
+class ImageClassifier(nn.Module):
     def __init__(self):
         super(ImageClassifier, self).__init__()
-        self.model = nn.Sequential(
-            nn.Conv2d(1, 32, (3,3)), 
-            nn.ReLU(),
-            nn.Conv2d(32, 64, (3,3)), 
-            nn.ReLU(),
-            nn.Conv2d(64, 64, (3,3)), 
-            nn.ReLU(),
-            nn.Flatten(), 
-            nn.Linear(64*(28-6)*(28-6), 10)  
-        )
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
+        self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
+        self.conv2_drop = nn.Dropout2d()
+        self.fc1 = nn.Linear(320, 50)
+        self.fc2 = nn.Linear(50, 10)
 
-    def forward(self, x): 
-        return self.model(x)
+    def forward(self, x):
+        x = F.relu(F.max_pool2d(self.conv1(x), 2))
+        x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
+        x = x.view(-1, 320)
+        x = F.relu(self.fc1(x))
+        x = F.dropout(x, training=self.training)
+        x = self.fc2(x)
+        return F.log_softmax(x)
 
 
 # ------------------- create required objects ----------------
 network_factory = NetworkFactory(ImageClassifier)
-optimizer_factory = OptimizerFactory(Adam, lr=LEARNING_RATE)
+optimizer_factory = OptimizerFactory(SGD, lr=LEARNING_RATE, momentum=MOMENTUM)
 
 data_set_factory = DataSetFactory(
     torchvision.datasets.MNIST,
@@ -68,9 +62,22 @@ data_loader_factory = DataLoaderFactory(
 
 
 # ------------------- train the model ----------------
-def train_batch(data, target, network, optimizer):
-    yhat = network(data)
-    loss = loss_fn(yhat, target) 
+def train_batch(data, target, model, optimizer):
     optimizer.zero_grad()
-    loss.backward() 
+    output = model(data)
+    loss = F.nll_loss(output, target)
+    loss.backward()
+    optimizer.step()
     return loss  # for local logging purposes only
+
+
+if __name__ == "__main__":
+    data_loader = data_loader_factory.create("data")
+    model = network_factory.create()
+    optimizer = optimizer_factory.create(model.parameters())
+    for epoch in range(N_EPOCHS):
+        for batch_idx, (data, target) in enumerate(data_loader):
+            train_batch(data, target, model, optimizer)
+
+    from tests.tools import evaluate_model
+    evaluate_model(model, "data")
