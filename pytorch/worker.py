@@ -1,5 +1,6 @@
 import asyncio
 import os
+import shutil
 import torch
 
 from pathlib import Path
@@ -159,7 +160,8 @@ class Worker:
         trainer = user_script.create_trainer()
         callback = VulkanCallback(trainer=trainer)
         trainer.add_callback(callback)
-        trainer.args.output_dir = OUTPUT_DIR / trainer.args.output_dir
+        shutil.rmtree(trainer.args.output_dir)
+        trainer.args.output_dir = OUTPUT_DIR / Path(trainer.args.output_dir).name
 
         trainer.train()
 
