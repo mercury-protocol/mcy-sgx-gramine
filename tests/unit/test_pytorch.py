@@ -1,10 +1,11 @@
 from tests.conftest import pytorch_context
-from tests.constants import EXAMPLES_DIR
+from tests.constants import EXAMPLES_DIR, TEMP_DIR
 from tests.utils import load_model, evaluate_model
 
 
 @pytorch_context(
     role="WORKER", worker_count=1,
+    temp_dir_name="worker1",
     example_dir="image_classifier",
     clear_tmp_dir_end=False
 )
@@ -14,12 +15,13 @@ def test_one_worker_image_classifier():
 
     main()
 
-    model = load_model(create_model)
-    evaluate_model(model, EXAMPLES_DIR + "/image_classifier/data")
+    model = load_model(TEMP_DIR / "worker1/output", create_model)
+    evaluate_model(model, EXAMPLES_DIR / "image_classifier/data")
 
 
 @pytorch_context(
     role="WORKER-LLM", worker_count=1,
+    temp_dir_name="worker1",
     example_dir="fine_tune_llm",
     clear_tmp_dir_end=False
 )

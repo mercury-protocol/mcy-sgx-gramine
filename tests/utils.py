@@ -2,14 +2,13 @@ import torch
 import torch.nn.functional as F
 import torchvision
 
+from pathlib import Path
 from typing import Callable
 
-from tests.constants import TEMP_OUTPUT_DIR
 
-
-def load_model(create_model: Callable):
+def load_model(path: Path, create_model: Callable):
     model = create_model()
-    model.load_state_dict(torch.load(TEMP_OUTPUT_DIR + "/trained_model.pth"))
+    model.load_state_dict(torch.load(path / "trained_model.pth"))
     return model
 
 

@@ -33,7 +33,7 @@ GRADIENT_READY_FILE = "gradient_ready.pth"
 WORKER_FINISHED_FILE = "worker_finished.pth"
 
 BASE_DIR = Path(os.getcwd())
-OUTPUT_DIR = Path("/var/tmp/vulkan_trained_models")
+OUTPUT_DIR = BASE_DIR / "output"
 
 DATA_PATH = BASE_DIR / "data"
 USER_SCRIPT_PATH = BASE_DIR / "user_script.py"
