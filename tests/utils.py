@@ -52,12 +52,12 @@ def run_node(
         if os.path.exists(example_dir / "data"):
             shutil.copytree(example_dir / "data", tmp_dir / "data")
 
-        with (patch("os.getcwd", return_value=tmp_dir),
-              patch("sys.argv", [
-                  "main.py",
-                  "--role", role,
-                  "--worker_count", str(worker_count)
-              ])):
+        with patch("sys.argv", [
+            "main.py",
+            "--role", role,
+            "--worker_count", str(worker_count)
+        ]):
+            os.chdir(tmp_dir)
             from pytorch.main import main
             return main()
 
