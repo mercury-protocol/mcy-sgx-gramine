@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Callable
 from unittest.mock import patch
 
-from tests.constants import TEMP_DIR, EXAMPLES_DIR
+from tests.constants import TEMP_DIR
 
 
 class TempDir:
@@ -35,22 +35,20 @@ def run_node(
         role="WORKER",
         worker_count=1,
         temp_dir_name="worker1",
-        example_dir="image_classifier",
         clear_tmp_dir_start=True,
         clear_tmp_dir_end=True
 ):
-
-    example_dir = EXAMPLES_DIR / example_dir
-
     with TempDir(
             temp_dir_name,
             clear_tmp_dir_start=clear_tmp_dir_start,
             clear_tmp_dir_end=clear_tmp_dir_end
     ) as tmp_dir:
         os.makedirs(tmp_dir / "output", exist_ok=True)
-        shutil.copy(example_dir / "user_script.py", tmp_dir / "user_script.py")
-        if os.path.exists(example_dir / "data"):
-            shutil.copytree(example_dir / "data", tmp_dir / "data")
+
+        # TODO: the network simulator process doesnt copy the files yet
+        # shutil.copy(example_dir / "user_script.py", tmp_dir / "user_script.py")
+        # if os.path.exists(example_dir / "data"):
+        #     shutil.copytree(example_dir / "data", tmp_dir / "data")
 
         with patch("sys.argv", [
             "main.py",
@@ -87,6 +85,8 @@ def evaluate_model(model, data_path, batch_size=1000):
             pred = output.data.max(1, keepdim=True)[1]
             correct += pred.eq(target.data.view_as(pred)).sum()
     test_loss /= len(test_data_loader.dataset)
-    print('\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_data_loader.dataset),
-        100. * correct / len(test_data_loader.dataset)))
+    accuracy = correct / len(test_data_loader.dataset)
+    print(f"\nTest set: Avg. loss: {test_loss:.4f}, "
+          f"Accuracy: {correct}/{len(test_data_loader.dataset)} ({100. * accuracy:.0f}%)\n")
+
+    return accuracy

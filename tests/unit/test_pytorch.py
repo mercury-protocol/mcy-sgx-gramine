@@ -1,49 +1,66 @@
-from tests.constants import EXAMPLES_DIR, TEMP_DIR
+import multiprocessing
+
+from tests.constants import TEMP_DIR, ExampleDirs
 from tests.examples.image_classifier.user_script import create_model
+from tests.simulate_p2p_network import simulate_p2p_network
 from tests.utils import run_node, load_model, evaluate_model
 
 
 def test_one_worker_image_classifier():
-    import multiprocessing
+    example_dir = ExampleDirs.IMAGE_CLASSIFIER
+    worker_count = 1
+
+    p2p_network_simulator = multiprocessing.Process(
+        target=simulate_p2p_network,
+        kwargs=dict(
+            example_dir=example_dir,
+            worker_count=worker_count
+        )
+    )
 
     worker1 = multiprocessing.Process(
         target=run_node,
         kwargs=dict(
             role="WORKER",
-            worker_count=1,
+            worker_count=worker_count,
             temp_dir_name="worker1",
-            example_dir="image_classifier",
-            clear_tmp_dir_end=False
-        )
-    )
-
-    worker2 = multiprocessing.Process(
-        target=run_node,
-        kwargs=dict(
-            role="WORKER",
-            worker_count=1,
-            temp_dir_name="worker2",
-            example_dir="image_classifier",
             clear_tmp_dir_end=False
         )
     )
 
     worker1.start()
-    worker2.start()
+    p2p_network_simulator.start()
     worker1.join()
-    worker2.join()
+    p2p_network_simulator.join()
 
     model = load_model(TEMP_DIR / "worker1/output", create_model)
-    evaluate_model(model, EXAMPLES_DIR / "image_classifier/data")
-    model = load_model(TEMP_DIR / "worker2/output", create_model)
-    evaluate_model(model, EXAMPLES_DIR / "image_classifier/data")
+    worker1_accuracy = evaluate_model(model, example_dir / "data")
+    assert worker1_accuracy > 0.94
 
 
 def test_one_worker_llm():
-    run_node(
-        role="WORKER-LLM",
-        worker_count=1,
-        temp_dir_name="worker1",
-        example_dir="fine_tune_llm",
-        clear_tmp_dir_end=False
+    example_dir = ExampleDirs.FINE_TUNE_LLM
+    worker_count = 1
+
+    p2p_network_simulator = multiprocessing.Process(
+        target=simulate_p2p_network,
+        kwargs=dict(
+            example_dir=example_dir,
+            worker_count=worker_count
+        )
     )
+
+    worker1 = multiprocessing.Process(
+        target=run_node,
+        kwargs=dict(
+            role="WORKER-LLM",
+            worker_count=worker_count,
+            temp_dir_name="worker1",
+            clear_tmp_dir_end=False
+        )
+    )
+
+    worker1.start()
+    p2p_network_simulator.start()
+    worker1.join()
+    p2p_network_simulator.join()
