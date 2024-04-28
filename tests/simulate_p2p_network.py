@@ -14,6 +14,8 @@ from tests.constants import (
     GRADIENT_FILE,
     WAITING_PERIOD,
 )
+from tests.logger import testlogger
+from tests.utils import check_temp_dir_created
 
 
 def leader_dir() -> Path:
@@ -43,11 +45,14 @@ def list_worker_nodes(worker_count: int) -> list[str]:
 
 class WatchLeader:
     def __init__(self, example_dir: Path, worker_count: int = 1):
+        check_temp_dir_created()
         self.example_dir = example_dir
         self.worker_count = worker_count
         self.worker_nodes = list_worker_nodes(worker_count)
         self.state_dict_ready_path = leader_dir() / STATE_DICT_READY_FILE
         self.state_dict_path = leader_dir() / STATE_DICT_FILE
+        if worker_count > 1:
+            os.makedirs(leader_dir(), exist_ok=True)
 
     def send_user_script_to_leader(self):
         shutil.copy(
@@ -59,7 +64,7 @@ class WatchLeader:
         while not os.path.exists(self.state_dict_ready_path):
             await asyncio.sleep(WAITING_PERIOD)
         if not os.path.exists(self.state_dict_path):
-            raise Exception(f"{self.state_dict_path} does not exist!")
+            raise FileNotFoundError(f"{self.state_dict_path} does not exist!")
         os.remove(self.state_dict_ready_path)
 
     def send_state_dict_to_worker(self, node: str):
@@ -72,10 +77,10 @@ class WatchLeader:
 
     async def run(self):
         if self.worker_count == 1:
-            # if there's only one worker, leader is not needed
+            testlogger.info("Watch leader not started, because there's only one worker.")
             return
 
-        print("Watch leader started.")
+        testlogger.info("Watch leader started.")
         self.send_user_script_to_leader()
         while True:
             await self.wait_state_dict()
@@ -84,16 +89,18 @@ class WatchLeader:
                 self.send_state_dict_to_worker(node)
 
             if all(has_worker_finished(node) for node in self.worker_nodes):
-                print("Watch leader finished.")
+                testlogger.info("Watch leader finished.")
                 return
 
 
 class WatchWorker:
     def __init__(self, example_dir: Path, node: str, worker_count: int = 1):
+        check_temp_dir_created()
         self.example_dir = example_dir
         self.node = node
         self.worker_count = worker_count
         self.worker_dir = worker_dir(self.node)
+        os.makedirs(self.worker_dir, exist_ok=True)
 
     def send_user_script_to_worker(self):
         shutil.copy(
@@ -113,7 +120,7 @@ class WatchWorker:
         while not os.path.exists(self.worker_dir / GRADIENT_READY_FILE):
             await asyncio.sleep(WAITING_PERIOD)
         if not os.path.exists(self.worker_dir / GRADIENT_FILE):
-            raise Exception(f"{self.worker_dir / GRADIENT_FILE} does not exist!")
+            raise FileNotFoundError(f"{self.worker_dir / GRADIENT_FILE} does not exist!")
 
     def send_worker_finished_to_leader(self):
         shutil.copy(
@@ -134,13 +141,13 @@ class WatchWorker:
         os.remove(self.worker_dir / GRADIENT_READY_FILE)
 
     async def run(self):
-        print(f"Watch worker {self.node} started")
+        testlogger.info(f"Watch worker {self.node} started.")
         self.send_user_script_to_worker()
         self.send_data_to_worker()
 
         if self.worker_count == 1:
             # if there's only one worker, leader is not needed
-            print(f"Watch worker {self.node} started")
+            testlogger.info(f"Watch worker {self.node} finished.")
             return
 
         while True:
@@ -152,7 +159,7 @@ class WatchWorker:
             self.send_gradient_to_leader()
 
             if has_worker_finished(self.node):
-                print(f"Watch worker {self.node} finished.")
+                testlogger.info(f"Watch worker {self.node} finished.")
                 return
 
 

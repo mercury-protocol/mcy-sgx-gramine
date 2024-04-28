@@ -3,9 +3,10 @@ import multiprocessing
 from tests.constants import TEMP_DIR, ExampleDirs
 from tests.examples.image_classifier.user_script import create_model
 from tests.simulate_p2p_network import simulate_p2p_network
-from tests.utils import run_node, load_model, evaluate_model
+from tests.utils import run_node, load_model, evaluate_model, with_temp_dir
 
 
+@with_temp_dir(clear_tmp_dir_end=False)
 def test_one_worker_image_classifier():
     example_dir = ExampleDirs.IMAGE_CLASSIFIER
     worker_count = 1
@@ -23,8 +24,7 @@ def test_one_worker_image_classifier():
         kwargs=dict(
             role="WORKER",
             worker_count=worker_count,
-            temp_dir_name="worker1",
-            clear_tmp_dir_end=False
+            dir_name="worker1",
         )
     )
 
@@ -38,6 +38,7 @@ def test_one_worker_image_classifier():
     assert worker1_accuracy > 0.94
 
 
+@with_temp_dir(clear_tmp_dir_end=False)
 def test_one_worker_llm():
     example_dir = ExampleDirs.FINE_TUNE_LLM
     worker_count = 1
@@ -55,8 +56,7 @@ def test_one_worker_llm():
         kwargs=dict(
             role="WORKER-LLM",
             worker_count=worker_count,
-            temp_dir_name="worker1",
-            clear_tmp_dir_end=False
+            dir_name="worker1",
         )
     )
 

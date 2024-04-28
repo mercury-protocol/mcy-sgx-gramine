@@ -9,13 +9,14 @@ from typing import Callable
 from unittest.mock import patch
 
 from tests.constants import TEMP_DIR
+from tests.exceptions import TempDirNotCreated
 
 
 class TempDir:
-    def __init__(self, dir_name, clear_tmp_dir_start=True, clear_tmp_dir_end=True):
+    def __init__(self, subdir_name=None, clear_tmp_dir_start=True, clear_tmp_dir_end=True):
         self.clear_tmp_dir_start = clear_tmp_dir_start
         self.clear_tmp_dir_end = clear_tmp_dir_end
-        self.tmp_dir = TEMP_DIR / dir_name
+        self.tmp_dir = TEMP_DIR / subdir_name if subdir_name else TEMP_DIR
 
     def __enter__(self):
         if self.clear_tmp_dir_start:
@@ -31,33 +32,41 @@ class TempDir:
             shutil.rmtree(self.tmp_dir)
 
 
+def with_temp_dir(clear_tmp_dir_start=True, clear_tmp_dir_end=True):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            with TempDir(
+                    subdir_name=None,
+                    clear_tmp_dir_start=clear_tmp_dir_start,
+                    clear_tmp_dir_end=clear_tmp_dir_end
+            ):
+                func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def check_temp_dir_created():
+    if not os.path.exists(TEMP_DIR):
+        raise TempDirNotCreated(f"{TEMP_DIR} has not been created. Consider using with_temp_dir or TempDir.")
+
+
 def run_node(
         role="WORKER",
         worker_count=1,
-        temp_dir_name="worker1",
-        clear_tmp_dir_start=True,
-        clear_tmp_dir_end=True
+        dir_name="worker1",
 ):
-    with TempDir(
-            temp_dir_name,
-            clear_tmp_dir_start=clear_tmp_dir_start,
-            clear_tmp_dir_end=clear_tmp_dir_end
-    ) as tmp_dir:
-        os.makedirs(tmp_dir / "output", exist_ok=True)
+    check_temp_dir_created()
 
-        # TODO: the network simulator process doesnt copy the files yet
-        # shutil.copy(example_dir / "user_script.py", tmp_dir / "user_script.py")
-        # if os.path.exists(example_dir / "data"):
-        #     shutil.copytree(example_dir / "data", tmp_dir / "data")
-
-        with patch("sys.argv", [
-            "main.py",
-            "--role", role,
-            "--worker_count", str(worker_count)
-        ]):
-            os.chdir(tmp_dir)
-            from pytorch.main import main
-            return main()
+    working_directory = TEMP_DIR / dir_name
+    os.makedirs(working_directory / "output", exist_ok=True)
+    with patch("sys.argv", [
+        "main.py",
+        "--role", role,
+        "--worker_count", str(worker_count)
+    ]):
+        os.chdir(working_directory)
+        from pytorch.main import main
+        return main()
 
 
 def load_model(path: Path, create_model: Callable):
