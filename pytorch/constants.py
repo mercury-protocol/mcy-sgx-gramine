@@ -26,6 +26,9 @@ if args.role == LEADER_ROLE and args.worker_count is None:
 
 ROLE = args.role.upper()
 WORKER_NODES_NUM = int(args.worker_count)
+if ROLE == LEADER_ROLE and WORKER_NODES_NUM == 1:
+    logger.info("Leader is not starting because there's only one worker.")
+    sys.exit(0)
 
 
 GRADIENT_FILE = "gradient.pth"

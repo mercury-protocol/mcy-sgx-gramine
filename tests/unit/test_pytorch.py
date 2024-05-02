@@ -18,6 +18,7 @@ def train_image_classifier(worker_count: int):
     for i in range(worker_count):
         workers.append(
             multiprocessing.Process(
+                name=f"worker{i+1}",
                 target=run_node,
                 kwargs=dict(
                     role="WORKER",
@@ -28,6 +29,7 @@ def train_image_classifier(worker_count: int):
         )
 
     p2p_network_simulator = multiprocessing.Process(
+        name="p2p_network_simulator",
         target=simulate_p2p_network,
         kwargs=dict(
             example_dir=example_dir,
@@ -36,13 +38,14 @@ def train_image_classifier(worker_count: int):
     )
 
     leader = multiprocessing.Process(
-                target=run_node,
-                kwargs=dict(
-                    role="LEADER",
-                    worker_count=worker_count,
-                    dir_name="leader",
-                )
-            )
+        name="leader",
+        target=run_node,
+        kwargs=dict(
+            role="LEADER",
+            worker_count=worker_count,
+            dir_name="leader",
+        )
+    )
 
     [worker.start() for worker in workers]
     leader.start()

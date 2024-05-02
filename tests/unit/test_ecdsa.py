@@ -1,6 +1,7 @@
 from ecdsa.ecdh import ECDH
 from ecdsa.curves import NIST256p
 from app.sgx_utils import generate_key_pair, derive_public_from_secret, derive_shared_secret
+from tests.logger import testlogger
 
 
 def test_dhke():
