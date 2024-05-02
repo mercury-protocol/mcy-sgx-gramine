@@ -14,6 +14,7 @@ from tests.constants import (
     STATE_DICT_FILE,
     GRADIENT_READY_FILE,
     GRADIENT_FILE,
+    CHECKPOINT_FILE,
     WAITING_PERIOD,
     ExampleDirs,
 )
@@ -122,6 +123,10 @@ class WatchWorker:
             dirs_exist_ok=True
         )
 
+    def remove_checkpoint(self):
+        if os.path.exists(self.worker_dir / CHECKPOINT_FILE):
+            os.remove(self.worker_dir / CHECKPOINT_FILE)
+
     async def wait_gradient(self):
         while not os.path.exists(self.worker_dir / GRADIENT_READY_FILE):
             await asyncio.sleep(WAITING_PERIOD)
@@ -183,7 +188,7 @@ def simulate_p2p_network(example_dir: Path, worker_count: int = 1):
 
 
 @with_temp_dir(clear_tmp_dir_end=False)
-def train_image_classifier(worker_count: int):
+def train_image_classifier_parallel(worker_count: int):
     example_dir = ExampleDirs.IMAGE_CLASSIFIER
     workers = []
 
@@ -228,3 +233,24 @@ def train_image_classifier(worker_count: int):
     [worker.join() for worker in workers]
     leader.join()
     p2p_network_simulator.join()
+
+
+@with_temp_dir(clear_tmp_dir_end=False)
+def train_image_classifier_sequential(worker_count: int):
+    example_dir = ExampleDirs.IMAGE_CLASSIFIER
+
+    if worker_count > 1:
+        split_and_save_data(split_into=worker_count, random_seed=42)
+
+    for i in range(worker_count):
+        watch_worker = WatchWorker(example_dir, "1", worker_count)
+        watch_worker.remove_checkpoint()
+        watch_worker.send_user_script_to_worker()
+        watch_worker.node = str(i+1)
+        watch_worker.send_data_to_worker()
+
+        run_node(
+            role="WORKER",
+            worker_count=1,
+            dir_name="worker1",
+        )

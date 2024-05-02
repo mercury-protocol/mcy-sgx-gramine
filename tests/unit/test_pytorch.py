@@ -2,12 +2,12 @@ import multiprocessing
 
 from tests.constants import TEMP_DIR, ExampleDirs
 from tests.examples.image_classifier.user_script import create_model
-from tests.simulation import run_node, simulate_p2p_network, train_image_classifier
+from tests.simulation import run_node, simulate_p2p_network, train_image_classifier_parallel
 from tests.utils import load_model, evaluate_model, with_temp_dir
 
 
 def test_train_image_classifier_one_worker():
-    train_image_classifier(worker_count=1)
+    train_image_classifier_parallel(worker_count=1)
 
     model = load_model(TEMP_DIR / "worker1/output", create_model)
     model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER / "data")
@@ -15,7 +15,7 @@ def test_train_image_classifier_one_worker():
 
 
 def test_train_image_classifier_two_workers():
-    train_image_classifier(worker_count=2)
+    train_image_classifier_parallel(worker_count=2)
 
     model = load_model(TEMP_DIR / "leader/output", create_model)
     model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER / "data")
@@ -23,7 +23,7 @@ def test_train_image_classifier_two_workers():
 
 
 def test_train_image_classifier_four_workers():
-    train_image_classifier(worker_count=4)
+    train_image_classifier_parallel(worker_count=4)
 
     model = load_model(TEMP_DIR / "leader/output", create_model)
     model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER / "data")
