@@ -11,14 +11,6 @@ def test_one_worker_image_classifier():
     example_dir = ExampleDirs.IMAGE_CLASSIFIER
     worker_count = 1
 
-    p2p_network_simulator = multiprocessing.Process(
-        target=simulate_p2p_network,
-        kwargs=dict(
-            example_dir=example_dir,
-            worker_count=worker_count
-        )
-    )
-
     worker1 = multiprocessing.Process(
         target=run_node,
         kwargs=dict(
@@ -28,14 +20,69 @@ def test_one_worker_image_classifier():
         )
     )
 
+    p2p_network_simulator = multiprocessing.Process(
+        target=simulate_p2p_network,
+        kwargs=dict(
+            example_dir=example_dir,
+            worker_count=worker_count
+        )
+    )
+
     worker1.start()
     p2p_network_simulator.start()
     worker1.join()
     p2p_network_simulator.join()
 
     model = load_model(TEMP_DIR / "worker1/output", create_model)
-    worker1_accuracy = evaluate_model(model, example_dir / "data")
-    assert worker1_accuracy > 0.94
+    model_accuracy = evaluate_model(model, example_dir / "data")
+    assert model_accuracy > 0.94
+
+
+@with_temp_dir(clear_tmp_dir_end=False)
+def test_four_workers_image_classifier():
+    example_dir = ExampleDirs.IMAGE_CLASSIFIER
+    worker_count = 4
+    workers = []
+
+    for i in range(worker_count):
+        workers.append(
+            multiprocessing.Process(
+                target=run_node,
+                kwargs=dict(
+                    role="WORKER",
+                    worker_count=worker_count,
+                    dir_name=f"worker{i+1}",
+                )
+            )
+        )
+
+    p2p_network_simulator = multiprocessing.Process(
+        target=simulate_p2p_network,
+        kwargs=dict(
+            example_dir=example_dir,
+            worker_count=worker_count
+        )
+    )
+
+    leader = multiprocessing.Process(
+                target=run_node,
+                kwargs=dict(
+                    role="LEADER",
+                    worker_count=worker_count,
+                    dir_name="leader",
+                )
+            )
+
+    [worker.start() for worker in workers]
+    leader.start()
+    p2p_network_simulator.start()
+    [worker.join() for worker in workers]
+    leader.join()
+    p2p_network_simulator.join()
+
+    model = load_model(TEMP_DIR / "leader/output", create_model)
+    model_accuracy = evaluate_model(model, example_dir / "data")
+    assert model_accuracy > 0.94
 
 
 @with_temp_dir(clear_tmp_dir_end=False)
