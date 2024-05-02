@@ -1,7 +1,8 @@
-import struct
 import numpy as np
 import os
 import random
+import shutil
+import struct
 
 from tests.examples.image_classifier.data_manipulation.constants import MNIST_IMAGES_PATH, SPLIT_DATA_PATH
 
@@ -64,12 +65,14 @@ def save_to_idx1(data, file_path):
 
 
 def get_output_data_path(partition_num):
-    return f"{SPLIT_DATA_PATH}/{partition_num}/MNIST/raw"
+    return SPLIT_DATA_PATH / f"{partition_num}/MNIST/raw"
 
 
 def split_and_save_data(split_into=2, random_seed=42):
     if split_into not in (2, 4):
         raise Exception("Can only split MNIST dataset into 2 or 4 partitions.")
+
+    shutil.rmtree(SPLIT_DATA_PATH)
 
     for i in range(split_into):
         os.makedirs(get_output_data_path(i + 1), exist_ok=True)
@@ -78,8 +81,8 @@ def split_and_save_data(split_into=2, random_seed=42):
     random.seed(random_seed)
 
     for prefix in ("train", "t10k"):
-        images = read_idx3_file(MNIST_IMAGES_PATH + f'/{prefix}-images-idx3-ubyte',)
-        labels = read_idx1_file(MNIST_IMAGES_PATH + f'/{prefix}-labels-idx1-ubyte',)
+        images = read_idx3_file(MNIST_IMAGES_PATH / f'{prefix}-images-idx3-ubyte',)
+        labels = read_idx1_file(MNIST_IMAGES_PATH / f'{prefix}-labels-idx1-ubyte',)
 
         data_pairs = list(zip(images, labels))
         random.shuffle(data_pairs)
@@ -90,8 +93,8 @@ def split_and_save_data(split_into=2, random_seed=42):
             images_partition, labels_partition = zip(*data_pairs_partition)
             images_partition = np.array(images_partition)
             labels_partition = np.array(labels_partition)
-            save_to_idx3(images_partition, get_output_data_path(i + 1) + f'/{prefix}-images-idx3-ubyte')
-            save_to_idx1(labels_partition, get_output_data_path(i + 1) + f'/{prefix}-labels-idx1-ubyte')
+            save_to_idx3(images_partition, get_output_data_path(i + 1) / f'{prefix}-images-idx3-ubyte')
+            save_to_idx1(labels_partition, get_output_data_path(i + 1) / f'{prefix}-labels-idx1-ubyte')
 
 
 if __name__ == "__main__":

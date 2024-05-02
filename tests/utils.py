@@ -98,4 +98,4 @@ def evaluate_model(model, data_path, batch_size=1000):
     print(f"\nTest set: Avg. loss: {test_loss:.4f}, "
           f"Accuracy: {correct}/{len(test_data_loader.dataset)} ({100. * accuracy:.0f}%)\n")
 
-    return accuracy
+    return float(accuracy)

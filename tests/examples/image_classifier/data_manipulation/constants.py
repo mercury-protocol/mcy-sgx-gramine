@@ -1,2 +1,6 @@
-SPLIT_DATA_PATH = "../split_data"
-MNIST_IMAGES_PATH = "../data/MNIST/raw"
+from tests.constants import EXAMPLES_DIR
+
+
+IMAGE_CLASSIFIER_DIR = EXAMPLES_DIR / "image_classifier"
+SPLIT_DATA_PATH = IMAGE_CLASSIFIER_DIR / "split_data"
+MNIST_IMAGES_PATH = IMAGE_CLASSIFIER_DIR / "data/MNIST/raw"
