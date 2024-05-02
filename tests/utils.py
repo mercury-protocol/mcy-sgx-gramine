@@ -6,9 +6,8 @@ import torchvision
 
 from pathlib import Path
 from typing import Callable
-from unittest.mock import patch
 
-from tests.constants import TEMP_DIR
+from tests.constants import TEMP_DIR, WORKER_FINISHED_FILE
 from tests.exceptions import TempDirNotCreated
 
 
@@ -50,23 +49,29 @@ def check_temp_dir_created():
         raise TempDirNotCreated(f"{TEMP_DIR} has not been created. Consider using with_temp_dir or TempDir.")
 
 
-def run_node(
-        role="WORKER",
-        worker_count=1,
-        dir_name="worker1",
-):
-    check_temp_dir_created()
+def leader_dir() -> Path:
+    return TEMP_DIR / "leader"
 
-    working_directory = TEMP_DIR / dir_name
-    os.makedirs(working_directory / "output", exist_ok=True)
-    with patch("sys.argv", [
-        "main.py",
-        "--role", role,
-        "--worker_count", str(worker_count)
-    ]):
-        os.chdir(working_directory)
-        from pytorch.main import main
-        return main()
+
+def leader_get_path(worker_node: str, file: str) -> Path:
+    if "." in file:
+        name, extension = file.split(".")
+        file = f"{name}_{worker_node}.{extension}"
+    else:
+        file = f"{file}_{worker_node}"
+    return leader_dir() / file
+
+
+def worker_dir(node: str) -> Path:
+    return TEMP_DIR / f"worker{node}"
+
+
+def has_worker_finished(node: str) -> bool:
+    return os.path.exists(worker_dir(node) / WORKER_FINISHED_FILE)
+
+
+def list_worker_nodes(worker_count: int) -> list[str]:
+    return [str(i + 1) for i in range(worker_count)]
 
 
 def load_model(path: Path, create_model: Callable):

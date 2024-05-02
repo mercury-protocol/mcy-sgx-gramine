@@ -1,8 +1,10 @@
 import asyncio
+import multiprocessing
 import os
 import shutil
 
 from pathlib import Path
+from unittest.mock import patch
 
 from tests.constants import (
     TEMP_DIR,
@@ -13,34 +15,38 @@ from tests.constants import (
     GRADIENT_READY_FILE,
     GRADIENT_FILE,
     WAITING_PERIOD,
+    ExampleDirs,
 )
+from tests.examples.image_classifier.data_manipulation.split_mnist_image_data import split_and_save_data
 from tests.logger import testlogger
-from tests.utils import check_temp_dir_created
+from tests.utils import (
+    check_temp_dir_created,
+    list_worker_nodes,
+    leader_dir,
+    worker_dir,
+    has_worker_finished,
+    leader_get_path,
+    with_temp_dir,
+)
 
 
-def leader_dir() -> Path:
-    return TEMP_DIR / "leader"
+def run_node(
+        role="WORKER",
+        worker_count=1,
+        dir_name="worker1",
+):
+    check_temp_dir_created()
 
-
-def leader_get_path(worker_node: str, file: str) -> Path:
-    if "." in file:
-        name, extension = file.split(".")
-        file = f"{name}_{worker_node}.{extension}"
-    else:
-        file = f"{file}_{worker_node}"
-    return leader_dir() / file
-
-
-def worker_dir(node: str) -> Path:
-    return TEMP_DIR / f"worker{node}"
-
-
-def has_worker_finished(node: str) -> bool:
-    return os.path.exists(worker_dir(node) / WORKER_FINISHED_FILE)
-
-
-def list_worker_nodes(worker_count: int) -> list[str]:
-    return [str(i + 1) for i in range(worker_count)]
+    working_directory = TEMP_DIR / dir_name
+    os.makedirs(working_directory / "output", exist_ok=True)
+    with patch("sys.argv", [
+        "main.py",
+        "--role", role,
+        "--worker_count", str(worker_count)
+    ]):
+        os.chdir(working_directory)
+        from pytorch.main import main
+        return main()
 
 
 class WatchLeader:
@@ -174,3 +180,51 @@ async def simulate_p2p_network_coroutine(example_dir: Path, worker_count: int = 
 
 def simulate_p2p_network(example_dir: Path, worker_count: int = 1):
     asyncio.run(simulate_p2p_network_coroutine(example_dir, worker_count))
+
+
+@with_temp_dir(clear_tmp_dir_end=False)
+def train_image_classifier(worker_count: int):
+    example_dir = ExampleDirs.IMAGE_CLASSIFIER
+    workers = []
+
+    if worker_count > 1:
+        split_and_save_data(split_into=worker_count, random_seed=42)
+
+    for i in range(worker_count):
+        workers.append(
+            multiprocessing.Process(
+                name=f"worker{i+1}",
+                target=run_node,
+                kwargs=dict(
+                    role="WORKER",
+                    worker_count=worker_count,
+                    dir_name=f"worker{i+1}",
+                )
+            )
+        )
+
+    p2p_network_simulator = multiprocessing.Process(
+        name="p2p_network_simulator",
+        target=simulate_p2p_network,
+        kwargs=dict(
+            example_dir=example_dir,
+            worker_count=worker_count
+        )
+    )
+
+    leader = multiprocessing.Process(
+        name="leader",
+        target=run_node,
+        kwargs=dict(
+            role="LEADER",
+            worker_count=worker_count,
+            dir_name="leader",
+        )
+    )
+
+    [worker.start() for worker in workers]
+    leader.start()
+    p2p_network_simulator.start()
+    [worker.join() for worker in workers]
+    leader.join()
+    p2p_network_simulator.join()

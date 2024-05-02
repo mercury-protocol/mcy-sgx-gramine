@@ -2,57 +2,8 @@ import multiprocessing
 
 from tests.constants import TEMP_DIR, ExampleDirs
 from tests.examples.image_classifier.user_script import create_model
-from tests.examples.image_classifier.data_manipulation.split_mnist_image_data import split_and_save_data
-from tests.simulate_p2p_network import simulate_p2p_network
-from tests.utils import run_node, load_model, evaluate_model, with_temp_dir
-
-
-@with_temp_dir(clear_tmp_dir_end=False)
-def train_image_classifier(worker_count: int):
-    example_dir = ExampleDirs.IMAGE_CLASSIFIER
-    workers = []
-
-    if worker_count > 1:
-        split_and_save_data(split_into=worker_count, random_seed=42)
-
-    for i in range(worker_count):
-        workers.append(
-            multiprocessing.Process(
-                name=f"worker{i+1}",
-                target=run_node,
-                kwargs=dict(
-                    role="WORKER",
-                    worker_count=worker_count,
-                    dir_name=f"worker{i+1}",
-                )
-            )
-        )
-
-    p2p_network_simulator = multiprocessing.Process(
-        name="p2p_network_simulator",
-        target=simulate_p2p_network,
-        kwargs=dict(
-            example_dir=example_dir,
-            worker_count=worker_count
-        )
-    )
-
-    leader = multiprocessing.Process(
-        name="leader",
-        target=run_node,
-        kwargs=dict(
-            role="LEADER",
-            worker_count=worker_count,
-            dir_name="leader",
-        )
-    )
-
-    [worker.start() for worker in workers]
-    leader.start()
-    p2p_network_simulator.start()
-    [worker.join() for worker in workers]
-    leader.join()
-    p2p_network_simulator.join()
+from tests.simulation import run_node, simulate_p2p_network, train_image_classifier
+from tests.utils import load_model, evaluate_model, with_temp_dir
 
 
 def test_train_image_classifier_one_worker():
