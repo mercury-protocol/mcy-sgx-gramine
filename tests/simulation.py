@@ -14,6 +14,7 @@ from tests.constants import (
     STATE_DICT_FILE,
     GRADIENT_READY_FILE,
     GRADIENT_FILE,
+    TRAINED_MODEL_FILE,
     CHECKPOINT_FILE,
     WAITING_PERIOD,
     ExampleDirs,
@@ -253,4 +254,9 @@ def train_image_classifier_sequential(worker_count: int):
             role="WORKER",
             worker_count=1,
             dir_name="worker1",
+        )
+
+        shutil.copy(
+            watch_worker.worker_dir / "output" / TRAINED_MODEL_FILE,
+            watch_worker.worker_dir / STATE_DICT_FILE
         )

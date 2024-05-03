@@ -12,6 +12,7 @@ STATE_DICT_READY_FILE = "state_dict_ready.pth"
 STATE_DICT_FILE = "state_dict.pth"
 GRADIENT_READY_FILE = "gradient_ready.pth"
 GRADIENT_FILE = "gradient.pth"
+TRAINED_MODEL_FILE = "trained_model.pth"
 CHECKPOINT_FILE = "checkpoint.bin"
 
 WAITING_PERIOD = 0.01

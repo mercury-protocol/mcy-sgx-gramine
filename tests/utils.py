@@ -7,7 +7,7 @@ import torchvision
 from pathlib import Path
 from typing import Callable
 
-from tests.constants import TEMP_DIR, WORKER_FINISHED_FILE
+from tests.constants import TEMP_DIR, WORKER_FINISHED_FILE, TRAINED_MODEL_FILE
 from tests.exceptions import TempDirNotCreated
 
 
@@ -76,7 +76,7 @@ def list_worker_nodes(worker_count: int) -> list[str]:
 
 def load_model(path: Path, create_model: Callable):
     model = create_model()
-    model.load_state_dict(torch.load(path / "trained_model.pth"))
+    model.load_state_dict(torch.load(path / TRAINED_MODEL_FILE))
     return model
 
 
