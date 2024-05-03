@@ -4,7 +4,11 @@ import random
 import shutil
 import struct
 
-from tests.examples.image_classifier.data_manipulation.constants import MNIST_IMAGES_PATH, SPLIT_DATA_PATH
+from tests.examples.image_classifier.data_manipulation.constants import (
+    MNIST_IMAGES_PATH,
+    SPLIT_DATA_PATH,
+    VALID_DATA_SPLIT_PARTITIONS,
+)
 
 
 def read_idx3_file(file_path):
@@ -69,8 +73,8 @@ def get_output_data_path(partition_num):
 
 
 def split_and_save_data(split_into=2, random_seed=42):
-    if split_into not in (2, 4):
-        raise Exception("Can only split MNIST dataset into 2 or 4 partitions.")
+    if split_into not in VALID_DATA_SPLIT_PARTITIONS:
+        raise Exception(f"Can only split MNIST dataset into {VALID_DATA_SPLIT_PARTITIONS} partitions.")
 
     shutil.rmtree(SPLIT_DATA_PATH)
 
