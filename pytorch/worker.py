@@ -91,7 +91,7 @@ class Worker:
         logger.debug("state dict waited")
 
     def save_gradient(self, model: nn.Module):
-        gradient = {name: param.grad.data for name, param in model.named_parameters()}
+        gradient = [param.grad.data for param in model.parameters()]
         torch.save(gradient, self.gradient_path)
 
         with open(self.gradient_ready_path, "wb"):

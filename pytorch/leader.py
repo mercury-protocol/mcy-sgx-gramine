@@ -70,15 +70,14 @@ class Leader:
 
     def aggregate_gradients(self, model: nn.Module):
         gradients = [torch_safe_load(path) for path in self.gradient_paths]
-        avg_grads = gradients[0]
-        num = len(gradients)
 
-        for grad in gradients[1:]:
-            for name, _ in model.named_parameters():
-                avg_grads[name] = torch.add(avg_grads[name], grad[name])
-
-        for name, param in model.named_parameters():
-            param.grad = avg_grads[name] / num
+        for i, param in enumerate(model.parameters()):
+            param.grad = torch.mean(
+                torch.stack(
+                    [grad[i] for grad in gradients]
+                ),
+                dim=0
+            )
 
         logger.debug("gradients aggregated")
 
