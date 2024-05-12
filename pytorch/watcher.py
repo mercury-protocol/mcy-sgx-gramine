@@ -2,7 +2,7 @@ import argparse
 import sys
 import torch
 
-from mcy_dist_ai.data_partitioner import DataPartitioner
+from pytorch.data_partitioner import DataPartitioner
 from pytorch.constants import WATCHER_DATA_PATH
 from pytorch.logger import logger
 
