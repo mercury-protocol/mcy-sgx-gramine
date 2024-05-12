@@ -48,8 +48,8 @@ def create_optimizer(model: nn.Module):
     return SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 
 
-def create_dataset(path):
-    return torchvision.datasets.MNIST(
+def create_data_loader(path):
+    dataset = torchvision.datasets.MNIST(
         path,
         train=True,
         download=True,
@@ -58,10 +58,6 @@ def create_dataset(path):
             torchvision.transforms.Normalize((0.1307,), (0.3081,))
         ])
     )
-
-
-def create_data_loader(path):
-    dataset = create_dataset(path)
     return torch.utils.data.DataLoader(
         dataset,
         batch_size=BATCH_SIZE,
