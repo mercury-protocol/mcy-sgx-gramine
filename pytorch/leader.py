@@ -49,6 +49,9 @@ class Leader:
             await asyncio.sleep(WAITING_PERIOD)
         if not all(os.path.exists(path) for path in self.gradient_paths):
             raise FileNotFoundError("Not all gradient files exist!")
+        # TODO: locking mechanism should be used here,
+        #  now we just sleep a little to give time the other process to finish copying
+        await asyncio.sleep(WAITING_PERIOD)
         [os.remove(path) for path in self.gradient_ready_paths]
         logger.debug("gradients waited")
 
