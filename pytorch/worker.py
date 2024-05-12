@@ -87,6 +87,9 @@ class Worker:
             await asyncio.sleep(WAITING_PERIOD)
         if not os.path.exists(STATE_DICT_PATH):
             raise FileNotFoundError(f"{STATE_DICT_PATH} does not exist!")
+        # TODO: locking mechanism should be used here,
+        #  now we just sleep a little to give time the other process to finish copying
+        await asyncio.sleep(WAITING_PERIOD)
         os.remove(STATE_DICT_READY_PATH)
         logger.debug("state dict waited")
 
