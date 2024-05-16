@@ -66,7 +66,8 @@ def create_data_loader(path):
 
 
 # ------------------- train the model ----------------
-def train_batch(data, target, model, optimizer):
+def train_batch(batch, model, optimizer):
+    data, target = batch
     optimizer.zero_grad()
     output = model(data)
     loss = F.nll_loss(output, target)
@@ -82,8 +83,8 @@ if __name__ == "__main__":
     model = create_model()
     optimizer = create_optimizer(model)
     for epoch in range(N_EPOCHS):
-        for batch_idx, (data, target) in enumerate(data_loader):
-            train_batch(data, target, model, optimizer)
+        for batch_idx, batch in enumerate(data_loader):
+            train_batch(batch, model, optimizer)
 
     from tests.utils import evaluate_model
     evaluate_model(model, "data")

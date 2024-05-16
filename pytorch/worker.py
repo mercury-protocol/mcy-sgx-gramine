@@ -126,11 +126,11 @@ class Worker:
 
         start_epoch, start_batch = load_last_checkpoint()
         for epoch in range(start_epoch, user_script.N_EPOCHS):
-            for batch_idx, (data, target) in enumerate(data_loader):
+            for batch_idx, batch in enumerate(data_loader):
                 if epoch == start_epoch and batch_idx < start_batch:
                     continue
 
-                loss = user_script.train_batch(data, target, model, optimizer)
+                loss = user_script.train_batch(batch, model, optimizer)
                 
                 self.save_gradient(model)
                 checkpoint(epoch=epoch, batch_idx=batch_idx)
