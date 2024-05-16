@@ -1,5 +1,6 @@
 import evaluate
 import torch
+import torch.nn as nn
 
 from datasets import load_dataset
 from torch.optim import AdamW
@@ -11,78 +12,106 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, get_
 N_EPOCHS = 1
 LEARNING_RATE = 5e-5
 
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
 
 def tokenize_function(examples):
     tokenizer = AutoTokenizer.from_pretrained("google-bert/bert-base-cased")
     return tokenizer(examples["text"], padding="max_length", truncation=True)
 
 
-dataset = load_dataset("yelp_review_full", cache_dir="data")
-tokenized_datasets = dataset.map(tokenize_function, batched=True)
+def create_tokenized_datasets():
+    dataset = load_dataset("yelp_review_full", cache_dir="data")
+    tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
-# Next, manually postprocess tokenized_dataset to prepare it for training.
-# 1. Remove the text column because the model does not accept raw text as an input:
-tokenized_datasets = tokenized_datasets.remove_columns(["text"])
+    # Next, manually postprocess tokenized_dataset to prepare it for training.
+    # 1. Remove the text column because the model does not accept raw text as an input:
+    tokenized_datasets = tokenized_datasets.remove_columns(["text"])
 
-# 2. Rename the label column to labels because the model expects the argument to be named labels:
-tokenized_datasets = tokenized_datasets.rename_column("label", "labels")
+    # 2. Rename the label column to labels because the model expects the argument to be named labels:
+    tokenized_datasets = tokenized_datasets.rename_column("label", "labels")
 
-# 3. Set the format of the dataset to return PyTorch tensors instead of lists:
-tokenized_datasets.set_format("torch")
+    # 3. Set the format of the dataset to return PyTorch tensors instead of lists:
+    tokenized_datasets.set_format("torch")
 
-# Then create a smaller subset of the dataset to speed up the fine-tuning:
-small_train_dataset = tokenized_datasets["train"].shuffle(seed=42).select(range(1000))
-small_eval_dataset = tokenized_datasets["test"].shuffle(seed=42).select(range(1000))
-
-train_dataloader = DataLoader(small_train_dataset, shuffle=True, batch_size=8)
-eval_dataloader = DataLoader(small_eval_dataset, batch_size=8)
-
-model = AutoModelForSequenceClassification.from_pretrained(
-    "google-bert/bert-base-cased", num_labels=5
-)
-
-optimizer = AdamW(model.parameters(), lr=LEARNING_RATE)
-
-num_training_steps = N_EPOCHS * len(train_dataloader)
-lr_scheduler = get_scheduler(
-    name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
-)
-
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-model.to(device)
+    return tokenized_datasets
 
 
-progress_bar = tqdm(range(num_training_steps))
-
-model.train()
-for epoch in range(N_EPOCHS):
-    for batch in train_dataloader:
-        batch = {k: v.to(device) for k, v in batch.items()}
-        outputs = model(**batch)
-        loss = outputs.loss
-        loss.backward()
-
-        optimizer.step()
-        lr_scheduler.step()
-        optimizer.zero_grad()
-        progress_bar.update(1)
+def create_eval_data_loader():
+    tokenized_datasets = create_tokenized_datasets()
+    small_eval_dataset = tokenized_datasets["test"].shuffle(seed=42).select(range(1000))
+    return DataLoader(small_eval_dataset, batch_size=8)
 
 
-metric = evaluate.load("accuracy")
-model.eval()
-for batch in eval_dataloader:
+def create_data_loader():
+    tokenized_datasets = create_tokenized_datasets()
+
+    # Create a smaller subset of the dataset to speed up the fine-tuning:
+    small_train_dataset = tokenized_datasets["train"].shuffle(seed=42).select(range(1000))
+
+    return DataLoader(small_train_dataset, shuffle=True, batch_size=8)
+
+
+def create_model():
+    model = AutoModelForSequenceClassification.from_pretrained(
+        "google-bert/bert-base-cased", num_labels=5
+    )
+    model.to(device)
+    model.train()
+    return model
+
+
+def create_optimizer(model: nn.Module):
+    return AdamW(model.parameters(), lr=LEARNING_RATE)
+
+
+def train_batch(batch, model, optimizer):
+    # TODO: figure out how to use prepare info like len(train_dataloader)
+    #  without creating creating big objects here in the script
+
+    # num_training_steps = N_EPOCHS * len(train_dataloader)
+    # lr_scheduler = get_scheduler(
+    #     name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
+    # )
+    # progress_bar = tqdm(range(num_training_steps))
+
     batch = {k: v.to(device) for k, v in batch.items()}
-    with torch.no_grad():
-        outputs = model(**batch)
+    outputs = model(**batch)
+    loss = outputs.loss
+    loss.backward()
 
-    logits = outputs.logits
-    predictions = torch.argmax(logits, dim=-1)
-    metric.add_batch(predictions=predictions, references=batch["labels"])
+    optimizer.step()
+    # lr_scheduler.step()
+    optimizer.zero_grad()
+    # progress_bar.update(1)
 
-computed_metric = metric.compute()
+    return loss  # for local logging purposes only
 
 
 if __name__ == "__main__":
     from pprint import pprint
+
+    data_loader = create_data_loader()
+    model = create_model()
+    optimizer = create_optimizer(model)
+
+    for epoch in range(N_EPOCHS):
+        for batch in data_loader:
+            train_batch(batch, model, optimizer)
+
+    eval_dataloader = create_eval_data_loader()
+    metric = evaluate.load("accuracy")
+    model.eval()
+    for batch in eval_dataloader:
+        batch = {k: v.to(device) for k, v in batch.items()}
+        with torch.no_grad():
+            outputs = model(**batch)
+
+        logits = outputs.logits
+        predictions = torch.argmax(logits, dim=-1)
+        metric.add_batch(predictions=predictions, references=batch["labels"])
+
+    computed_metric = metric.compute()
+
     print()
     pprint(computed_metric)
