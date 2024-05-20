@@ -3,7 +3,7 @@ import torch.nn as nn
 import torchvision
 
 import torch.nn.functional as F
-from torch.optim import SGD
+from torch.optim import SGD, Optimizer
 from torch.utils.data import DataLoader
 
 
@@ -40,15 +40,15 @@ class ImageClassifier(nn.Module):
 
 
 # ------------------- create required objects ----------------
-def create_model():
+def create_model() -> nn.Module:
     return ImageClassifier()
 
 
-def create_optimizer(model: nn.Module):
+def create_optimizer(model: nn.Module) -> Optimizer:
     return SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 
 
-def create_data_loader(path):
+def create_data_loader(path) -> DataLoader:
     dataset = torchvision.datasets.MNIST(
         path,
         train=True,
@@ -65,6 +65,10 @@ def create_data_loader(path):
     )
 
 
+def create_args_from_data_loader(data_loader: DataLoader):
+    pass
+
+
 # ------------------- train the model ----------------
 def train_batch(batch, model, optimizer):
     data, target = batch
@@ -77,7 +81,7 @@ def train_batch(batch, model, optimizer):
 
 
 if __name__ == "__main__":
-    # Test set: Avg. loss: 0.1994, Accuracy: 9408/10000 (94%)
+    # Test set: Avg. loss: 0.1986, Accuracy: 9410/10000 (94%)
 
     data_loader = create_data_loader("data")
     model = create_model()

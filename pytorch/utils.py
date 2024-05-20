@@ -3,9 +3,11 @@ import os
 import torch
 import struct
 
+from collections.abc import Iterable
 from pathlib import Path
 from time import sleep
 from torch import nn
+from torch.utils.data import DataLoader
 from typing import Any, List, Union
 
 from pytorch.constants import (
@@ -53,6 +55,15 @@ def load_model(path: Union[Path, str] = "", delete_file: bool = False) -> nn.Mod
 def load_optimizer(model: nn.Module) -> Any:
     optimizer = user_script.create_optimizer(model)
     return optimizer
+
+
+def safe_create_args_from_data_loader(data_loader: DataLoader) -> Iterable:
+    extra_args = user_script.create_args_from_data_loader(data_loader)
+    if extra_args is None:
+        return []
+    if not isinstance(extra_args, Iterable):
+        return [extra_args]
+    return extra_args
 
 
 def list_worker_nodes() -> List[str]:

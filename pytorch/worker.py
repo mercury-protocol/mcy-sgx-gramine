@@ -26,7 +26,14 @@ from pytorch.constants import (
     OUTPUT_DIR,
 )
 from pytorch.logger import logger
-from pytorch.utils import load_model, load_optimizer, user_script, checkpoint, load_last_checkpoint
+from pytorch.utils import (
+    load_model,
+    load_optimizer,
+    user_script,
+    checkpoint,
+    load_last_checkpoint,
+    safe_create_args_from_data_loader,
+)
 
 
 class VulkanCallback(TrainerCallback):
@@ -116,6 +123,7 @@ class Worker:
         await self.wait_data()
 
         data_loader = user_script.create_data_loader(DATA_PATH)
+        extra_args = safe_create_args_from_data_loader(data_loader)
         total_batches = len(data_loader)
         model = load_model(path=STATE_DICT_PATH, delete_file=True)
         optimizer = load_optimizer(model)
@@ -130,7 +138,7 @@ class Worker:
                 if epoch == start_epoch and batch_idx < start_batch:
                     continue
 
-                loss = user_script.train_batch(batch, model, optimizer)
+                loss = user_script.train_batch(batch, model, optimizer, *extra_args)
                 
                 self.save_gradient(model)
                 checkpoint(epoch=epoch, batch_idx=batch_idx)
