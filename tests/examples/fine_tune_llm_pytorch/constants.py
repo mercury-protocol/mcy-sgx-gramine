@@ -1,0 +1,9 @@
+from tests.constants import EXAMPLES_DIR
+
+
+FINE_TUNE_LLM_PYTORCH_DIR = EXAMPLES_DIR / "fine_tune_llm_pytorch"
+SPLIT_DATA_PATH = FINE_TUNE_LLM_PYTORCH_DIR / "split_data"
+DATA_PATH = FINE_TUNE_LLM_PYTORCH_DIR / "data"
+RAW_DATA_PATH = FINE_TUNE_LLM_PYTORCH_DIR / "raw_data"
+
+VALID_DATA_SPLIT_PARTITIONS = (2, 4, 5, 8)

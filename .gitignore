@@ -15,3 +15,5 @@ __pycache__
 /tests/examples/image_classifier/data/
 /tests/examples/image_classifier/split_data/
 /tests/examples/fine_tune_llm_pytorch/data/
+/tests/examples/fine_tune_llm_pytorch/raw_data/
+/tests/examples/fine_tune_llm_pytorch/split_data/
