@@ -78,3 +78,14 @@ def train_batch(batch, model, optimizer):
     loss.backward()
     optimizer.step()
     return loss  # for local logging purposes only
+
+
+# ---------- for testing purpose ----------
+def create_eval_data_loader(path) -> DataLoader:
+    return torch.utils.data.DataLoader(
+        torchvision.datasets.MNIST(path, train=False, download=True,
+                                   transform=torchvision.transforms.Compose([
+                                       torchvision.transforms.ToTensor(),
+                                       torchvision.transforms.Normalize((0.1307,), (0.3081,))
+                                   ])),
+        batch_size=1000, shuffle=True)
