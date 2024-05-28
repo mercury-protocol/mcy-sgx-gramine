@@ -80,6 +80,7 @@ def load_model(path: Path, create_model: Callable):
     return model
 
 
+# TODO: make this function uniform to all models
 def evaluate_model(model, data_path, batch_size=1000):
     test_data_loader = torch.utils.data.DataLoader(
         torchvision.datasets.MNIST(data_path, train=False, download=True,

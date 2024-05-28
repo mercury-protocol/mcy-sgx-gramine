@@ -4,11 +4,13 @@ import random
 import shutil
 import struct
 
-from tests.examples.image_classifier.data_manipulation.constants import (
+from tests.examples.image_classifier.constants import (
     MNIST_IMAGES_PATH,
+    DATA_PATH,
     SPLIT_DATA_PATH,
     VALID_DATA_SPLIT_PARTITIONS,
 )
+from tests.examples.image_classifier.user_script import create_data_loader
 
 
 def read_idx3_file(file_path):
@@ -76,13 +78,16 @@ def split_and_save_data(split_into=2, random_seed=42):
     if split_into not in VALID_DATA_SPLIT_PARTITIONS:
         raise Exception(f"Can only split MNIST dataset into {VALID_DATA_SPLIT_PARTITIONS} partitions.")
 
-    shutil.rmtree(SPLIT_DATA_PATH)
+    shutil.rmtree(SPLIT_DATA_PATH, ignore_errors=True)
 
     for i in range(split_into):
         os.makedirs(get_output_data_path(i + 1), exist_ok=True)
 
     # Set random seed for reproducibility
     random.seed(random_seed)
+
+    if not os.path.exists(MNIST_IMAGES_PATH):
+        create_data_loader(DATA_PATH)
 
     for prefix in ("train", "t10k"):
         images = read_idx3_file(MNIST_IMAGES_PATH / f'{prefix}-images-idx3-ubyte',)

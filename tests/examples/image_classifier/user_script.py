@@ -78,17 +78,3 @@ def train_batch(batch, model, optimizer):
     loss.backward()
     optimizer.step()
     return loss  # for local logging purposes only
-
-
-if __name__ == "__main__":
-    # Test set: Avg. loss: 0.1986, Accuracy: 9410/10000 (94%)
-
-    data_loader = create_data_loader("data")
-    model = create_model()
-    optimizer = create_optimizer(model)
-    for epoch in range(N_EPOCHS):
-        for batch_idx, batch in enumerate(data_loader):
-            train_batch(batch, model, optimizer)
-
-    from tests.utils import evaluate_model
-    evaluate_model(model, "data")

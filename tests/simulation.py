@@ -19,7 +19,7 @@ from tests.constants import (
     WAITING_PERIOD,
     ExampleDirs,
 )
-from tests.examples.image_classifier.data_manipulation.split_mnist_image_data import split_and_save_data
+from tests.examples.image_classifier.preprocess_data import split_and_save_data
 from tests.logger import testlogger
 from tests.utils import (
     check_temp_dir_created,
