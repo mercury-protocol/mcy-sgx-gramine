@@ -10,6 +10,7 @@ from tests.constants import (
     TEMP_DIR,
     WORKER_FINISHED_FILE,
     USER_SCRIPT_FILE,
+    PREPROCESS_DATA_FILE,
     STATE_DICT_READY_FILE,
     STATE_DICT_FILE,
     GRADIENT_READY_FILE,
@@ -19,7 +20,6 @@ from tests.constants import (
     WAITING_PERIOD,
     ExampleDirs,
 )
-from tests.examples.image_classifier.preprocess_data import split_and_save_data
 from tests.logger import testlogger
 from tests.utils import (
     check_temp_dir_created,
@@ -29,6 +29,7 @@ from tests.utils import (
     has_worker_finished,
     leader_get_path,
     with_temp_dir,
+    dynamic_import,
 )
 
 
@@ -192,8 +193,9 @@ def simulate_p2p_network(example_dir: Path, worker_count: int = 1):
 def train_model_parallel(worker_count: int, example_dir: Path = ExampleDirs.IMAGE_CLASSIFIER):
     workers = []
 
+    preprocess_data = dynamic_import("preprocess_data", example_dir / PREPROCESS_DATA_FILE)
     if worker_count > 1:
-        split_and_save_data(split_into=worker_count, random_seed=42)
+        preprocess_data.split_and_save_data(split_into=worker_count, random_seed=42)
 
     for i in range(worker_count):
         workers.append(
@@ -237,8 +239,9 @@ def train_model_parallel(worker_count: int, example_dir: Path = ExampleDirs.IMAG
 
 @with_temp_dir(clear_tmp_dir_end=False)
 def train_model_sequential(worker_count: int, example_dir: Path = ExampleDirs.IMAGE_CLASSIFIER):
+    preprocess_data = dynamic_import("preprocess_data", example_dir / PREPROCESS_DATA_FILE)
     if worker_count > 1:
-        split_and_save_data(split_into=worker_count, random_seed=42)
+        preprocess_data.split_and_save_data(split_into=worker_count, random_seed=42)
 
     for i in range(worker_count):
         watch_worker = WatchWorker(example_dir, "1", worker_count)

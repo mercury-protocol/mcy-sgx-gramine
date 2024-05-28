@@ -5,7 +5,7 @@ import torch
 
 from pathlib import Path
 
-from tests.constants import TEMP_DIR, WORKER_FINISHED_FILE, TRAINED_MODEL_FILE, USER_SCRIPT_FILE
+from tests.constants import TEMP_DIR, WORKER_FINISHED_FILE, TRAINED_MODEL_FILE, USER_SCRIPT_FILE, CHECKS_FILE
 from tests.exceptions import TempDirNotCreated
 
 
@@ -72,23 +72,22 @@ def list_worker_nodes(worker_count: int) -> list[str]:
     return [str(i + 1) for i in range(worker_count)]
 
 
-def load_model(path: Path, example_dir: Path):
-    user_script_path = os.path.abspath(example_dir / USER_SCRIPT_FILE)
-    spec = importlib.util.spec_from_file_location("user_script", user_script_path)
-    user_script = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(user_script)
+def dynamic_import(module_name: str, file_path: Path):
+    spec = importlib.util.spec_from_file_location(module_name, os.path.abspath(file_path))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
+
+def load_model(model_dir: Path, example_dir: Path):
+    user_script = dynamic_import("user_script", example_dir / USER_SCRIPT_FILE)
     model = user_script.create_model()
-    model.load_state_dict(torch.load(path / TRAINED_MODEL_FILE))
+    model.load_state_dict(torch.load(model_dir / TRAINED_MODEL_FILE))
     return model
 
 
 def evaluate_model(model: torch.nn.Module, example_dir: Path) -> float:
-    checks_path = os.path.abspath(example_dir / "checks.py")
-    spec = importlib.util.spec_from_file_location("checks", checks_path)
-    checks = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(checks)
-
+    checks = dynamic_import("checks", example_dir / CHECKS_FILE)
     data_path = example_dir / "data"
     accuracy = checks.evaluate_model(model, data_path)
     return accuracy

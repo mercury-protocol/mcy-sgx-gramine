@@ -122,7 +122,7 @@ class Worker:
         logger.info("Worker started.")
         await self.wait_data()
 
-        data_loader = user_script.create_data_loader(DATA_PATH)
+        data_loader = user_script.create_data_loader(str(DATA_PATH))
         total_batches = len(data_loader)
         model = load_model(path=STATE_DICT_PATH, delete_file=True)
         optimizer = load_optimizer(model)
