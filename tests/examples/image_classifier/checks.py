@@ -28,8 +28,8 @@ def check_data():
     plt.show()
 
 
-def train_model():
-    data_loader = create_data_loader(DATA_PATH)
+def train_model(data_path=DATA_PATH):
+    data_loader = create_data_loader(data_path)
     model = create_model()
     optimizer = create_optimizer(model)
     for epoch in range(N_EPOCHS):
@@ -39,7 +39,7 @@ def train_model():
     return model
 
 
-def evaluate_model(model, data_path) -> float:
+def evaluate_model(model, data_path=DATA_PATH) -> float:
     eval_data_loader = create_eval_data_loader(data_path)
 
     model.eval()

@@ -14,7 +14,7 @@ LEARNING_RATE = 5e-5
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 
-def create_data_loader(path="data") -> DataLoader:
+def create_data_loader(path) -> DataLoader:
     tokenized_datasets = load_from_disk(path)
     return DataLoader(tokenized_datasets["train"], shuffle=True, batch_size=8)
 
@@ -57,6 +57,6 @@ def train_batch(batch, model, optimizer, lr_scheduler, progress_bar):
 
 
 # ---------- for testing purpose ----------
-def create_eval_data_loader(path="data") -> DataLoader:
+def create_eval_data_loader(path) -> DataLoader:
     tokenized_datasets = load_from_disk(path)
     return DataLoader(tokenized_datasets["test"], batch_size=8)

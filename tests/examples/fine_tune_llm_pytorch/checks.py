@@ -2,7 +2,7 @@ import evaluate
 import torch
 import torch.nn as nn
 from pprint import pprint
-from tests.examples.fine_tune_llm_pytorch.constants import TRAINED_REFERENCE_MODEL_PATH
+from tests.examples.fine_tune_llm_pytorch.constants import TRAINED_MODEL_PATH, DATA_PATH
 from tests.examples.fine_tune_llm_pytorch.user_script import (
     N_EPOCHS,
     device,
@@ -15,8 +15,8 @@ from tests.examples.fine_tune_llm_pytorch.user_script import (
 )
 
 
-def train_model() -> nn.Module:
-    data_loader = create_data_loader()
+def train_model(data_path=DATA_PATH) -> nn.Module:
+    data_loader = create_data_loader(data_path)
     model = create_model()
     optimizer = create_optimizer(model)
     extra_args = create_extra_training_args(data_loader, optimizer)
@@ -28,7 +28,7 @@ def train_model() -> nn.Module:
         for batch in data_loader:
             train_batch(batch, model, optimizer, *extra_args)
 
-    torch.save(model.state_dict(), TRAINED_REFERENCE_MODEL_PATH)
+    torch.save(model.state_dict(), TRAINED_MODEL_PATH)
 
     print()
     print("training loop finish")
@@ -37,14 +37,14 @@ def train_model() -> nn.Module:
 
 
 def load_trained_model() -> nn.Module:
-    state_dict = torch.load(TRAINED_REFERENCE_MODEL_PATH)
+    state_dict = torch.load(TRAINED_MODEL_PATH)
     model = create_model()
     model.load_state_dict(state_dict)
     return model
 
 
-def evaluate_model(model: nn.Module) -> float:
-    eval_dataloader = create_eval_data_loader()
+def evaluate_model(model: nn.Module, data_path=DATA_PATH) -> float:
+    eval_dataloader = create_eval_data_loader(data_path)
     metric = evaluate.load("accuracy")
     model.eval()
     for batch in eval_dataloader:

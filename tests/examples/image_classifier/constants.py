@@ -1,7 +1,7 @@
-from tests.constants import EXAMPLES_DIR
+from tests.constants import ExampleDirs
 
 
-IMAGE_CLASSIFIER_DIR = EXAMPLES_DIR / "image_classifier"
+IMAGE_CLASSIFIER_DIR = ExampleDirs.IMAGE_CLASSIFIER
 SPLIT_DATA_PATH = IMAGE_CLASSIFIER_DIR / "split_data"
 DATA_PATH = IMAGE_CLASSIFIER_DIR / "data"
 MNIST_IMAGES_PATH = DATA_PATH / "MNIST/raw"

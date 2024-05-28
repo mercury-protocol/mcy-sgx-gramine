@@ -1,61 +1,60 @@
 import multiprocessing
 
 from tests.constants import TEMP_DIR, ExampleDirs
-from tests.examples.image_classifier.user_script import create_model
 from tests.simulation import (
     run_node,
     simulate_p2p_network,
-    train_image_classifier_parallel,
-    train_image_classifier_sequential,
+    train_model_parallel,
+    train_model_sequential,
 )
 from tests.utils import load_model, evaluate_model, with_temp_dir
 
 
 def test_train_image_classifier_one_worker_parallel():
-    train_image_classifier_parallel(worker_count=1)
+    train_model_parallel(worker_count=1, example_dir=ExampleDirs.IMAGE_CLASSIFIER)
 
-    model = load_model(TEMP_DIR / "worker1/output", create_model)
-    model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER / "data")
+    model = load_model(TEMP_DIR / "worker1/output", ExampleDirs.IMAGE_CLASSIFIER)
+    model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER)
     assert model_accuracy > 0.94
 
 
 def test_train_image_classifier_two_workers_parallel():
-    train_image_classifier_parallel(worker_count=2)
+    train_model_parallel(worker_count=2, example_dir=ExampleDirs.IMAGE_CLASSIFIER)
 
-    model = load_model(TEMP_DIR / "leader/output", create_model)
-    model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER / "data")
+    model = load_model(TEMP_DIR / "leader/output", ExampleDirs.IMAGE_CLASSIFIER)
+    model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER)
     assert model_accuracy > 0.94  # TODO: FAIL: accuracy reduced to 0.91
 
 
 def test_train_image_classifier_four_workers_parallel():
-    train_image_classifier_parallel(worker_count=4)
+    train_model_parallel(worker_count=4, example_dir=ExampleDirs.IMAGE_CLASSIFIER)
 
-    model = load_model(TEMP_DIR / "leader/output", create_model)
-    model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER / "data")
+    model = load_model(TEMP_DIR / "leader/output", ExampleDirs.IMAGE_CLASSIFIER)
+    model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER)
     assert model_accuracy > 0.94  # TODO: FAIL: accuracy reduced to 0.84!!
 
 
 def test_train_image_classifier_one_worker_sequential():
-    train_image_classifier_sequential(worker_count=1)
+    train_model_sequential(worker_count=1, example_dir=ExampleDirs.IMAGE_CLASSIFIER)
 
-    model = load_model(TEMP_DIR / "worker1/output", create_model)
-    model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER / "data")
+    model = load_model(TEMP_DIR / "worker1/output", ExampleDirs.IMAGE_CLASSIFIER)
+    model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER)
     assert model_accuracy > 0.94
 
 
 def test_train_image_classifier_two_workers_sequential():
-    train_image_classifier_sequential(worker_count=2)
+    train_model_sequential(worker_count=2, example_dir=ExampleDirs.IMAGE_CLASSIFIER)
 
-    model = load_model(TEMP_DIR / "worker1/output", create_model)
-    model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER / "data")
+    model = load_model(TEMP_DIR / "worker1/output", ExampleDirs.IMAGE_CLASSIFIER)
+    model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER)
     assert model_accuracy > 0.94
 
 
 def test_train_image_classifier_four_workers_sequential():
-    train_image_classifier_sequential(worker_count=4)
+    train_model_sequential(worker_count=4, example_dir=ExampleDirs.IMAGE_CLASSIFIER)
 
-    model = load_model(TEMP_DIR / "worker1/output", create_model)
-    model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER / "data")
+    model = load_model(TEMP_DIR / "worker1/output", ExampleDirs.IMAGE_CLASSIFIER)
+    model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER)
     assert model_accuracy > 0.94
 
 

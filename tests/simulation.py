@@ -189,8 +189,7 @@ def simulate_p2p_network(example_dir: Path, worker_count: int = 1):
 
 
 @with_temp_dir(clear_tmp_dir_end=False)
-def train_image_classifier_parallel(worker_count: int):
-    example_dir = ExampleDirs.IMAGE_CLASSIFIER
+def train_model_parallel(worker_count: int, example_dir: Path = ExampleDirs.IMAGE_CLASSIFIER):
     workers = []
 
     if worker_count > 1:
@@ -237,9 +236,7 @@ def train_image_classifier_parallel(worker_count: int):
 
 
 @with_temp_dir(clear_tmp_dir_end=False)
-def train_image_classifier_sequential(worker_count: int):
-    example_dir = ExampleDirs.IMAGE_CLASSIFIER
-
+def train_model_sequential(worker_count: int, example_dir: Path = ExampleDirs.IMAGE_CLASSIFIER):
     if worker_count > 1:
         split_and_save_data(split_into=worker_count, random_seed=42)
 

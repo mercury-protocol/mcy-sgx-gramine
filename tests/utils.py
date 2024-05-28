@@ -1,13 +1,11 @@
+import importlib
 import os
 import shutil
 import torch
-import torch.nn.functional as F
-import torchvision
 
 from pathlib import Path
-from typing import Callable
 
-from tests.constants import TEMP_DIR, WORKER_FINISHED_FILE, TRAINED_MODEL_FILE
+from tests.constants import TEMP_DIR, WORKER_FINISHED_FILE, TRAINED_MODEL_FILE, USER_SCRIPT_FILE
 from tests.exceptions import TempDirNotCreated
 
 
@@ -74,34 +72,23 @@ def list_worker_nodes(worker_count: int) -> list[str]:
     return [str(i + 1) for i in range(worker_count)]
 
 
-def load_model(path: Path, create_model: Callable):
-    model = create_model()
+def load_model(path: Path, example_dir: Path):
+    user_script_path = os.path.abspath(example_dir / USER_SCRIPT_FILE)
+    spec = importlib.util.spec_from_file_location("user_script", user_script_path)
+    user_script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(user_script)
+
+    model = user_script.create_model()
     model.load_state_dict(torch.load(path / TRAINED_MODEL_FILE))
     return model
 
 
-# TODO: make this function uniform to all models
-def evaluate_model(model, data_path, batch_size=1000):
-    test_data_loader = torch.utils.data.DataLoader(
-        torchvision.datasets.MNIST(data_path, train=False, download=True,
-                                   transform=torchvision.transforms.Compose([
-                                       torchvision.transforms.ToTensor(),
-                                       torchvision.transforms.Normalize((0.1307,), (0.3081,))
-                                   ])),
-        batch_size=batch_size, shuffle=True)
+def evaluate_model(model: torch.nn.Module, example_dir: Path) -> float:
+    checks_path = os.path.abspath(example_dir / "checks.py")
+    spec = importlib.util.spec_from_file_location("checks", checks_path)
+    checks = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(checks)
 
-    model.eval()
-    test_loss = 0
-    correct = 0
-    with torch.no_grad():
-        for data, target in test_data_loader:
-            output = model(data)
-            test_loss += F.nll_loss(output, target, size_average=False).item()
-            pred = output.data.max(1, keepdim=True)[1]
-            correct += pred.eq(target.data.view_as(pred)).sum()
-    test_loss /= len(test_data_loader.dataset)
-    accuracy = correct / len(test_data_loader.dataset)
-    print(f"\nTest set: Avg. loss: {test_loss:.4f}, "
-          f"Accuracy: {correct}/{len(test_data_loader.dataset)} ({100. * accuracy:.0f}%)\n")
-
-    return float(accuracy)
+    data_path = example_dir / "data"
+    accuracy = checks.evaluate_model(model, data_path)
+    return accuracy
