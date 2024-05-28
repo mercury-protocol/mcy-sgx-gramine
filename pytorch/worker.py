@@ -32,7 +32,7 @@ from pytorch.utils import (
     user_script,
     checkpoint,
     load_last_checkpoint,
-    safe_create_args_from_data_loader,
+    safe_create_extra_training_args,
 )
 
 
@@ -123,10 +123,10 @@ class Worker:
         await self.wait_data()
 
         data_loader = user_script.create_data_loader(DATA_PATH)
-        extra_args = safe_create_args_from_data_loader(data_loader)
         total_batches = len(data_loader)
         model = load_model(path=STATE_DICT_PATH, delete_file=True)
         optimizer = load_optimizer(model)
+        extra_args = safe_create_extra_training_args(data_loader, optimizer)
 
         # TODO: this is probably needed because recovery - investigate why
         if os.path.exists(STATE_DICT_READY_PATH):

@@ -1,4 +1,3 @@
-import evaluate
 import torch
 import torch.nn as nn
 
@@ -38,7 +37,7 @@ def create_optimizer(model: nn.Module) -> Optimizer:
     return AdamW(model.parameters(), lr=LEARNING_RATE)
 
 
-def create_args_from_data_loader(data_loader: DataLoader):
+def create_extra_training_args(data_loader: DataLoader, optimizer: Optimizer):
     num_training_steps = N_EPOCHS * len(data_loader)
     lr_scheduler = get_scheduler(
         name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
@@ -60,42 +59,3 @@ def train_batch(batch, model, optimizer, lr_scheduler, progress_bar):
     progress_bar.update(1)
 
     return loss  # for local logging purposes only
-
-
-if __name__ == "__main__":
-    # {'accuracy': 0.533}
-    from pprint import pprint
-
-    data_loader = create_data_loader()
-    model = create_model()
-    optimizer = create_optimizer(model)
-    extra_args = create_args_from_data_loader(data_loader)
-
-    print()
-    print("training loop start")
-
-    for epoch in range(N_EPOCHS):
-        for batch in data_loader:
-            train_batch(batch, model, optimizer, *extra_args)
-
-    torch.save(model.state_dict(), "trained_reference_model.pth")
-
-    print()
-    print("training loop finish")
-
-    eval_dataloader = create_eval_data_loader()
-    metric = evaluate.load("accuracy")
-    model.eval()
-    for batch in eval_dataloader:
-        batch = {k: v.to(device) for k, v in batch.items()}
-        with torch.no_grad():
-            outputs = model(**batch)
-
-        logits = outputs.logits
-        predictions = torch.argmax(logits, dim=-1)
-        metric.add_batch(predictions=predictions, references=batch["labels"])
-
-    computed_metric = metric.compute()
-
-    print()
-    pprint(computed_metric)

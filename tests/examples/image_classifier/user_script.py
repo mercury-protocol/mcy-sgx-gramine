@@ -65,7 +65,7 @@ def create_data_loader(path) -> DataLoader:
     )
 
 
-def create_args_from_data_loader(data_loader: DataLoader):
+def create_extra_training_args(data_loader: DataLoader, optimizer: Optimizer):
     pass
 
 

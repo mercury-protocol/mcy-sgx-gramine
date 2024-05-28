@@ -7,6 +7,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from time import sleep
 from torch import nn
+from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from typing import Any, List, Union
 
@@ -57,8 +58,8 @@ def load_optimizer(model: nn.Module) -> Any:
     return optimizer
 
 
-def safe_create_args_from_data_loader(data_loader: DataLoader) -> Iterable:
-    extra_args = user_script.create_args_from_data_loader(data_loader)
+def safe_create_extra_training_args(data_loader: DataLoader, optimizer: Optimizer) -> Iterable:
+    extra_args = user_script.create_extra_training_args(data_loader, optimizer)
     if extra_args is None:
         return []
     if not isinstance(extra_args, Iterable):
