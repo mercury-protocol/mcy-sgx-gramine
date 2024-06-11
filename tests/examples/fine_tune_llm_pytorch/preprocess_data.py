@@ -2,7 +2,7 @@ import os
 import random
 import shutil
 
-from datasets import load_dataset, DatasetDict, Dataset
+from datasets import load_dataset, load_from_disk, DatasetDict, Dataset
 from transformers import AutoTokenizer
 
 from tests.examples.fine_tune_llm_pytorch.constants import (
@@ -57,17 +57,14 @@ def split_and_save_data(split_into=4, random_seed=42):
     for i in range(split_into):
         os.makedirs(get_output_data_path(i + 1), exist_ok=True)
 
-    # Set random seed for reproducibility
-    random.seed(random_seed)
-
     if not os.path.exists(DATA_PATH):
         save_tokenized_data()
-    tokenized_dataset = load_dataset(str(DATA_PATH))
+    tokenized_dataset = load_from_disk(str(DATA_PATH))
 
     train_dataset = tokenized_dataset["train"]
     eval_dataset = tokenized_dataset["test"]
-    random.shuffle(train_dataset)
-    random.shuffle(eval_dataset)
+    train_dataset.shuffle(seed=random_seed)
+    eval_dataset.shuffle(seed=random_seed)
     train_partition_length = len(train_dataset) // split_into
     eval_partition_length = len(eval_dataset) // split_into
 
