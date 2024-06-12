@@ -14,7 +14,7 @@ If you don't need any extra arguments for `train_batch`, you can just leave the 
   ```
 ### • It shall define the `train_batch` function which is the custom training logic defined by the user to be performed on each data batch.<br>
 The function shall have 3 arguments: `batch`, `model` and `optimizer`, 
-where `batch` is the iteration variable of the data loader.
+where `batch` is the iteration variable of the data loader. The `optimizer.zero_grad()` shall be performed at the beginning of the function - otherwise the gradient aggregation would not work.
   ```
   def train_batch(batch, model, optimizer):
       <training algorithm implementation>

@@ -44,13 +44,12 @@ def create_extra_training_args(data_loader: DataLoader, optimizer: Optimizer):
 
 def train_batch(batch, model, optimizer, lr_scheduler, progress_bar):
     batch = {k: v.to(device) for k, v in batch.items()}
+    optimizer.zero_grad()
     outputs = model(**batch)
     loss = outputs.loss
     loss.backward()
-
     optimizer.step()
     lr_scheduler.step()
-    optimizer.zero_grad()
     progress_bar.update(1)
 
     return loss  # for local logging purposes only
