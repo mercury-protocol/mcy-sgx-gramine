@@ -49,7 +49,7 @@ def create_optimizer(model: nn.Module) -> Optimizer:
 
 
 def create_data_loader(path) -> DataLoader:
-    # if download returns 403, clode this:
+    # if download returns 403, clone this:
     # https://github.com/knamdar/data/tree/master
     dataset = torchvision.datasets.MNIST(
         path,

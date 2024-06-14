@@ -37,9 +37,3 @@ TODOs:
 * currently in the leader we do optimizer.step(), but in the LLM case we should do trainer.step()
     * we have to figure out how to implement it properly
 * since we are using trainers and models we have to figure out how to load them
-
-
-
-
-
-

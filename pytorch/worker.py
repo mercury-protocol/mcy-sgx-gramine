@@ -37,6 +37,8 @@ from pytorch.utils import (
 
 
 class VulkanCallback(TrainerCallback):
+    # TODO: finish the implementation of this class
+    #  it is used in the fully automated LLM fine tuning case, where ROLE == "WORKER-LLM"
     def __init__(self, trainer: Trainer):
         self.trainer = trainer
 

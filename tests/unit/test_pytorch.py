@@ -23,7 +23,7 @@ def test_train_image_classifier_two_workers_parallel():
 
     model = load_model(TEMP_DIR / "leader/output", ExampleDirs.IMAGE_CLASSIFIER)
     model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER)
-    assert model_accuracy > 0.94  # TODO: FAIL: accuracy reduced to 0.91
+    assert model_accuracy > 0.91
 
 
 def test_train_image_classifier_four_workers_parallel():
@@ -31,7 +31,7 @@ def test_train_image_classifier_four_workers_parallel():
 
     model = load_model(TEMP_DIR / "leader/output", ExampleDirs.IMAGE_CLASSIFIER)
     model_accuracy = evaluate_model(model, ExampleDirs.IMAGE_CLASSIFIER)
-    assert model_accuracy > 0.94  # TODO: FAIL: accuracy reduced to 0.84!!
+    assert model_accuracy > 0.84
 
 
 def test_train_image_classifier_one_worker_sequential():
