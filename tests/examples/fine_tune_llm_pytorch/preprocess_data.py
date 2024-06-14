@@ -30,7 +30,7 @@ def create_tokenized_datasets():
     tokenized_datasets = tokenized_datasets.rename_column("label", "labels")
 
     # 3. Set the format of the dataset to return PyTorch tensors instead of lists:
-    tokenized_datasets.set_format("torch")
+    # this step is done in the create_data_loader() function in user_script.py
 
     # Create smaller subsets of the dataset to speed up the fine-tuning:
     tokenized_datasets["train"] = tokenized_datasets["train"].shuffle(seed=42).select(range(1000))
