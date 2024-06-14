@@ -93,3 +93,7 @@ def evaluate_model(model: torch.nn.Module, example_dir: Path) -> float:
     data_path = example_dir / "data"
     accuracy = checks.evaluate_model(model, data_path)
     return accuracy
+
+
+def get_model_dir(worker_count: int) -> Path:
+    return TEMP_DIR / "worker1/output" if worker_count == 1 else TEMP_DIR / "leader/output"
