@@ -7,6 +7,7 @@ from pathlib import Path
 
 from tests.constants import TEMP_DIR, WORKER_FINISHED_FILE, TRAINED_MODEL_FILE, USER_SCRIPT_FILE, CHECKS_FILE
 from tests.exceptions import TempDirNotCreated
+from tests.logger import testlogger
 
 
 class TempDir:
@@ -87,6 +88,7 @@ def load_model(model_dir: Path, example_dir: Path):
 
 
 def evaluate_model(model: torch.nn.Module, example_dir: Path) -> float:
+    testlogger.info("Evaluate model started.")
     checks = dynamic_import("checks", example_dir / CHECKS_FILE)
     data_path = example_dir / "data"
     accuracy = checks.evaluate_model(model, data_path)
