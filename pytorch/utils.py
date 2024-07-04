@@ -1,44 +1,24 @@
-import argparse
 import importlib
 import os
 import torch
-import sys
 import struct
 
+from collections.abc import Iterable
 from pathlib import Path
 from time import sleep
 from torch import nn
+from torch.optim import Optimizer
+from torch.utils.data import DataLoader
 from typing import Any, List, Union
 
-import pytorch.constants as constants  # have to import separately because the setup of some vars from arg parse
 from pytorch.constants import (
     WAITING_PERIOD,
-    LEADER_ROLE,
-    WORKER_ROLE,
-    WORKER_LLM_ROLE,
     USER_SCRIPT_PATH,
     CHECKPOINT_PATH,
-    set_role_and_worker_node_num
+    WORKER_NODES_NUM,
 )
 from pytorch.logger import logger
 
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--role", type=str, help="Node role - leader, worker or worker-llm")
-parser.add_argument("--worker_count", type=int, help="Worker nodes count")
-args = parser.parse_args()
-if args.role is None:
-    logger.error("Role argument is missing")
-    sys.exit(1)
-elif args.role.upper() not in (LEADER_ROLE, WORKER_ROLE, WORKER_LLM_ROLE):
-    logger.error(f"role must be {LEADER_ROLE}, {WORKER_ROLE} or {WORKER_LLM_ROLE}")
-    sys.exit(1)
-
-if args.role == LEADER_ROLE and args.worker_count is None:
-    logger.error("Worker nodes count argument is required for leader")
-    sys.exit(1)
-
-set_role_and_worker_node_num(role=args.role, worker_nodes_num=args.worker_count)
 
 script_path = os.path.abspath(USER_SCRIPT_PATH)
 while not os.path.exists(script_path):
@@ -49,7 +29,6 @@ spec = importlib.util.spec_from_file_location("user_script", script_path)
 user_script = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(user_script)
 logger.info("user_script.py imported.")
-logger.info(f'user_script has network_factory: {hasattr(user_script, "network_factory")}')
 
 
 def torch_safe_load(path: Union[Path, str]) -> Any:
@@ -63,24 +42,33 @@ def torch_safe_load(path: Union[Path, str]) -> Any:
     raise Exception("Couldn't load file safely with torch.")
 
 
-def load_network(path: Union[Path, str] = "", delete_file: bool = False) -> nn.Module:
-    network = user_script.network_factory.create()
+def load_model(path: Union[Path, str] = "", delete_file: bool = False) -> nn.Module:
+    model = user_script.create_model()
     if os.path.exists(path):
-        network.load_state_dict(torch_safe_load(path))
+        model.load_state_dict(torch_safe_load(path))
         if delete_file:
             os.remove(path)
 
-    logger.debug("network loaded")
-    return network
+    logger.debug("model loaded")
+    return model
 
 
-def load_optimizer(network: nn.Module) -> Any:
-    optimizer = user_script.optimizer_factory.create(network.parameters())
+def load_optimizer(model: nn.Module) -> Any:
+    optimizer = user_script.create_optimizer(model)
     return optimizer
 
 
+def safe_create_extra_training_args(data_loader: DataLoader, optimizer: Optimizer) -> Iterable:
+    extra_args = user_script.create_extra_training_args(data_loader, optimizer)
+    if extra_args is None:
+        return []
+    if not isinstance(extra_args, Iterable):
+        return [extra_args]
+    return extra_args
+
+
 def list_worker_nodes() -> List[str]:
-    return [str(i + 1) for i in range(constants.WORKER_NODES_NUM)]
+    return [str(i + 1) for i in range(WORKER_NODES_NUM)]
 
 
 def checkpoint(epoch: int, batch_idx: int):

@@ -1,0 +1,78 @@
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSequenceClassification,
+    )
+
+import torch
+from pprint import pprint
+
+
+UNTRAINED_CHECKPOINT = 'distilbert-base-uncased'
+TRAINED_CHECKPOINT = 'distilbert-base-uncased-lora-text-classification/checkpoint-250'
+
+
+id2label = {0: "Negative", 1: "Positive"}
+label2id = {"Negative": 0, "Positive": 1}
+
+
+def load_model(checkpoint=TRAINED_CHECKPOINT):
+    # generate classification model from model_checkpoint
+    model = AutoModelForSequenceClassification.from_pretrained(
+        checkpoint, num_labels=2, id2label=id2label, label2id=label2id
+    )
+
+    print()
+    print("model")
+    pprint(model)
+
+    return model
+
+
+def evaluate_model(model, checkpoint=TRAINED_CHECKPOINT):
+    # create tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(checkpoint, add_prefix_space=True)
+
+    # add pad token if none exists
+    if tokenizer.pad_token is None:
+        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        model.resize_token_embeddings(len(tokenizer))
+
+    # define list of examples
+    text_list = [
+        "It was good.",
+        "Not a fan, don't recommend.",
+        "Better than the first one.",
+        "This is not worth watching even once.",
+        "This one is a pass."
+    ]
+
+    model.to('mps')  # moving to mps for Mac (can alternatively do 'cpu')
+
+    print("Trained model predictions:")
+    print("--------------------------")
+    for text in text_list:
+        inputs = tokenizer.encode(text, return_tensors="pt").to("mps")  # moving to mps for Mac (can alternatively do 'cpu')
+
+        logits = model(inputs).logits
+        predictions = torch.max(logits, 1).indices
+
+        print(text + " - " + id2label[predictions.tolist()[0]])
+
+
+def experiment(model):
+    state_dict = model.state_dict()
+    model.load_state_dict(state_dict)
+
+    loaded_model = load_model(checkpoint=UNTRAINED_CHECKPOINT)
+    loaded_model.load_state_dict(state_dict)
+    evaluate_model(loaded_model)
+
+
+def main():
+    model = load_model()
+    evaluate_model(model)
+    # experiment(model)
+
+
+if __name__ == "__main__":
+    main()

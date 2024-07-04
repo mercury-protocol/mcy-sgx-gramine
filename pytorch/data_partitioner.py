@@ -15,7 +15,7 @@ class Partition:
 
 
 class DataPartitioner:
-    def __init__(self, data, sizes=[0.7, 0.2, 0.1], seed=1234):
+    def __init__(self, data, sizes=[1.0], seed=1234):
         self.data = data
         self.partitions = []
         rng = Random()

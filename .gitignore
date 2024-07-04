@@ -11,4 +11,10 @@ __pycache__
 /.env
 
 /io/
-/simulate_vulkan/io/
+/tests/temp/
+/tests/examples/image_classifier/data/
+/tests/examples/image_classifier/split_data/
+/tests/examples/fine_tune_llm_pytorch/data/
+/tests/examples/fine_tune_llm_pytorch/raw_data/
+/tests/examples/fine_tune_llm_pytorch/split_data/
+/tests/examples/fine_tune_llm_pytorch/trained_model.pth
