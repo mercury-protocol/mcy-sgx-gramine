@@ -19,7 +19,8 @@ where `batch` is the iteration variable of the data loader. The `optimizer.zero_
   def train_batch(batch, model, optimizer):
       <training algorithm implementation>
   ```
-Plus it can have any user defined arguments which shall be created with `create_extra_training_args`.
+Plus it can have any user defined arguments which shall be created with `create_extra_training_args`. 
+This is for creating objects for the lifetime of the full training cycle - for example a learning rate scheduler which needs to know the number of batches and the current batch.
   ```
   def create_extra_training_args(data_loader: DataLoader, optimizer: Optimizer):
       <creating scheduler and progress bar objects>
