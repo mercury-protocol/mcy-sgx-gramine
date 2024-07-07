@@ -17,7 +17,7 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 def create_data_loader(path) -> DataLoader:
     tokenized_datasets = load_from_disk(path)
     tokenized_datasets.set_format("torch")
-    return DataLoader(tokenized_datasets["train"], shuffle=True, batch_size=8)
+    return DataLoader(tokenized_datasets["train"], shuffle=True, batch_size=4)
 
 
 def create_model() -> nn.Module:
