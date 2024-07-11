@@ -1,0 +1,34 @@
+from setuptools import setup, find_packages
+
+
+def parse_requirements() -> list[str]:
+    with open("requirements.txt", "r") as f:
+        lines = f.readlines()
+        return [
+            line.strip()
+            for line in lines
+            if line.strip() and not line.startswith("#")
+        ]
+
+
+setup(
+    name="mcy_pytorch",
+    version="0.1",
+    packages=find_packages(),
+    install_requires=parse_requirements(),
+    entry_points={
+        "console_scripts": [],
+    },
+    author="Peter and Lajos",
+    author_email="founders@mercuryprotocol.io",
+    description="Mercury leader, worker and watcher",
+    long_description=open("docs/user_script_requirements.md").read(),
+    long_description_content_type="text/markdown",
+    url="https://github.com/mercury-protocol/mcy-sgx-gramine",
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+    python_requires=">=3.11",
+)
