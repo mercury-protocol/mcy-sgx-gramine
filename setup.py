@@ -24,7 +24,7 @@ setup(
     description="Mercury leader, worker and watcher",
     long_description=open("docs/user_script_requirements.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/mercury-protocol/mcy-sgx-gramine",
+    url="https://github.com/mercury-protocol/mcy-sgx-gramine/tree/featre/pip-install",  # TODO: use the main branch here
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
