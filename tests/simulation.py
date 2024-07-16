@@ -48,7 +48,7 @@ def run_node(
         "--worker_count", str(worker_count)
     ]):
         os.chdir(working_directory)
-        from pytorch.main import main
+        from mcy_pytorch.main import main
         return main()
 
 

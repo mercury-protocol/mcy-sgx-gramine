@@ -5,7 +5,7 @@ import torch
 from pathlib import Path
 from torch import nn
 
-from pytorch.constants import (
+from mcy_pytorch.constants import (
     BASE_DIR,
     STATE_DICT_PATH,
     WORKER_FINISHED_FILE,
@@ -18,8 +18,8 @@ from pytorch.constants import (
     LOG_INTERVAL,
     TRAINED_MODEL_PATH
 )
-from pytorch.logger import logger
-from pytorch.utils import torch_safe_load, load_model, load_optimizer, list_worker_nodes
+from mcy_pytorch.logger import logger
+from mcy_pytorch.utils import torch_safe_load, load_model, load_optimizer, list_worker_nodes
 
 
 class Leader:
