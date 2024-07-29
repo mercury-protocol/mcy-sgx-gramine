@@ -4,6 +4,8 @@ import shutil
 from datasets import load_dataset, load_from_disk, DatasetDict, Dataset
 from transformers import AutoTokenizer
 
+from mcy_pytorch.constants import DATA, MODEL
+
 from tests.examples.fine_tune_llm_pytorch.constants import (
     SPLIT_DATA_PATH,
     DATA_PATH,
@@ -13,12 +15,12 @@ from tests.examples.fine_tune_llm_pytorch.constants import (
 
 
 def tokenize_function(examples):
-    tokenizer = AutoTokenizer.from_pretrained("google-bert/bert-base-cased")
+    tokenizer = AutoTokenizer.from_pretrained(MODEL)
     return tokenizer(examples["text"], padding="max_length", truncation=True)
 
 
 def create_tokenized_datasets():
-    dataset = load_dataset("yelp_review_full", cache_dir=RAW_DATA_PATH)
+    dataset = load_dataset(DATA, cache_dir=RAW_DATA_PATH)
     tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
     # Next, manually postprocess tokenized_dataset to prepare it for training.

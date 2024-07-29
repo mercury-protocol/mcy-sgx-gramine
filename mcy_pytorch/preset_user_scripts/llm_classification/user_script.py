@@ -7,6 +7,8 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from transformers import AutoModelForSequenceClassification, get_scheduler
 
+from mcy_pytorch.constants import MODEL
+
 
 N_EPOCHS = 1
 LEARNING_RATE = 5e-5
@@ -22,7 +24,7 @@ def create_data_loader(path) -> DataLoader:
 
 def create_model() -> nn.Module:
     model = AutoModelForSequenceClassification.from_pretrained(
-        "google-bert/bert-base-cased", num_labels=5
+        MODEL, num_labels=5
     )
     model.to(device)
     model.train()
