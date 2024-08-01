@@ -35,8 +35,7 @@ def create_tokenized_datasets():
     # this step is done in the create_data_loader() function in user_script.py
 
     # Create smaller subsets of the dataset to speed up the fine-tuning:
-    tokenized_datasets["test"] = tokenized_datasets["train"].shuffle(seed=42).select(range(500, 1000))
-    tokenized_datasets["train"] = tokenized_datasets["train"].shuffle(seed=42).select(range(500))
+    tokenized_datasets["train"] = tokenized_datasets["train"].shuffle(seed=42).select(range(1000))
 
     return tokenized_datasets
 
@@ -64,19 +63,14 @@ def split_and_save_data(split_into=4, random_seed=42):
     tokenized_dataset = load_from_disk(str(DATA_PATH))
 
     train_dataset = tokenized_dataset["train"]
-    eval_dataset = tokenized_dataset["test"]
     train_dataset.shuffle(seed=random_seed)
-    eval_dataset.shuffle(seed=random_seed)
     train_partition_length = len(train_dataset) // split_into
-    eval_partition_length = len(eval_dataset) // split_into
 
     for i in range(split_into):
         train_partition = train_dataset[i * train_partition_length:(i + 1) * train_partition_length]
-        eval_partition = eval_dataset[i * eval_partition_length:(i + 1) * eval_partition_length]
 
         split_dataset = DatasetDict({
-            "train": Dataset.from_dict(train_partition),
-            "test": Dataset.from_dict(eval_partition)
+            "train": Dataset.from_dict(train_partition)
         })
 
         split_dataset.save_to_disk(get_output_data_path(i + 1))
