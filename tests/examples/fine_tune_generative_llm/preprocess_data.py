@@ -23,19 +23,17 @@ def create_tokenized_datasets():
     dataset = load_dataset(DATA, cache_dir=RAW_DATA_PATH)
     tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
-    # Next, manually postprocess tokenized_dataset to prepare it for training.
-    # 1. Remove the text column because the model does not accept raw text as an input:
+    # Manually postprocess tokenized_dataset to prepare it for training.
+    # Remove the text column because the model does not accept raw text as an input:
     tokenized_datasets = tokenized_datasets.remove_columns(["text"])
 
-    # 2. Rename the label column to labels because the model expects the argument to be named labels:
-    tokenized_datasets = tokenized_datasets.rename_column("label", "labels")
-
-    # 3. Set the format of the dataset to return PyTorch tensors instead of lists:
+    # Set the format of the dataset to return PyTorch tensors instead of lists:
     # this step is done in the create_data_loader() function in user_script.py
 
     # Create smaller subsets of the dataset to speed up the fine-tuning:
     tokenized_datasets["train"] = tokenized_datasets["train"].shuffle(seed=42).select(range(1000))
-    tokenized_datasets["test"] = tokenized_datasets["test"].shuffle(seed=42).select(range(1000))
+    if "test" in tokenized_datasets:
+        tokenized_datasets["test"] = tokenized_datasets["test"].shuffle(seed=42).select(range(1000))
 
     return tokenized_datasets
 

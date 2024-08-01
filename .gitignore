@@ -18,3 +18,6 @@ __pycache__
 /tests/examples/fine_tune_llm_pytorch/raw_data/
 /tests/examples/fine_tune_llm_pytorch/split_data/
 /tests/examples/fine_tune_llm_pytorch/trained_model.pth
+/tests/examples/fine_tune_generative_llm/data/
+/tests/examples/fine_tune_generative_llm/raw_data/
+/tests/examples/fine_tune_generative_llm/split_data/
