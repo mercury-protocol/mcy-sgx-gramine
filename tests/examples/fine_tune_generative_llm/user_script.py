@@ -14,16 +14,23 @@ MODEL = "NousResearch/Llama-2-7b-chat-hf"
 OPTIMIZER = "paged_adamw_32bit"
 
 N_EPOCHS = 1
-LEARNING_RATE = 5e-5
+LEARNING_RATE = 2e-4
 
+IS_CUDA_AVAILABLE = torch.cuda.is_available()
 USE_4BIT = True  # Activate 4-bit precision base model loading
 BNB_4BIT_COMPUTE_DTYPE = "float16"  # Compute dtype for 4-bit base models
 BNB_4BIT_QUANT_TYPE = "nf4"  # Quantization type (fp4 or nf4)
 USE_NESTED_QUANT = False  # Activate nested quantization for 4-bit base models (double quantization)
-COMPUTE_DTYPE = torch.bnb_4bit_compute_dtype  # Load tokenizer and model with QLoRA configuration
-DEVICE_MAP = {"": 0}  # Load the entire model on the GPU 0
+COMPUTE_DTYPE = getattr(torch, BNB_4BIT_COMPUTE_DTYPE)  # Load tokenizer and model with QLoRA configuration
+DEVICE_MAP = {"": 0} if IS_CUDA_AVAILABLE else None  # Load the entire model on the GPU 0
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=USE_4BIT,
+    bnb_4bit_quant_type=BNB_4BIT_QUANT_TYPE,
+    bnb_4bit_compute_dtype=COMPUTE_DTYPE,
+    bnb_4bit_use_double_quant=USE_NESTED_QUANT,
+) if IS_CUDA_AVAILABLE else None
 
 
 def create_data_loader(path) -> DataLoader:
@@ -33,13 +40,6 @@ def create_data_loader(path) -> DataLoader:
 
 
 def create_model() -> nn.Module:
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=USE_4BIT,
-        bnb_4bit_quant_type=BNB_4BIT_QUANT_TYPE,
-        bnb_4bit_compute_dtype=COMPUTE_DTYPE,
-        bnb_4bit_use_double_quant=USE_NESTED_QUANT,
-    )
-
     model = AutoModelForCausalLM.from_pretrained(
         MODEL,
         quantization_config=bnb_config,
