@@ -16,10 +16,15 @@ DATA = "mlabonne/guanaco-llama2-1k"
 MODEL = "NousResearch/Llama-2-7b-chat-hf"
 
 
-def tokenize_function(examples):
+def create_tokenizer():
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"  # Fix weird overflow issue with fp16 training
+    return tokenizer
+
+
+def tokenize_function(examples):
+    tokenizer = create_tokenizer()
     return tokenizer(examples["text"], padding="max_length", truncation=True)
 
 
