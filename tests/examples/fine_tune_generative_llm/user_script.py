@@ -47,7 +47,6 @@ def create_model() -> nn.Module:
     )
     model.config.use_cache = False
     model.config.pretraining_tp = 1
-    model.to(device)
     model.train()
     return model
 
