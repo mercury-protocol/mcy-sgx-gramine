@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from datasets import load_from_disk
-from torch.optim import Optimizer, AdamW
+from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from transformers import AutoModelForCausalLM, get_scheduler, BitsAndBytesConfig
