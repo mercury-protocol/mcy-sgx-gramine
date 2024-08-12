@@ -1,16 +1,17 @@
 import torch
 import torch.nn as nn
-import transformers
 
 from datasets import load_from_disk
-from torch.optim import Optimizer
+from torch.optim import Optimizer, AdamW
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from transformers import AutoModelForCausalLM, get_scheduler, BitsAndBytesConfig
 
+from tests.examples.fine_tune_generative_llm.constants import OPTIMIZER_MAPPING
+
 
 DATA = "mlabonne/guanaco-llama2-1k"
-MODEL = "NousResearch/Llama-2-7b-chat-hf"
+MODEL = "google-bert/bert-base-cased"  # "NousResearch/Llama-2-7b-chat-hf"
 OPTIMIZER = "paged_adamw_32bit"
 
 N_EPOCHS = 1
@@ -52,10 +53,10 @@ def create_model() -> nn.Module:
 
 
 def create_optimizer(model: nn.Module) -> Optimizer:
-    if not hasattr(transformers, OPTIMIZER):
-        raise ValueError(f"Optimizer {OPTIMIZER} is not found in the transformers library")
+    optimizer_class = OPTIMIZER_MAPPING.get(OPTIMIZER)
+    if not optimizer_class:
+        raise ValueError(f"Optimizer {OPTIMIZER} is not supported")
 
-    optimizer_class = getattr(transformers, OPTIMIZER)
     return optimizer_class(model.parameters(), lr=LEARNING_RATE)
 
 
