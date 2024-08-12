@@ -15,7 +15,7 @@ from tests.examples.fine_tune_generative_llm.constants import (
 
 
 def create_tokenizer():
-    tokenizer = AutoTokenizer.from_pretrained(MODEL)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"  # Fix weird overflow issue with fp16 training
     return tokenizer
@@ -23,7 +23,7 @@ def create_tokenizer():
 
 def tokenize_function(examples):
     tokenizer = create_tokenizer()
-    return tokenizer(examples["text"], padding="max_length", truncation=True)
+    return tokenizer(examples["text"], padding="max_length", truncation=True, max_length=200)
 
 
 def create_tokenized_datasets():

@@ -14,7 +14,8 @@ VALID_DATA_SPLIT_PARTITIONS = (1, 2, 4, 5, 8)
 
 
 DATA = "mlabonne/guanaco-llama2-1k"
-MODEL = "NousResearch/Llama-2-7b-chat-hf"  # "google-bert/bert-base-cased"
+MODEL = "NousResearch/Llama-2-7b-chat-hf"
+# MODEL = "google-bert/bert-base-cased"
 OPTIMIZER = "adamw"  # "paged_adamw_32bit"
 OPTIMIZER_MAPPING = {
     "adamw": AdamW,
