@@ -7,10 +7,9 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from transformers import AutoModelForCausalLM, get_scheduler, BitsAndBytesConfig
 
-from tests.examples.fine_tune_generative_llm.constants import MODEL, OPTIMIZER_MAPPING
+from tests.examples.fine_tune_generative_llm.constants import MODEL, OPTIMIZER, OPTIMIZER_MAPPING
 
 
-OPTIMIZER = "paged_adamw_32bit"
 N_EPOCHS = 1
 LEARNING_RATE = 2e-4
 
