@@ -12,6 +12,9 @@ TRAINED_MODEL_PATH = FINE_TUNE_GENERATIVE_LLM_DIR / TRAINED_MODEL_FILE
 
 VALID_DATA_SPLIT_PARTITIONS = (1, 2, 4, 5, 8)
 
+
+DATA = "mlabonne/guanaco-llama2-1k"
+MODEL = "NousResearch/Llama-2-7b-chat-hf"  # "google-bert/bert-base-cased"
 OPTIMIZER_MAPPING = {
     "adamw": AdamW,
     "paged_adamw_32bit": PagedAdamW,

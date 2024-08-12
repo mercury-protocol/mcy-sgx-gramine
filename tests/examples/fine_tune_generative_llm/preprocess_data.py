@@ -5,15 +5,13 @@ from datasets import load_dataset, load_from_disk, DatasetDict, Dataset
 from transformers import AutoTokenizer
 
 from tests.examples.fine_tune_generative_llm.constants import (
+    DATA,
+    MODEL,
     SPLIT_DATA_PATH,
     DATA_PATH,
     RAW_DATA_PATH,
     VALID_DATA_SPLIT_PARTITIONS
 )
-
-
-DATA = "mlabonne/guanaco-llama2-1k"
-MODEL = "NousResearch/Llama-2-7b-chat-hf"
 
 
 def create_tokenizer():
@@ -82,4 +80,4 @@ def split_and_save_data(split_into=4, random_seed=42):
 
 
 if __name__ == "__main__":
-    split_and_save_data(split_into=4)
+    split_and_save_data(split_into=2)

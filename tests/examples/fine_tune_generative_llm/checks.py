@@ -52,5 +52,6 @@ def evaluate_model(model: nn.Module, **kwargs) -> float:
 
 
 if __name__ == "__main__":
-    trained_model = load_trained_model()
-    evaluate_model(trained_model)
+    train_model()
+    # trained_model = load_trained_model()
+    # evaluate_model(trained_model)

@@ -7,13 +7,10 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from transformers import AutoModelForCausalLM, get_scheduler, BitsAndBytesConfig
 
-from tests.examples.fine_tune_generative_llm.constants import OPTIMIZER_MAPPING
+from tests.examples.fine_tune_generative_llm.constants import MODEL, OPTIMIZER_MAPPING
 
 
-DATA = "mlabonne/guanaco-llama2-1k"
-MODEL = "google-bert/bert-base-cased"  # "NousResearch/Llama-2-7b-chat-hf"
 OPTIMIZER = "paged_adamw_32bit"
-
 N_EPOCHS = 1
 LEARNING_RATE = 2e-4
 
