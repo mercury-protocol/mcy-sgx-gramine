@@ -1,0 +1,2 @@
+class TempDirNotCreated(FileNotFoundError):
+    pass
