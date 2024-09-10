@@ -7,7 +7,7 @@ from pathlib import Path
 from torch import nn
 from transformers import TrainerCallback, TrainingArguments, TrainerState, TrainerControl, Trainer
 
-from mcy_pytorch.constants import (
+from mcy_dist_ai.constants import (
     ROLE,
     WORKER_LLM_ROLE,
     BASE_DIR,
@@ -25,8 +25,8 @@ from mcy_pytorch.constants import (
     TRAINED_MODEL_PATH,
     OUTPUT_DIR,
 )
-from mcy_pytorch.logger import logger
-from mcy_pytorch.utils import (
+from mcy_dist_ai.logger import logger
+from mcy_dist_ai.utils import (
     load_model,
     load_optimizer,
     user_script,

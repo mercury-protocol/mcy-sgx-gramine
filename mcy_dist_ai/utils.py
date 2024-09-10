@@ -11,13 +11,13 @@ from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from typing import Any, List, Union
 
-from mcy_pytorch.constants import (
+from mcy_dist_ai.constants import (
     WAITING_PERIOD,
     USER_SCRIPT_PATH,
     CHECKPOINT_PATH,
     WORKER_NODES_NUM,
 )
-from mcy_pytorch.logger import logger
+from mcy_dist_ai.logger import logger
 
 
 script_path = os.path.abspath(USER_SCRIPT_PATH)
