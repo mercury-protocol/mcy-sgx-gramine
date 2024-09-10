@@ -13,14 +13,14 @@ def parse_requirements() -> list[str]:
 
 setup(
     name="mcy_pytorch",
-    version="0.1",
+    version="0.0.1",
     packages=find_packages(),
     install_requires=parse_requirements(),
     entry_points={
         "console_scripts": [],
     },
-    author="Peter and Lajos",
-    author_email="founders@mercuryprotocol.io",
+    author="Peter Berekvolgyi",
+    author_email="peter@mercuryprotocol.io",
     description="Mercury leader, worker and watcher",
     long_description=open("docs/user_script_requirements.md").read(),
     long_description_content_type="text/markdown",
@@ -30,5 +30,5 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.11",
+    python_requires="==3.11",
 )
