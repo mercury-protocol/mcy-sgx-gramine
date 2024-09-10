@@ -2,9 +2,9 @@ import argparse
 import sys
 import torch
 
-from mcy_pytorch.data_partitioner import DataPartitioner
-from mcy_pytorch.constants import WATCHER_DATA_PATH
-from mcy_pytorch.logger import logger
+from mcy_dist_ai.data_partitioner import DataPartitioner
+from mcy_dist_ai.constants import WATCHER_DATA_PATH
+from mcy_dist_ai.logger import logger
 
 
 def parse_worker_nodes_count():

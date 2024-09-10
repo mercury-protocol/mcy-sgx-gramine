@@ -3,7 +3,7 @@ import sys
 from argparse import ArgumentParser
 from pathlib import Path
 
-from mcy_pytorch.logger import logger
+from mcy_dist_ai.logger import logger
 
 
 LEADER_ROLE = "LEADER"

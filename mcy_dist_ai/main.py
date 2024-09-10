@@ -1,9 +1,9 @@
 import asyncio
 
-from mcy_pytorch.constants import ROLE, LEADER_ROLE, WORKER_ROLE, WORKER_LLM_ROLE
-from mcy_pytorch.exceptions import InvalidRole
-from mcy_pytorch.worker import Worker
-from mcy_pytorch.leader import Leader
+from mcy_dist_ai.constants import ROLE, LEADER_ROLE, WORKER_ROLE, WORKER_LLM_ROLE
+from mcy_dist_ai.exceptions import InvalidRole
+from mcy_dist_ai.worker import Worker
+from mcy_dist_ai.leader import Leader
 
 
 def main():
