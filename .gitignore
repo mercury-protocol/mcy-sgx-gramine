@@ -12,6 +12,7 @@ __pycache__
 
 /io/
 /tests/temp/
+/tests/scratch.py
 /tests/examples/image_classifier/data/
 /tests/examples/image_classifier/split_data/
 /tests/examples/fine_tune_llm_pytorch/data/
