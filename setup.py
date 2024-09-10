@@ -12,9 +12,9 @@ def parse_requirements() -> list[str]:
 
 
 setup(
-    name="mcy_pytorch",
+    name="mcy_dist_ai",
     version="0.0.1",
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests"]),
     install_requires=parse_requirements(),
     entry_points={
         "console_scripts": [],
@@ -22,7 +22,7 @@ setup(
     author="Peter Berekvolgyi",
     author_email="peter@mercuryprotocol.io",
     description="Mercury leader, worker and watcher",
-    long_description=open("docs/user_script_requirements.md").read(),
+    long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/mercury-protocol/mcy-sgx-gramine",
     classifiers=[
