@@ -9,6 +9,7 @@ from transformers import AutoModelForSequenceClassification, get_scheduler
 
 
 N_EPOCHS = 1
+BATCH_SIZE = 8
 LEARNING_RATE = 5e-5
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -17,7 +18,7 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 def create_data_loader(path) -> DataLoader:
     tokenized_datasets = load_from_disk(path)
     tokenized_datasets.set_format("torch")
-    return DataLoader(tokenized_datasets["train"], shuffle=True, batch_size=8)
+    return DataLoader(tokenized_datasets["train"], shuffle=True, batch_size=BATCH_SIZE)
 
 
 def create_model() -> nn.Module:
@@ -60,4 +61,4 @@ def train_batch(batch, model, optimizer, lr_scheduler, progress_bar):
 def create_eval_data_loader(path) -> DataLoader:
     tokenized_datasets = load_from_disk(path)
     tokenized_datasets.set_format("torch")
-    return DataLoader(tokenized_datasets["test"], batch_size=8)
+    return DataLoader(tokenized_datasets["test"], batch_size=BATCH_SIZE)
