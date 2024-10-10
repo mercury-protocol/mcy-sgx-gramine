@@ -189,13 +189,17 @@ def simulate_p2p_network(example_dir: Path, worker_count: int = 1):
     asyncio.run(simulate_p2p_network_coroutine(example_dir, worker_count))
 
 
+def split_and_save_data_manually(worker_count: int, example_dir: Path):
+    if worker_count > 1:
+        preprocess_data = dynamic_import("preprocess_data", example_dir / PREPROCESS_DATA_FILE)
+        preprocess_data.split_and_save_data(split_into=worker_count, random_seed=42)
+
+
 @with_temp_dir(clear_tmp_dir_end=False)
 def train_model_parallel(worker_count: int, example_dir: Path = ExampleDirs.IMAGE_CLASSIFIER):
     workers = []
 
-    preprocess_data = dynamic_import("preprocess_data", example_dir / PREPROCESS_DATA_FILE)
-    if worker_count > 1:
-        preprocess_data.split_and_save_data(split_into=worker_count, random_seed=42)
+    split_and_save_data_manually(worker_count, example_dir)
 
     for i in range(worker_count):
         workers.append(
@@ -239,9 +243,7 @@ def train_model_parallel(worker_count: int, example_dir: Path = ExampleDirs.IMAG
 
 @with_temp_dir(clear_tmp_dir_end=False)
 def train_model_sequential(worker_count: int, example_dir: Path = ExampleDirs.IMAGE_CLASSIFIER):
-    preprocess_data = dynamic_import("preprocess_data", example_dir / PREPROCESS_DATA_FILE)
-    if worker_count > 1:
-        preprocess_data.split_and_save_data(split_into=worker_count, random_seed=42)
+    split_and_save_data_manually(worker_count, example_dir)
 
     for i in range(worker_count):
         watch_worker = WatchWorker(example_dir, "1", worker_count)

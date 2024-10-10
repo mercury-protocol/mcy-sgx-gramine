@@ -8,7 +8,7 @@ from pathlib import Path
 from time import sleep
 from torch import nn
 from torch.optim import Optimizer
-from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, DataLoader
 from typing import Any, List, Union
 
 from mcy_dist_ai.constants import (
@@ -29,6 +29,31 @@ spec = importlib.util.spec_from_file_location("user_script", script_path)
 user_script = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(user_script)
 logger.info("user_script.py imported.")
+
+
+class TensorDataset(Dataset):
+    def __init__(self, data_tensor, target_tensor):
+        self.data = data_tensor
+        self.targets = target_tensor
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx], self.targets[idx]
+
+
+def create_tensor_loader(data_path: str):
+    data_tensor = torch.load(f"{data_path}/data_tensor.pt")
+    target_tensor = torch.load(f"{data_path}/target_tensor.pt")
+
+    tensor_dataset = TensorDataset(data_tensor, target_tensor)
+
+    return DataLoader(
+        tensor_dataset,
+        batch_size=user_script.BATCH_SIZE,
+        shuffle=True
+    )
 
 
 def torch_safe_load(path: Union[Path, str]) -> Any:

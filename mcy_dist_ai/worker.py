@@ -10,6 +10,7 @@ from transformers import TrainerCallback, TrainingArguments, TrainerState, Train
 from mcy_dist_ai.constants import (
     ROLE,
     WORKER_LLM_ROLE,
+    TENSOR_LOAD,
     BASE_DIR,
     DATA_PATH,
     GRADIENT_FILE,
@@ -27,6 +28,7 @@ from mcy_dist_ai.constants import (
 )
 from mcy_dist_ai.logger import logger
 from mcy_dist_ai.utils import (
+    create_tensor_loader,
     load_model,
     load_optimizer,
     user_script,
@@ -79,6 +81,13 @@ class Worker:
         logger.info("Data has arrived.")
 
     @staticmethod
+    def create_data_loader():
+        if TENSOR_LOAD:
+            return create_tensor_loader(str(DATA_PATH))
+        else:
+            return user_script.create_data_loader(str(DATA_PATH))
+
+    @staticmethod
     def is_last_iteration(epoch: int, batch_idx: int, total_batches: int) -> bool:
         return epoch == user_script.N_EPOCHS - 1 and batch_idx == total_batches - 1
 
@@ -124,7 +133,7 @@ class Worker:
         logger.info("Worker started.")
         await self.wait_data()
 
-        data_loader = user_script.create_data_loader(str(DATA_PATH))
+        data_loader = self.create_data_loader()
         total_batches = len(data_loader)
         model = load_model(path=STATE_DICT_PATH, delete_file=True)
         optimizer = load_optimizer(model)

@@ -13,6 +13,12 @@ WORKER_LLM_ROLE = "WORKER-LLM"
 parser = ArgumentParser()
 parser.add_argument("--role", type=str, help="Node role - leader, worker or worker-llm")
 parser.add_argument("--worker_count", type=int, help="Worker nodes count")
+parser.add_argument(
+    "--tensor_load",
+    action='store_true',
+    default=False,
+    help="pass this arg when data was split by mcy script"
+)
 args = parser.parse_args()
 if args.role is None:
     logger.error("Role argument is missing")
@@ -29,6 +35,7 @@ WORKER_NODES_NUM = int(args.worker_count)
 if ROLE == LEADER_ROLE and WORKER_NODES_NUM == 1:
     logger.info("Leader is not starting because there's only one worker.")
     sys.exit(0)
+TENSOR_LOAD = args.tensor_load
 
 
 GRADIENT_FILE = "gradient.pth"
