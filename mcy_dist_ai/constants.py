@@ -8,10 +8,9 @@ from mcy_dist_ai.logger import logger
 
 LEADER_ROLE = "LEADER"
 WORKER_ROLE = "WORKER"
-WORKER_LLM_ROLE = "WORKER-LLM"
 
 parser = ArgumentParser()
-parser.add_argument("--role", type=str, help="Node role - leader, worker or worker-llm")
+parser.add_argument("--role", type=str, help="Node role - leader or worker")
 parser.add_argument("--worker_count", type=int, help="Worker nodes count")
 parser.add_argument(
     "--tensor_load",
@@ -23,8 +22,8 @@ args = parser.parse_args()
 if args.role is None:
     logger.error("Role argument is missing")
     sys.exit(1)
-if args.role.upper() not in (LEADER_ROLE, WORKER_ROLE, WORKER_LLM_ROLE):
-    logger.error(f"role must be {LEADER_ROLE}, {WORKER_ROLE} or {WORKER_LLM_ROLE}")
+if args.role.upper() not in (LEADER_ROLE, WORKER_ROLE):
+    logger.error(f"role must be {LEADER_ROLE} or {WORKER_ROLE}")
     sys.exit(1)
 if args.role == LEADER_ROLE and args.worker_count is None:
     logger.error("Worker nodes count argument is required for leader")

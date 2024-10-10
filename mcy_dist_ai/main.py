@@ -1,6 +1,6 @@
 import asyncio
 
-from mcy_dist_ai.constants import ROLE, LEADER_ROLE, WORKER_ROLE, WORKER_LLM_ROLE
+from mcy_dist_ai.constants import ROLE, LEADER_ROLE, WORKER_ROLE
 from mcy_dist_ai.exceptions import InvalidRole
 from mcy_dist_ai.worker import Worker
 from mcy_dist_ai.leader import Leader
@@ -9,7 +9,7 @@ from mcy_dist_ai.leader import Leader
 def main():
     if ROLE == LEADER_ROLE:
         node = Leader()
-    elif ROLE in (WORKER_ROLE, WORKER_LLM_ROLE):
+    elif ROLE == WORKER_ROLE:
         node = Worker()
     else:
         raise InvalidRole

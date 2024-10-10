@@ -1,15 +1,11 @@
 import asyncio
 import os
-import shutil
 import torch
 
 from pathlib import Path
 from torch import nn
-from transformers import TrainerCallback, TrainingArguments, TrainerState, TrainerControl, Trainer
 
 from mcy_dist_ai.constants import (
-    ROLE,
-    WORKER_LLM_ROLE,
     TENSOR_LOAD,
     BASE_DIR,
     DATA_PATH,
@@ -24,7 +20,6 @@ from mcy_dist_ai.constants import (
     LOG_INTERVAL,
     WORKER_NODES_NUM,
     TRAINED_MODEL_PATH,
-    OUTPUT_DIR,
 )
 from mcy_dist_ai.logger import logger
 from mcy_dist_ai.utils import (
@@ -36,33 +31,6 @@ from mcy_dist_ai.utils import (
     load_last_checkpoint,
     safe_create_extra_training_args,
 )
-
-
-class VulkanCallback(TrainerCallback):
-    # TODO: finish the implementation of this class
-    #  it is used in the fully automated LLM fine tuning case, where ROLE == "WORKER-LLM"
-    def __init__(self, trainer: Trainer):
-        self.trainer = trainer
-
-    def save_gradients(self):
-        gradient = {name: param.data for name, param in self.trainer.model.named_parameters() if param.requires_grad}
-        torch.save(gradient, BASE_DIR / GRADIENT_FILE)
-
-    def on_step_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-        # self.trainer.model = load_model(path=STATE_DICT_PATH, delete_file=True)
-        # optimizer = load_optimizer(model)
-        pass
-
-    def on_step_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-        self.save_gradients()
-        # checkpoint(epoch=state.epoch, batch_idx=batch_idx)
-
-        # if state.global_step == state.max_steps:
-        #     self.signal_worker_finished()
-        # else:
-        #     await self.wait_state_dict()
-        print(state.epoch, state.global_step, state.max_steps)
-
 
 class Worker:
     def __init__(self):
@@ -170,26 +138,7 @@ class Worker:
 
         logger.info("Worker finished.")
 
-    @staticmethod
-    async def fine_tune_llm():
-        # TODO: make this implementation compatible with the original code flow:
-        #  - distributed training
-        #  - use Mercury user script format
-        #  - no separate role for llm training
-
-        logger.info("Worker started - Fine tune LLM")
-
-        trainer = user_script.create_trainer()
-        callback = VulkanCallback(trainer=trainer)
-        trainer.add_callback(callback)
-        shutil.rmtree(trainer.args.output_dir)
-        trainer.args.output_dir = OUTPUT_DIR / Path(trainer.args.output_dir).name
-
-        trainer.train()
-
     async def run(self):
-        training_task = asyncio.create_task(
-            self.fine_tune_llm() if ROLE == WORKER_LLM_ROLE else self.train_model()
-        )
+        training_task = asyncio.create_task(self.train_model())
         monitor_task = asyncio.create_task(self.monitor(training_task))
         await asyncio.gather(training_task, monitor_task)
