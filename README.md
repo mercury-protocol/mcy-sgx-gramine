@@ -1,4 +1,4 @@
-# mcy-sgx-gramine
+# mcy-dist-ai
 
 This is a package used in [Mercury Protocol](https://mercuryprotocol.netlify.app)'s [vulkan](https://github.com/mercury-protocol/vulkan) repository for training AI models distributed.
 
