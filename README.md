@@ -8,7 +8,8 @@ Each instance has a role: WATCHER or LEADER. Watchers do the batch training and 
 
 The user who wants to train an AI model has to write the script in a file called `user_script.py` 
 and also a `user_requirements.txt` where the dependencies of the `user_script.py` are specified.
-This file is used by this component to perform the training. To see how it should be written check `docs/user_script_requirements.md` and `docs/user_script_template.py`.
+This file is used by this component to perform the training. 
+To see how it should be written check `docs/user_script_requirements.md` and `docs/user_script_template.py`.
 
 ## mcy-split-data:
 
