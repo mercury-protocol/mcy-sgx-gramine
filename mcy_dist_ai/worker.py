@@ -5,8 +5,8 @@ import torch
 from pathlib import Path
 from torch import nn
 
+from mcy_dist_ai.args import TENSOR_LOAD, WORKER_NODES_NUM
 from mcy_dist_ai.constants import (
-    TENSOR_LOAD,
     BASE_DIR,
     DATA_PATH,
     GRADIENT_FILE,
@@ -18,7 +18,6 @@ from mcy_dist_ai.constants import (
     MONITORING_PERIOD,
     MONITOR_PATH,
     LOG_INTERVAL,
-    WORKER_NODES_NUM,
     TRAINED_MODEL_PATH,
 )
 from mcy_dist_ai.logger import logger

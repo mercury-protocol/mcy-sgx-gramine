@@ -10,6 +10,7 @@ from tests.constants import (
     TEMP_DIR,
     WORKER_FINISHED_FILE,
     USER_SCRIPT_FILE,
+    USER_REQUIREMENTS_FILE,
     PREPROCESS_DATA_FILE,
     STATE_DICT_READY_FILE,
     STATE_DICT_FILE,
@@ -69,10 +70,10 @@ class WatchLeader:
         if worker_count > 1:
             os.makedirs(leader_dir(), exist_ok=True)
 
-    def send_user_script_to_leader(self):
+    def send_file_to_leader(self, file: str):
         shutil.copy(
-            self.example_dir / USER_SCRIPT_FILE,
-            leader_dir() / USER_SCRIPT_FILE
+            self.example_dir / file,
+            leader_dir() / file
         )
 
     async def wait_state_dict(self):
@@ -96,7 +97,8 @@ class WatchLeader:
             return
 
         testlogger.info("Watch leader started.")
-        self.send_user_script_to_leader()
+        self.send_file_to_leader(USER_SCRIPT_FILE)
+        self.send_file_to_leader(USER_REQUIREMENTS_FILE)
         while True:
             await self.wait_state_dict()
 
@@ -117,10 +119,10 @@ class WatchWorker:
         self.worker_dir = worker_dir(self.node)
         os.makedirs(self.worker_dir, exist_ok=True)
 
-    def send_user_script_to_worker(self):
+    def send_file_to_worker(self, file: str):
         shutil.copy(
-            self.example_dir / USER_SCRIPT_FILE,
-            self.worker_dir / USER_SCRIPT_FILE
+            self.example_dir / file,
+            self.worker_dir / file
         )
 
     def send_data_to_worker(self):
@@ -161,7 +163,8 @@ class WatchWorker:
 
     async def run(self):
         testlogger.info(f"Watch worker {self.node} started.")
-        self.send_user_script_to_worker()
+        self.send_file_to_worker(USER_SCRIPT_FILE)
+        self.send_file_to_worker(USER_REQUIREMENTS_FILE)
         self.send_data_to_worker()
 
         if self.worker_count == 1:
@@ -200,6 +203,7 @@ def split_and_save_data_manually(split_into: int, example_dir: Path):
         preprocess_data = dynamic_import("preprocess_data", example_dir / PREPROCESS_DATA_FILE)
         preprocess_data.split_and_save_data(split_into=split_into, random_seed=42)
 
+
 def split_and_save_data_by_mcy_script(split_into: int, example_dir: Path):
     from mcy_dist_ai.script.split_data import split_data
     shutil.rmtree(str(example_dir / "split_data"), ignore_errors=True)
@@ -209,6 +213,7 @@ def split_and_save_data_by_mcy_script(split_into: int, example_dir: Path):
         str(example_dir / "split_data"),
         str(example_dir / USER_SCRIPT_FILE)
     )
+
 
 def split_and_save_data(split_into: int, example_dir: Path, tensor_load: bool = False):
     if tensor_load:
@@ -275,7 +280,8 @@ def train_model_sequential(
     for i in range(worker_count):
         watch_worker = WatchWorker(example_dir, "1", worker_count)
         watch_worker.remove_checkpoint()
-        watch_worker.send_user_script_to_worker()
+        watch_worker.send_file_to_worker(USER_SCRIPT_FILE)
+        watch_worker.send_file_to_worker(USER_REQUIREMENTS_FILE)
         watch_worker.node = str(i+1)
         watch_worker.send_data_to_worker()
 

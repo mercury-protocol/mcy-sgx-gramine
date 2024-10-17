@@ -1,17 +1,8 @@
-import importlib
 import os
 import sys
 import torch
 
-
-def import_user_script(user_script_path: str):
-    if not os.path.exists(user_script_path):
-        raise FileNotFoundError("Invalid path specified for user_script.py")
-
-    spec = importlib.util.spec_from_file_location("user_script", user_script_path)
-    user_script = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(user_script)
-    return user_script
+from mcy_dist_ai.import_user_files import import_user_script
 
 
 def split_data(split_into: int, data_path: str, output_dir_path: str, user_script_path: str):

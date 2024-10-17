@@ -8,6 +8,7 @@ EXAMPLES_DIR = TEST_DIR / "examples"
 
 WORKER_FINISHED_FILE = "worker_finished.pth"
 USER_SCRIPT_FILE = "user_script.py"
+USER_REQUIREMENTS_FILE = "user_requirements.txt"
 CHECKS_FILE = "checks.py"
 PREPROCESS_DATA_FILE = "preprocess_data.py"
 STATE_DICT_READY_FILE = "state_dict_ready.pth"
