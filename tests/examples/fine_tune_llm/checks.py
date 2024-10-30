@@ -2,8 +2,8 @@ import evaluate
 import torch
 import torch.nn as nn
 from pprint import pprint
-from tests.examples.fine_tune_llm_pytorch.constants import TRAINED_MODEL_PATH, DATA_PATH
-from tests.examples.fine_tune_llm_pytorch.user_script import (
+from tests.examples.fine_tune_llm.constants import TRAINED_MODEL_PATH, DATA_PATH
+from tests.examples.fine_tune_llm.user_script import (
     N_EPOCHS,
     device,
     create_data_loader,

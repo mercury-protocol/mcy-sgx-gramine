@@ -23,5 +23,4 @@ WAITING_PERIOD = 0.01
 
 class ExampleDirs:
     FINE_TUNE_LLM = EXAMPLES_DIR / "fine_tune_llm"
-    FINE_TUNE_LLM_PYTORCH = EXAMPLES_DIR / "fine_tune_llm_pytorch"
     IMAGE_CLASSIFIER = EXAMPLES_DIR / "image_classifier"
