@@ -4,7 +4,7 @@ import shutil
 from datasets import load_dataset, load_from_disk, DatasetDict, Dataset
 from transformers import AutoTokenizer
 
-from tests.examples.fine_tune_llm_pytorch.constants import (
+from tests.examples.fine_tune_llm.constants import (
     SPLIT_DATA_PATH,
     DATA_PATH,
     RAW_DATA_PATH,

@@ -1,0 +1,8 @@
+-r requirements_test.txt
+-r requirements_sgx.txt
+datasets~=2.17.1
+matplotlib~=3.7.4
+torch~=2.5.0
+torchvision~=0.20.0
+tqdm~=4.66.5
+transformers~=4.37.2
