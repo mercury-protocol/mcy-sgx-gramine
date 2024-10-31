@@ -13,7 +13,7 @@ def parse_requirements() -> list[str]:
 
 setup(
     name="mcy_dist_ai",
-    version="1.0.0a3",
+    version="1.0.0",
     packages=find_packages(exclude=["tests"]),
     install_requires=parse_requirements(),
     entry_points={
