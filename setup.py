@@ -13,11 +13,13 @@ def parse_requirements() -> list[str]:
 
 setup(
     name="mcy_dist_ai",
-    version="0.0.1",
+    version="1.0.0",
     packages=find_packages(exclude=["tests"]),
     install_requires=parse_requirements(),
     entry_points={
-        "console_scripts": [],
+        "console_scripts": [
+            "mcy-split-data=mcy_dist_ai.script.split_data:split_data"
+        ],
     },
     author="Peter Berekvolgyi",
     author_email="peter@mercuryprotocol.io",

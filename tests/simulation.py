@@ -10,6 +10,7 @@ from tests.constants import (
     TEMP_DIR,
     WORKER_FINISHED_FILE,
     USER_SCRIPT_FILE,
+    USER_REQUIREMENTS_FILE,
     PREPROCESS_DATA_FILE,
     STATE_DICT_READY_FILE,
     STATE_DICT_FILE,
@@ -37,16 +38,22 @@ def run_node(
         role="WORKER",
         worker_count=1,
         dir_name="worker1",
+        tensor_load=False,
 ):
     check_temp_dir_created()
 
     working_directory = TEMP_DIR / dir_name
     os.makedirs(working_directory / "output", exist_ok=True)
-    with patch("sys.argv", [
+
+    argv = [
         "main.py",
         "--role", role,
         "--worker_count", str(worker_count)
-    ]):
+    ]
+    if tensor_load:
+        argv.append("--tensor_load")
+
+    with patch("sys.argv", argv):
         os.chdir(working_directory)
         from mcy_dist_ai.main import main
         return main()
@@ -63,10 +70,10 @@ class WatchLeader:
         if worker_count > 1:
             os.makedirs(leader_dir(), exist_ok=True)
 
-    def send_user_script_to_leader(self):
+    def send_file_to_leader(self, file: str):
         shutil.copy(
-            self.example_dir / USER_SCRIPT_FILE,
-            leader_dir() / USER_SCRIPT_FILE
+            self.example_dir / file,
+            leader_dir() / file
         )
 
     async def wait_state_dict(self):
@@ -90,7 +97,8 @@ class WatchLeader:
             return
 
         testlogger.info("Watch leader started.")
-        self.send_user_script_to_leader()
+        self.send_file_to_leader(USER_SCRIPT_FILE)
+        self.send_file_to_leader(USER_REQUIREMENTS_FILE)
         while True:
             await self.wait_state_dict()
 
@@ -111,10 +119,10 @@ class WatchWorker:
         self.worker_dir = worker_dir(self.node)
         os.makedirs(self.worker_dir, exist_ok=True)
 
-    def send_user_script_to_worker(self):
+    def send_file_to_worker(self, file: str):
         shutil.copy(
-            self.example_dir / USER_SCRIPT_FILE,
-            self.worker_dir / USER_SCRIPT_FILE
+            self.example_dir / file,
+            self.worker_dir / file
         )
 
     def send_data_to_worker(self):
@@ -155,7 +163,8 @@ class WatchWorker:
 
     async def run(self):
         testlogger.info(f"Watch worker {self.node} started.")
-        self.send_user_script_to_worker()
+        self.send_file_to_worker(USER_SCRIPT_FILE)
+        self.send_file_to_worker(USER_REQUIREMENTS_FILE)
         self.send_data_to_worker()
 
         if self.worker_count == 1:
@@ -189,13 +198,37 @@ def simulate_p2p_network(example_dir: Path, worker_count: int = 1):
     asyncio.run(simulate_p2p_network_coroutine(example_dir, worker_count))
 
 
+def split_and_save_data_manually(split_into: int, example_dir: Path):
+    if split_into > 1:
+        preprocess_data = dynamic_import("preprocess_data", example_dir / PREPROCESS_DATA_FILE)
+        preprocess_data.split_and_save_data(split_into=split_into, random_seed=42)
+
+
+def split_and_save_data_by_mcy_script(split_into: int, example_dir: Path):
+    from mcy_dist_ai.script.split_data import split_data
+    shutil.rmtree(str(example_dir / "split_data"), ignore_errors=True)
+    split_data(
+        split_into,
+        str(example_dir / "data"),
+        str(example_dir / "split_data"),
+        str(example_dir / USER_SCRIPT_FILE)
+    )
+
+
+def split_and_save_data(split_into: int, example_dir: Path, tensor_load: bool = False):
+    if tensor_load:
+        split_and_save_data_by_mcy_script(split_into, example_dir)
+    else:
+        split_and_save_data_manually(split_into, example_dir)
+
+
 @with_temp_dir(clear_tmp_dir_end=False)
-def train_model_parallel(worker_count: int, example_dir: Path = ExampleDirs.IMAGE_CLASSIFIER):
+def train_model_parallel(
+        worker_count: int, example_dir: Path = ExampleDirs.IMAGE_CLASSIFIER, tensor_load: bool = False
+):
     workers = []
 
-    preprocess_data = dynamic_import("preprocess_data", example_dir / PREPROCESS_DATA_FILE)
-    if worker_count > 1:
-        preprocess_data.split_and_save_data(split_into=worker_count, random_seed=42)
+    split_and_save_data(worker_count, example_dir, tensor_load=tensor_load)
 
     for i in range(worker_count):
         workers.append(
@@ -206,6 +239,7 @@ def train_model_parallel(worker_count: int, example_dir: Path = ExampleDirs.IMAG
                     role="WORKER",
                     worker_count=worker_count,
                     dir_name=f"worker{i+1}",
+                    tensor_load=tensor_load,
                 )
             )
         )
@@ -238,15 +272,16 @@ def train_model_parallel(worker_count: int, example_dir: Path = ExampleDirs.IMAG
 
 
 @with_temp_dir(clear_tmp_dir_end=False)
-def train_model_sequential(worker_count: int, example_dir: Path = ExampleDirs.IMAGE_CLASSIFIER):
-    preprocess_data = dynamic_import("preprocess_data", example_dir / PREPROCESS_DATA_FILE)
-    if worker_count > 1:
-        preprocess_data.split_and_save_data(split_into=worker_count, random_seed=42)
+def train_model_sequential(
+        worker_count: int, example_dir: Path = ExampleDirs.IMAGE_CLASSIFIER, tensor_load: bool = False
+):
+    split_and_save_data(worker_count, example_dir, tensor_load=tensor_load)
 
     for i in range(worker_count):
         watch_worker = WatchWorker(example_dir, "1", worker_count)
         watch_worker.remove_checkpoint()
-        watch_worker.send_user_script_to_worker()
+        watch_worker.send_file_to_worker(USER_SCRIPT_FILE)
+        watch_worker.send_file_to_worker(USER_REQUIREMENTS_FILE)
         watch_worker.node = str(i+1)
         watch_worker.send_data_to_worker()
 
@@ -254,6 +289,7 @@ def train_model_sequential(worker_count: int, example_dir: Path = ExampleDirs.IM
             role="WORKER",
             worker_count=1,
             dir_name="worker1",
+            tensor_load=tensor_load,
         )
 
         shutil.copy(

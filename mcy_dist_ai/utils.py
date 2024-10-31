@@ -1,34 +1,47 @@
-import importlib
 import os
-import torch
 import struct
+import torch
 
 from collections.abc import Iterable
 from pathlib import Path
 from time import sleep
 from torch import nn
 from torch.optim import Optimizer
-from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, DataLoader
 from typing import Any, List, Union
 
-from mcy_dist_ai.constants import (
-    WAITING_PERIOD,
-    USER_SCRIPT_PATH,
-    CHECKPOINT_PATH,
-    WORKER_NODES_NUM,
-)
+from mcy_dist_ai.args import WORKER_NODES_NUM
+from mcy_dist_ai.constants import CHECKPOINT_PATH
+from mcy_dist_ai.import_user_files import wait_and_import_user_script, wait_and_install_user_requirements
 from mcy_dist_ai.logger import logger
 
+wait_and_install_user_requirements()
+user_script = wait_and_import_user_script()
 
-script_path = os.path.abspath(USER_SCRIPT_PATH)
-while not os.path.exists(script_path):
-    sleep(WAITING_PERIOD)
 
-sleep(2)  # TODO: use a safer method to wait if file is completely copied
-spec = importlib.util.spec_from_file_location("user_script", script_path)
-user_script = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(user_script)
-logger.info("user_script.py imported.")
+class TensorDataset(Dataset):
+    def __init__(self, data_tensor, target_tensor):
+        self.data = data_tensor
+        self.targets = target_tensor
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx], self.targets[idx]
+
+
+def create_tensor_loader(data_path: str):
+    data_tensor = torch.load(f"{data_path}/data_tensor.pt")
+    target_tensor = torch.load(f"{data_path}/target_tensor.pt")
+
+    tensor_dataset = TensorDataset(data_tensor, target_tensor)
+
+    return DataLoader(
+        tensor_dataset,
+        batch_size=user_script.BATCH_SIZE,
+        shuffle=True
+    )
 
 
 def torch_safe_load(path: Union[Path, str]) -> Any:

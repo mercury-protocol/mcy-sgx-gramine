@@ -2,6 +2,7 @@
 
 ### • It shall be named `user_script.py`.
 ### • It shall define `N_EPOCHS` integer which specifies the number of training epochs.
+### • It shall define `BATCH_SIZE` integer which specifies the batch size of the data loader.
 ### • It shall define `create_model` function which shall return the initialized model.
 ### • It shall define `create_optimizer` function which shall return the initialized optimizer.
 ### • It shall define `create_data_loader` function which shall return the initialized data loader.
