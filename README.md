@@ -89,6 +89,8 @@ sudo docker-compose up app                    # builds and runs the enclave
 sudo python3 remote/simulated_remote.py       # plays the data + model owner
 ```
 
+`sudo` is required on both sides: the container needs root to access the host's `/dev/sgx_enclave` and `/dev/sgx_provision` device nodes, and the remote simulator inherits that requirement because it shares filesystem state with the root-launched container.
+
 The `remote/` simulator trains a baseline locally and asserts the enclave-returned model matches it — the round-trip is the test.
 
 ---
