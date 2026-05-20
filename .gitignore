@@ -9,6 +9,8 @@ __pycache__
 /app/input/
 /app/output/
 /.env
+/.venv/
+/.claude/.code-reviews/
 
 /io/
 /tests/temp/

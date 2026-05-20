@@ -91,7 +91,7 @@ def checkpoint(epoch: int, batch_idx: int):
         f.write(checkpoint_data)
 
 
-def load_last_checkpoint() -> (int, int):
+def load_last_checkpoint() -> tuple[int, int]:
     if not os.path.exists(CHECKPOINT_PATH):
         logger.warning("checkpoint file does not exist - this is expected only before first worker iteration")
         return 0, 0
