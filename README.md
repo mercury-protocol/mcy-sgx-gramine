@@ -1,6 +1,7 @@
 # mcy-sgx-gramine
 
-Confidential and distributed training building blocks for the [Mercury Protocol](https://mercuryprotocol.netlify.app) off-chain node.
+> **Mercury Protocol · confidential, distributed PyTorch training.**
+> Off-chain nodes that run user-supplied PyTorch training inside Intel SGX enclaves (via Gramine), produce a remote-attestation report per run, and exchange encrypted gradients between a leader and N workers — so a decentralized AI-training network can prove *this model was trained on this code and this data* without anyone trusting the node operator.
 
 ## Context
 
@@ -15,7 +16,7 @@ This repository contains two of the foundational pieces of the off-chain node:
 - **`mcy_dist_ai/`** — the leader and worker, published as a PyPI package. Drops into the Vulkan transport layer; gives Mercury its synchronous data-parallel training.
 - **`app/` + `remote/`** — a Gramine SGX enclave application that proves out the attestation and encrypted-channel flow underpinning Mercury's verifiable-compute story. In production, attestations produced inside the enclave are forwarded by the leader to the watcher, which posts them on-chain.
 
-Both subsystems are MVPs of their respective layers; the larger integration (workers running inside enclaves, attesting to a GPU TEE) is described in the Mercury Litepaper.
+Both subsystems are MVPs of their respective layers, running entirely on CPU TEEs; extending verifiable execution to the GPU is described in the Mercury Litepaper as future work.
 
 ---
 
@@ -25,26 +26,76 @@ Both subsystems are MVPs of their respective layers; the larger integration (wor
 
 Each process is launched as either a `LEADER` or a `WORKER`. Workers train batches on local data shards and emit gradients; the leader averages them, applies the optimizer step, and broadcasts the new state dict back. Synchronous stochastic gradient descent over file-based inter-process communication.
 
-```
-WORKER 1 ──gradient_1.pth──┐
-WORKER 2 ──gradient_2.pth──┼──► LEADER ──state_dict.pth──► all workers
-WORKER N ──gradient_N.pth──┘     (mean grads → optimizer.step → broadcast)
+```mermaid
+sequenceDiagram
+    participant W1 as Worker 1
+    participant W2 as Worker 2
+    participant WN as Worker N
+    participant L as Leader
+
+    loop Each training step
+        par
+            W1->>W1: Train batch on local data shard
+        and
+            W2->>W2: Train batch on local data shard
+        and
+            WN->>WN: Train batch on local data shard
+        end
+        W1->>L: computed gradients (+ ready sentinel)
+        W2->>L: computed gradients (+ ready sentinel)
+        WN->>L: computed gradients (+ ready sentinel)
+        L->>L: average gradients → optimizer.step()
+        L->>W1: updated model weights (+ ready sentinel)
+        L->>W2: updated model weights (+ ready sentinel)
+        L->>WN: updated model weights (+ ready sentinel)
+    end
 ```
 
 The Vulkan transport ships these files between hosts; this package only assumes they arrive. A `<name>.pth` + `<name>_ready.pth` sentinel pair handles producer/consumer races without locks.
 
 ### Confidential model training (`app/`, `remote/`)
 
-A Python application runs inside an Intel SGX enclave via Gramine. The remote party fetches the enclave's IAS attestation report and verifies it, then performs ECDH (NIST P-256) over two independent channels — one for the data, one for the model — and ships Fernet-encrypted payloads in. The enclave runs the model and returns the encrypted result.
+A Python application runs inside an Intel SGX enclave via Gramine — a hardware-isolated region of CPU memory that even the machine's own operating system cannot read into. Before sending anything sensitive, the remote party fetches the enclave's IAS attestation report (a signed statement from Intel saying "this exact code is running inside a genuine SGX enclave on a genuine Intel CPU") and verifies it. They then perform an ECDH key exchange (NIST P-256, the standard elliptic-curve handshake used in TLS) to derive a shared secret with the enclave without ever transmitting a key over the wire — and they do this twice, once for the data and once for the model, so the two channels are cryptographically independent. Payloads are then encrypted with Fernet (authenticated symmetric AES) under those keys and shipped in. The enclave decrypts inside the protected region, runs the model, and returns the encrypted result the same way back out.
 
-```
-DATA OWNER  ──encrypted data ──┐                  ┌── encrypted result
-                               ├──► SGX ENCLAVE ──┤
-MODEL OWNER ──encrypted model──┘  (attested via   └── (sealed to recipient)
-                                   Intel IAS)
+```mermaid
+sequenceDiagram
+    participant ModelOwner as Model owner
+    participant DataOwner as Data owner
+    participant Enclave as SGX enclave (Gramine)
+    participant IAS as Intel IAS
+
+    ModelOwner->>Enclave: Request training run
+    Enclave->>Enclave: Boot, generate own keypair
+    Enclave->>IAS: Request attestation quote (carries enclave's public key)
+    IAS-->>Enclave: Signed IAS report
+    Enclave->>Enclave: Publish report + public key to host
+    DataOwner->>IAS: Verify report, read enclave's public key
+    ModelOwner->>IAS: Verify report, read enclave's public key
+    DataOwner<<->>Enclave: Diffie-Hellman key exchange
+    ModelOwner<<->>Enclave: Diffie-Hellman key exchange
+    DataOwner->>Enclave: encrypted data
+    ModelOwner->>Enclave: encrypted model
+    Enclave->>Enclave: Decrypt and train inside enclave
+    Enclave-->>ModelOwner: encrypted trained model
 ```
 
-Two channels exist because Mercury's threat model treats the data owner and model owner as potentially distinct, mutually-distrustful parties — both shipping IP to the same untrusted compute provider.
+Each [*Diffie-Hellman key exchange*](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) arrow above is shorthand for: both parties send each other their public keys, then each combines its own private key with the counterpart's public key to land on the same shared secret. Only public keys travel between them; the secret itself never crosses the wire. Two arrows means two handshakes, so the data and model channels end up with cryptographically independent secrets.
+
+Two channels exist because Mercury's threat model treats the data owner and model owner as potentially distinct, mutually-distrustful parties — both shipping IP to the same untrusted compute provider. The same IAS report the remote parties verify is what the watcher will eventually upload on-chain as the verifiable-compute proof.
+
+### Threat model
+
+The untrusted node operator is assumed to control the host OS, the filesystem, and the network. Four concrete attacks the design defends against:
+
+- **Enclave compromise** (host OS or hypervisor reads enclave memory) — defeated by SGX hardware memory isolation; the Gramine manifest at [app/sgxapp.manifest.template](app/sgxapp.manifest.template) defines the trust boundary, declaring which host files are allowed in and forbidding everything else.
+- **Key exfiltration** (host steals the enclave's long-lived ECDH private key off disk) — the key is the only file mounted `type = "encrypted"` and is sealed against `MRENCLAVE`, so only a byte-identical rebuild of the enclave on the same CPU can unseal it. Session secrets exist only in enclave memory.
+- **Attestation forgery** (host fabricates a "running inside SGX" claim) — defeated by the IAS-signed quote generated inside the enclave ([app/attestation.py](app/attestation.py)); remote parties verify the Intel signature against the published certificate chain before sending any encrypted payload. The quote binds the enclave's public key in `user_report_data`, so a stale report cannot be paired with a key the attacker controls.
+- **Replay** (resending a captured ciphertext, or pairing an old IAS report with new traffic) — both sides generate a fresh ECDH keypair per run ([app/sgx_startup.py](app/sgx_startup.py) at enclave boot, [remote/simulated_remote.py](remote/simulated_remote.py) per session), so every session derives a different Fernet key and intercepted ciphertexts from a previous run will not decrypt under the new key. Pairing a stale IAS report with new traffic fails for the same reason: the public key bound into the report's `user_report_data` is the one ciphertexts were encrypted to, so swapping reports breaks the handshake.
+
+Not defended against:
+
+- **SGX side channels** (cache timing, page-fault patterns, branch prediction, speculative execution). The enclave makes no attempt at constant-time operations or oblivious memory access; Mercury inherits the standard limits of SGX's confidentiality model.
+- **Malicious model code inside the enclave.** [app/sgx_train_model.py](app/sgx_train_model.py) `exec`s the decrypted model source, so a model owner can in principle observe or smuggle out the data owner's plaintext via output channels. The two encryption channels protect the wire between mutually-distrustful parties; they do not isolate those parties from each other once both their payloads are inside the same enclave.
 
 ---
 
@@ -116,7 +167,7 @@ pytest tests/
 
 End-to-end tests run the real leader and worker code under a simulated network. Each node is launched in its own OS process via `multiprocessing`, with a role-specific argv and an isolated working directory under `tests/temp/`. Because the package resolves all coordination paths against the process `cwd` at import time, every child inhabits an independent filesystem namespace — the same isolation it would see on a separate host, with its own logger, its own user-script import, and its own copy of the per-node configuration. The Vulkan transport layer is replaced by an asynchronous file shuttler that copies gradient and state-dict files between those directories on the producer/consumer sentinel pattern the production transport uses.
 
-The harness supports arbitrary worker counts and can run the network either fully in parallel or sequentially. Included tests train MNIST classifiers with 1, 2, and 4 workers and assert on classification accuracy; an LLM fine-tuning example is also included as a work-in-progress.
+The harness supports arbitrary worker counts and can run the network either fully in parallel or sequentially. Included tests train MNIST classifiers with 1, 2, 4, and 8 workers and assert on classification accuracy; an LLM fine-tuning example is also included as a work-in-progress.
 
 ---
 
@@ -125,6 +176,35 @@ The harness supports arbitrary worker counts and can run the network either full
 - Python 3.10+
 - PyTorch (pinned in `requirements.txt`)
 - For the enclave: SGX-capable CPU and Gramine 1.5
+
+---
+
+## Benchmarks
+
+Small OCR classifier trained across 1 / 2 / 4 / 8 simulated worker nodes (multiprocessing + asyncio file shuttler), measured at 5, 10, and 20 epochs.
+
+![accuracy benchmark](docs/benchmark-accuracy.png)
+
+| Epochs | 1 worker | 2 workers | 4 workers | 8 workers |
+|---|---|---|---|---|
+| 5  | 97.67% | 96.60% | 94.95% | 92.26% |
+| 10 | 98.30% | 97.88% | 96.80% | 94.88% |
+| 20 | 98.70% | 98.50% | 97.91% | 96.81% |
+
+At 20 epochs the 1→8 worker spread narrows to ~1.9 percentage points. The early-epoch gap is a step-count effect: each round averages all worker gradients into a single leader step, so an N-worker epoch yields ~1/N as many weight updates as a 1-worker epoch (equivalently, an N×-larger effective batch). Enough additional epochs make the gap negligible.
+
+---
+
+## What's interesting (for reviewers)
+
+- **Gramine manifest** at [app/sgxapp.manifest.template](app/sgxapp.manifest.template) — what is trusted-input, allowed-host-file, or sealed; the enclave's trust boundary in one file.
+- **Attestation gate** at [app/attestation.py](app/attestation.py) and the enclave entrypoint at [app/sgx_main.py](app/sgx_main.py) — IAS report generation and the "no inputs accepted before the report is on disk" handshake.
+- **ECDH + Fernet channels** at [app/sgx_utils.py](app/sgx_utils.py) and the host-side mirror at [remote/utils.py](remote/utils.py) — why the utilities are deliberately duplicated across the trust boundary.
+- **Local end-to-end test** at [remote/simulated_remote.py](remote/simulated_remote.py) — trains a baseline locally and asserts the enclave-returned model matches it; the round-trip is the test.
+- **Leader/Worker coordination** at [mcy_dist_ai/leader.py](mcy_dist_ai/leader.py) and [mcy_dist_ai/worker.py](mcy_dist_ai/worker.py) — sentinel-file ready protocol, single-worker short-circuit, async file monitor.
+- **User-script plugin contract** at [docs/user_script_requirements.md](docs/user_script_requirements.md) — the four symbols a user provides; everything around them is orchestration.
+
+---
 
 ## License
 

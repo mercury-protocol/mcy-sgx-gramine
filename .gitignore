@@ -2,6 +2,7 @@
 .idea
 __pycache__
 .pytest_cache
+.DS_Store
 /app/sgxapp.sig
 /app/sgxapp.manifest
 /app/sgxapp.manifest.sgx
